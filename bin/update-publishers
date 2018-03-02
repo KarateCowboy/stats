@@ -53,6 +53,10 @@ var resourcesReady = async function (asyncError, resources) {
         var [channel, identifier] = publisher.publisher.split('#')[1].split(':')
         publisher.url = `https://youtube.com/${channel}/${identifier}`
         publisher.platform = 'youtube'
+      } else if (publisher.publisher.match(/^twitch\#/)) {
+        var [channel, identifier] = publisher.publisher.split('#')[1].split(':')
+        publisher.url = `https://www.twitch.tv/${identifier}`
+        publisher.platform = 'twitch'
       } else {
         publisher.url = `https://${publisher.publisher}`
         publisher.platform = 'publisher'
