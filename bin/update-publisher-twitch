@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+
+const pg = require('pg')
+const request = require("request")
+const puppeteer = require('puppeteer')
+
+async function retrieveChannelInfo(url) {
+  return new Promise(async (resolve, reject) => {
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage()
+    await page.goto(url)
+    await page.waitFor(500)
+
+    const selector = `a[data-a-target="followers-channel-header-item"] div.channel-header__item-count span`
+    //const selector = `a`
+    let results = await page.evaluate((sel) => {
+      var r = document.querySelector(sel)
+      if (r) return r.innerHTML
+      return '0'
+    }, selector)
+    browser.close()
+    results = results.replace(/,/g, '')
+    return resolve(parseInt(results))
+  })
+}
+
+async function main () {
+  var i, ranking, publishers, db
+  try {
+    db = await pg.connect(process.env.DATABASE_URL)
+    if (!db) throw "Could not connect to database at " + process.env.DATABASE_URL
+    publishers = (await db.query("SELECT * FROM dtl.publishers WHERE platform = 'twitch' and (audience IS NULL OR last_inspected IS NULL OR last_inspected + '10 days' < current_timestamp) ", [])).rows
+    for (const publisher of publishers) {
+      ranking = await retrieveChannelInfo(publisher.url)
+      console.log(publisher.publisher, ranking)
+      await db.query("UPDATE dtl.publishers SET audience = $1, last_inspected = CURRENT_TIMESTAMP WHERE publisher = $2", [ranking, publisher.publisher])
+    }
+    db.end()
+  } catch (e) {
+    console.log(e.toString())
+    process.exit(1)
+  }
+}
+
+main()
