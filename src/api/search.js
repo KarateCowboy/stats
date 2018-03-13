@@ -10,8 +10,7 @@ var tokenize = function (text) {
 
 const SEARCH = `
 SELECT
-  *,
-  ARRAY(SELECT tag FROM dtl.crash_tags CT WHERE CR.id = CT.crash_id) AS tags
+  *
 FROM dtl.crashes CR WHERE contents->>'crash_id' = $1 OR id IN ( select object_id from (
   SELECT
   object_id,

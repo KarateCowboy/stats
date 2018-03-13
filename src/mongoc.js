@@ -8,21 +8,16 @@ const MongoClient = require('mongodb').MongoClient
 const mongoURL = process.env.MONGOLAB_URI
 if (!mongoURL) throw new Error('MONGOLAB_URI must be set in environment')
 
-export function setup (cb) {
-  console.log('Connecting to Mongo at ' + mongoURL)
-  MongoClient.connect(mongoURL, (err, connection) => {
-    assert.equal(null, err)
-    cb(err, connection)
-  })
+module.exports.setup = async function  () {
+  // console.log('Connecting to Mongo at ' + mongoURL)
+  return await MongoClient.connect(mongoURL)
 }
 
-export function setupConnection () {
+module.exports.setupConnection = function () {
   return new Promise((resolve, reject) => {
-    console.log('Connecting to Mongo at ' + mongoURL)
     MongoClient.connect(mongoURL, (err, connection) => {
       if (err) return reject(err)
       else resolve(connection)
     })
   })
 }
-

@@ -88,7 +88,7 @@ exports.potentiallyFilterThisMonth = (rows, showMonth) => {
   return rows
 }
 
-export function round (v, n) {
+module.exports.round = function (v, n) {
   n = n || 2
   var mult = Math.pow(10, n)
   return parseInt(v * mult) / mult
@@ -104,7 +104,7 @@ export function round (v, n) {
   paramsBuilder - function(request) -> Array
   function to build a set of SQL params for query
 */
-export function buildQueryReponseHandler (client, query, successHandler, paramsBuilder) {
+module.exports.buildQueryReponseHandler = function (client, query, successHandler, paramsBuilder) {
   paramsBuilder = paramsBuilder || ((request) => { return [] })
   successHandler = successHandler || ((reply, results) => { reply(results.rows) })
   return (request, reply) => {
@@ -120,13 +120,13 @@ export function buildQueryReponseHandler (client, query, successHandler, paramsB
   }
 }
 
-export function convertPlatformLabels (row) {
+module.exports.convertPlatformLabels = function (row) {
   if (row.platform === 'android') row.platform = 'Link Bubble'
   if (row.platform === 'androidbrowser') row.platform = 'Android Browser'
   return row
 }
 
-export function prequest (url) {
+module.exports.prequest = function (url) {
   return new Promise((resolve, reject) => {
     r(url, (err, results, body) => {
       if (err) return reject(err)

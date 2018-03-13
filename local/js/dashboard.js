@@ -1,5 +1,5 @@
 // Platform meta data
-var platforms = {
+const platforms = {
   osx: {
     id: 'osx',
     label: 'OSx',
@@ -56,7 +56,7 @@ var channels = {
 var platformKeys = _.keys(platforms)
 var channelKeys = _.keys(channels)
 
-var reversePlatforms = _.object(_.map(platforms, function(platform) { return [platform.label, platform] }))
+var reversePlatforms = _.object(_.map(platforms, function (platform) { return [platform.label, platform] }))
 
 var round = function (x, n) {
   n = n || 0
@@ -133,16 +133,17 @@ var stp = function (num) {
   return numeral(num).format('0.0%')
 }
 
-var b = function(text) { return '<strong>' + text + "</strong>" }
+var b = function (text) { return '<strong>' + text + '</strong>' }
 
-var builders = { round, td, ptd, th, tr, st, td, st1, st3, stp, b, std }
+var builders = {round, td, ptd, th, tr, st, td, st1, st3, stp, b, std}
 
 // Install promotion info in the control bar
 var partners, refs
+
 async function installPromotions () {
   partners = await $.ajax('/api/1/promotions/partners')
   refs = await $.ajax('/api/1/promotions/refs')
-  var refsSelect = $("#refs")
+  var refsSelect = $('#refs')
 
   $('#refs_autocomplete').typeahead({
     minLength: 0,
@@ -155,7 +156,7 @@ async function installPromotions () {
         obj.rendered = obj.ref + ' - ' + obj.description + ' (' + obj.partner + ')'
       })
       var selected = refs.filter((obj) => { return obj.searchable.match(query) })
-      sync(selected)  
+      sync(selected)
     },
     display: function (obj) {
       return obj.rendered
@@ -167,75 +168,77 @@ async function installPromotions () {
     }
   })
 
-  $('#refs_autocomplete').on("typeahead:select", function (evt, obj) {
-    $("#clearRef").show()
+  $('#refs_autocomplete').on('typeahead:select', function (evt, obj) {
+    $('#clearRef').show()
     pageState.ref = obj.ref
     refreshData()
   })
 
-  $('#refs_autocomplete').on("keyup", function (evt) {
+  $('#refs_autocomplete').on('keyup', function (evt) {
     if ($('#refs_autocomplete').val()) {
-      $("#clearRef").show()
+      $('#clearRef').show()
     } else {
-      $("#clearRef").hide()
-    } 
+      $('#clearRef').hide()
+    }
   })
 }
 
 function installPromotionsPopoverHandler () {
-  var partnersSelect = $("#partners")
+  var partnersSelect = $('#partners')
 
-  var platformContainer = $("#addPromotionFormContainerPlatform")
+  var platformContainer = $('#addPromotionFormContainerPlatform')
   platformContainer.empty()
 
   publisherPlatforms.forEach((platform) => {
     var buffer = `<option value="${platform.platform}">${platform.label}</option>`
-    platformContainer.append(buffer)    
+    platformContainer.append(buffer)
   })
 
-  $("#addRef").popover({
+  $('#addRef').popover({
     html: true,
-    placement: "bottom",
-    content: $("#addPromotionFormContainer").html(),
-    title: "Add Promotion",
-    trigger: "manual"
+    placement: 'bottom',
+    content: $('#addPromotionFormContainer').html(),
+    title: 'Add Promotion',
+    trigger: 'manual'
   })
 
-  $("#addRef").on('click', () => {
-    $("#addRef").popover('toggle')
-    $("#addPromotionFormContainerPartner").val(partnersSelect.val())
+  $('#addRef').on('click', () => {
+    $('#addRef').popover('toggle')
+    $('#addPromotionFormContainerPartner').val(partnersSelect.val())
   })
 
   $('#addRef').on('shown.bs.popover', () => {
-    console.log("installing popover handlers")
-    $("#addPromotionOk").on("click", async (evt) => {
-      var partner = $("#addPromotionFormContainerPartner").val()
-      var ref = $("#addPromotionFormContainerRef").val()
-      var description = $("#addPromotionFormContainerDescription").val()
-      var platform = $("#addPromotionFormContainerPlatform").val()
+    console.log('installing popover handlers')
+    $('#addPromotionOk').on('click', async (evt) => {
+      var partner = $('#addPromotionFormContainerPartner').val()
+      var ref = $('#addPromotionFormContainerRef').val()
+      var description = $('#addPromotionFormContainerDescription').val()
+      var platform = $('#addPromotionFormContainerPlatform').val()
       console.log(partner, ref, description, platform)
       if (partner && ref && description && platform) {
-        $("#addRef").popover("hide")
-        var result = await $.ajax("/api/1/promotions/refs", { type: "POST", data: {
-          ref: ref,
-          partner: partner,
-          description: description,
-          platform: platform
-        }})
+        $('#addRef').popover('hide')
+        var result = await $.ajax('/api/1/promotions/refs', {
+          type: 'POST', data: {
+            ref: ref,
+            partner: partner,
+            description: description,
+            platform: platform
+          }
+        })
         console.log(result)
         installPromotions()
       }
     })
-    $("#addPromotionCancel").on("click", (evt) => {
-      $("#addRef").popover("hide")
+    $('#addPromotionCancel').on('click', (evt) => {
+      $('#addRef').popover('hide')
     })
   })
 }
 
 function installPromotionsClearHandler () {
-  $("#clearRef").on("click", function () {
-    $("#refs_autocomplete").typeahead('val', '')
-    $("#clearRef").hide()
+  $('#clearRef').on('click', function () {
+    $('#refs_autocomplete').typeahead('val', '')
+    $('#clearRef').hide()
     pageState.ref = null
     refreshData()
   })
@@ -244,7 +247,7 @@ function installPromotionsClearHandler () {
 installPromotions()
 installPromotionsClearHandler()
 
-var crashVersionHandler = function(rows) {
+var crashVersionHandler = function (rows) {
   var s = $('#crash-ratio-versions')
   s.empty()
   s.append('<option value="">All</option>')
@@ -258,7 +261,7 @@ var crashVersionHandler = function(rows) {
   })
 }
 
-var crashRatioHandler = function(rows) {
+var crashRatioHandler = function (rows) {
   $.ajax('/api/1/crash_versions?' + standardParams(), {
     success: crashVersionHandler
   })
@@ -278,7 +281,7 @@ var crashRatioHandler = function(rows) {
   })
 }
 
-var topCrashHandler = function(rows) {
+var topCrashHandler = function (rows) {
   var table = $('#top-crash-table tbody')
   table.empty()
   var sum = _.reduce(rows, function (memo, row) { return memo + parseInt(row.total) }, 0)
@@ -296,12 +299,11 @@ var topCrashHandler = function(rows) {
   })
 }
 
-
-var statsHandler = function(rows) {
+var statsHandler = function (rows) {
   // Build the table
   var table = $('#statsDataTable tbody')
   table.empty()
-  rows.forEach(function(row) {
+  rows.forEach(function (row) {
     var buf = '<tr>'
     buf = buf + '<td nowrap>' + row.ymd + '</td>'
     buf = buf + '<td class="text-right">' + row.count + '</td>'
@@ -319,18 +321,18 @@ var statsHandler = function(rows) {
 
   // Build a list of unique labels (ymd)
   var labels = _.chain(rows)
-      .map(function(row) { return row.ymd })
-      .uniq()
-      .sort()
-      .value()
+    .map(function (row) { return row.ymd })
+    .uniq()
+    .sort()
+    .value()
 
   var ys = ['change', 'retention']
 
   // Build the Chart.js data structure
   var datasets = []
-  ys.forEach(function(y) {
+  ys.forEach(function (y) {
     var dataset = []
-    rows.forEach(function(row) {
+    rows.forEach(function (row) {
       dataset.push(row[y])
     })
     datasets.push(dataset)
@@ -338,7 +340,7 @@ var statsHandler = function(rows) {
 
   var data = {
     labels: labels,
-    datasets: _.map(datasets, function(dataset, idx) {
+    datasets: _.map(datasets, function (dataset, idx) {
       return _.extend({
         label: ys[idx],
         data: dataset
@@ -346,13 +348,13 @@ var statsHandler = function(rows) {
     })
   }
 
-  var container = $("#statsChartContainer")
+  var container = $('#statsChartContainer')
   container.empty()
-  container.append("<canvas id='statsChart' height='300' width='800'></canvas>")
+  container.append('<canvas id=\'statsChart\' height=\'300\' width=\'800\'></canvas>')
 
-  var statsChart = document.getElementById("statsChart")
-  var ctx = statsChart.getContext("2d")
-  var myChart = new Chart.Line(ctx, { data: data, options: window.STATS.COMMON.standardYAxisOptions })
+  var statsChart = document.getElementById('statsChart')
+  var ctx = statsChart.getContext('2d')
+  var myChart = new Chart.Line(ctx, {data: data, options: window.STATS.COMMON.standardYAxisOptions})
 }
 
 var buildTelemetryChartBuilder = function (opts) {
@@ -365,26 +367,26 @@ var buildTelemetryChartBuilder = function (opts) {
   return function (rows) {
     // Build a list of unique labels (ymd)
     var ymds = _.chain(rows)
-        .map(function(row) { return row.ymd })
-        .uniq()
-        .sort()
-        .value()
+      .map(function (row) { return row.ymd })
+      .uniq()
+      .sort()
+      .value()
 
     // Build a list of unique data sets (platform)
     var ys = _.chain(rows)
-        .map(function(row) { return grouperLabel(row) })
-        .uniq()
-        .value()
+      .map(function (row) { return grouperLabel(row) })
+      .uniq()
+      .value()
 
     var groups = _.groupBy(rows, function (row) {
       return grouperLabel(row)
     })
 
     // Associate the data
-    var product = _.object(_.map(ymds, function(ymd) {
+    var product = _.object(_.map(ymds, function (ymd) {
       return [ymd, {}]
     }))
-    rows.forEach(function(row) {
+    rows.forEach(function (row) {
       if (!product[row.ymd][grouperLabel(row)]) product[row.ymd][grouperLabel(row)] = {}
       product[row.ymd][grouperLabel(row)].average = row.average
       product[row.ymd][grouperLabel(row)].minimum = row.minimum
@@ -425,7 +427,7 @@ var buildTelemetryChartBuilder = function (opts) {
 
     var data = {
       labels: ymds,
-      datasets: _.map(datasets, function(dataset, idx) {
+      datasets: _.map(datasets, function (dataset, idx) {
         return {
           label: labels[idx].label,
           data: dataset,
@@ -435,9 +437,9 @@ var buildTelemetryChartBuilder = function (opts) {
       })
     }
 
-    var container = $("#telemetryChartContainer")
+    var container = $('#telemetryChartContainer')
     container.empty()
-    container.append("<canvas id='telemetryUsageChart' height='350' width='800'></canvas>")
+    container.append('<canvas id=\'telemetryUsageChart\' height=\'350\' width=\'800\'></canvas>')
 
     var chartOptions = _.extend(_.clone(window.STATS.COMMON.standardYAxisOptions), {
       onClick: function (evt, points) {
@@ -453,8 +455,8 @@ var buildTelemetryChartBuilder = function (opts) {
       }
     })
 
-    var usageChart = document.getElementById("telemetryUsageChart")
-    new Chart.Line(usageChart.getContext("2d"), { data: data, options: chartOptions })
+    var usageChart = document.getElementById('telemetryUsageChart')
+    new Chart.Line(usageChart.getContext('2d'), {data: data, options: chartOptions})
   }
 }
 
@@ -464,7 +466,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   x_label = x_label || 'Date'
   y_label = y_label || 'Platform'
 
-  var value_func = function(row, value) {
+  var value_func = function (row, value) {
     var formatter = st
     if (opts.percentage) {
       formatter = stp
@@ -477,15 +479,15 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   return function (rows) {
     var table = $('#usageDataTable tbody')
 
-    $("#x_label").html(x_label)
-    $("#y_label").html(y_label)
+    $('#x_label').html(x_label)
+    $('#y_label').html(y_label)
 
     table.empty()
     var ctrl = rows[x]
     var ctrlClass = ''
     var grandTotalAccumulator = 0
     var previousValue, difference, differenceRate, i
-    rows.forEach(function(row) {
+    rows.forEach(function (row) {
       if (!previousValue) previousValue = row.count
       if (row[x] !== ctrl) {
         // The ctrl has broken, we need to change grouping
@@ -516,17 +518,17 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
 
     if (opts.growth_rate && rows[0]) {
       averageGrowthRate = Math.pow(rows[rows.length - 1].count / rows[0].count, 1 / rows.length) - 1
-      averageGrowthRateDesc = "Math.pow(" + rows[rows.length - 1].count + "/" + rows[0].count + ", 1 / " + rows.length + ") - 1"
+      averageGrowthRateDesc = 'Math.pow(' + rows[rows.length - 1].count + '/' + rows[0].count + ', 1 / ' + rows.length + ') - 1'
       console.log(averageGrowthRate)
       table.append(tr([
         td(),
         td(),
         td(),
-        td("Average monthly growth rate " + (averageGrowthRate * 100).toFixed(1) + '%<br><span class="subvalue">' + averageGrowthRateDesc + '</span>', 'right')
+        td('Average monthly growth rate ' + (averageGrowthRate * 100).toFixed(1) + '%<br><span class="subvalue">' + averageGrowthRateDesc + '</span>', 'right')
       ]))
 
       table.append(tr([
-        td("Forward projections based on " + (averageGrowthRate * 100).toFixed(1) + "% monthly growth rate"),
+        td('Forward projections based on ' + (averageGrowthRate * 100).toFixed(1) + '% monthly growth rate'),
         td(st(rows[rows.length - 1].count))
       ]))
 
@@ -544,35 +546,35 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
         td(),
         td(),
         td(grandTotalAccumulator, 'right')
-      ], { classes: "info" }))
+      ], {classes: 'info'}))
     }
 
     // Build a list of unique labels (ymd)
     var labels = _.chain(rows)
-        .map(function(row) { return row[x] })
-        .uniq()
-        .sort()
-        .value()
+      .map(function (row) { return row[x] })
+      .uniq()
+      .sort()
+      .value()
 
     // Build a list of unique data sets (platform)
     var ys = _.chain(rows)
-        .map(function(row) { return row[y] })
-        .uniq()
-        .value()
+      .map(function (row) { return row[y] })
+      .uniq()
+      .value()
 
     // Associate the data
-    var product = _.object(_.map(labels, function(label) {
+    var product = _.object(_.map(labels, function (label) {
       return [label, {}]
     }))
-    rows.forEach(function(row) {
+    rows.forEach(function (row) {
       product[row[x]][row[y]] = row.count
     })
 
     // Build the Chart.js data structure
     var datasets = []
-    ys.forEach(function(platform) {
+    ys.forEach(function (platform) {
       var dataset = []
-      labels.forEach(function(label) {
+      labels.forEach(function (label) {
         dataset.push(product[label][platform] || 0)
       })
       datasets.push(dataset)
@@ -586,7 +588,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
 
     var data = {
       labels: labels,
-      datasets: _.map(datasets, function(dataset, idx) {
+      datasets: _.map(datasets, function (dataset, idx) {
         return {
           label: ys[idx] || 'All',
           data: dataset,
@@ -597,135 +599,231 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
       })
     }
 
-    var container = $("#usageChartContainer")
+    var container = $('#usageChartContainer')
     container.empty()
-    container.append("<canvas id='usageChart' height='350' width='800'></canvas>")
+    container.append('<canvas id=\'usageChart\' height=\'350\' width=\'800\'></canvas>')
 
-    var usageChart = document.getElementById("usageChart")
-    new Chart.Line(usageChart.getContext("2d"), { data: data, options: window.STATS.COMMON.standardYAxisOptions })
+    var usageChart = document.getElementById('usageChart')
+    new Chart.Line(usageChart.getContext('2d'), {data: data, options: window.STATS.COMMON.standardYAxisOptions})
   }
 }
 
-var retentionMonthHandler = function (rows) {
-  var i, row, cellColor, monthDelta
-  var rowHeadings = []
-  var buffer = ""
-  var baseColor = net.brehaut.Color("#ff5500")
-  var baseColorAvg = net.brehaut.Color("#999999")
-  var sparklineOptions = { width: "60px", height: "25px", disableInteraction: true, fillColor: "#efefef", lineColor: "#999999" }
+const weeklyRetentionHandler = function (rows) {
+  console.log('executed the weeklyRetentionHandler')
+  let i, row, cellColor, weekDelta
+  let rowHeadings = []
+  let buffer = ''
+  const baseColor = net.brehaut.Color('#ff5500')
+  const baseColorAvg = net.brehaut.Color('#999999')
+  const sparklineOptions = {
+    width: '60px',
+    height: '25px',
+    disableInteraction: true,
+    fillColor: '#efefef',
+    lineColor: '#999999'
+  }
 
   // headings
-  buffer += "<table class='table'>"
-  buffer += "<tr class='active'><th colspan='2'>Months from installation</th>"
+  buffer += '<table class=\'table\'>'
+  buffer += `<tr style="color: red;"><th>Statistics for iOS/Android are not accurate</th></tr>`
+  buffer += '<tr class=\'active\'><th colspan=\'2\'>Weeks since installation</th>'
   for (i = 0; i < 12; i++) {
     buffer += '<th class="retentionCell">' + i + '</th>'
   }
 
   // heading sparklines
-  buffer += "</tr><tr><td></td><td></td>"
+  buffer += '</tr><tr><td></td><td></td>'
   for (i = 0; i < 12; i++) {
-    buffer += "<td><span id='sparklineDelta" + i + "'></span></td>"
+    buffer += '<td><span id=\'sparklineDelta' + i + '\'></span></td>'
   }
 
   // averages
-  buffer += "</tr><tr><th>Average</th><td></td>"
+  buffer += '</tr><tr><th>Average</th><td></td>'
   for (i = 0; i < 12; i++) {
-    avg = STATS.STATS.avg(rows.filter((row) => { return row.month_delta === i }).map((row) => { return row.retained_percentage})) || 0
+    avg = STATS.STATS.avg(rows.filter((row) => { return row.week_delta === i }).map((row) => { return row.retained_percentage})) || 0
     cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
-    buffer += "<td style='background-color: " + cellColor + "' class='retentionCell'>" + st(avg * 100) + "</td>"
+    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(avg * 100) + '</td>'
   }
 
   // cell contents
-  buffer += "</tr><tr>"
-  var ctrl = null
+  buffer += '</tr><tr>'
+  let ctrl = null
+  for (i = 0; i < rows.length; i++) {
+    row = rows[i]
+    if (row.woi !== ctrl) {
+      buffer += '</tr><tr>'
+      buffer += '<th nowrap>' + moment(row.woi).format('MMM DD YYYY') + '</th>'
+      buffer += '<td><span id=\'sparklineActual' + row.woi + '\'></span><br>'
+      rowHeadings.push(row.woi)
+      ctrl = row.woi
+      weekDelta = 0
+    }
+    weekDelta += 1
+    cellColor = baseColor.desaturateByAmount(1 - row.retained_percentage).lightenByAmount((1 - row.retained_percentage) / 6.2)
+    buffer += `<td style="background-color: ${cellColor}" class="retentionCell">${st(row.retained_percentage * 100)} </td>`
+  }
+  buffer += '<td><span id=\'sparklineDelta' + weekDelta + '\'></span><br>'
+  buffer += '</tr>'
+  buffer += '</table>'
+
+  // insert elements
+  const div = $('#weeklyRetentionTableContainer')
+  div.empty()
+  div.append(buffer)
+
+  // heading sparklines
+  for (i = 0; i < 12; i++) {
+    sparkData = rows.filter((row) => { return row.week_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100)})
+    $('#sparklineDelta' + i).sparkline(sparkData, sparklineOptions)
+  }
+
+  // installation week sparklines
+  rowHeadings.forEach((heading) => {
+    sparkData = rows.filter((row) => { return row.woi === heading }).map((row) => { return parseInt(row.retained_percentage * 100)})
+    $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
+  })
+  console.log('finished the weeklyRetentionHandler')
+}
+
+const retentionMonthHandler = function (rows) {
+  console.log('executed the retentionMonthHandler')
+  let i, row, cellColor, monthDelta
+  let rowHeadings = []
+  let buffer = ''
+  const baseColor = net.brehaut.Color('#ff5500')
+  const baseColorAvg = net.brehaut.Color('#999999')
+  const sparklineOptions = {
+    width: '60px',
+    height: '25px',
+    disableInteraction: true,
+    fillColor: '#efefef',
+    lineColor: '#999999'
+  }
+
+  // headings
+  buffer += '<table class=\'table\'>'
+  buffer += `<tr style="color: red;"><th>Statistics for iOS/Android are not accurate</th></tr>`
+  buffer += '<tr class=\'active\'><th colspan=\'2\'>Months from installation</th>'
+  for (i = 0; i < 12; i++) {
+    buffer += '<th class="retentionCell">' + i + '</th>'
+  }
+
+  // heading sparklines
+  buffer += '</tr><tr><td></td><td></td>'
+  for (i = 0; i < 12; i++) {
+    buffer += '<td><span id=\'sparklineDelta' + i + '\'></span></td>'
+  }
+
+  // averages
+  buffer += '</tr><tr><th>Average</th><td></td>'
+  for (i = 0; i < 12; i++) {
+    avg = STATS.STATS.avg(rows.filter((row) => { return row.month_delta === i }).map((row) => { return row.retained_percentage})) || 0
+    cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
+    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(avg * 100) + '</td>'
+  }
+
+  // cell contents
+  buffer += '</tr><tr>'
+  let ctrl = null
+  console.log(`length of rows is ${rows.length}`)
   for (i = 0; i < rows.length; i++) {
     row = rows[i]
     if (row.moi !== ctrl) {
-      buffer += "</tr><tr>"
-      buffer += "<th nowrap>" + moment(row.moi).format('MMM YYYY') + "</th>"
-      buffer += "<td><span id='sparklineActual" + row.moi + "'></span><br>"
+      buffer += '</tr><tr>'
+      buffer += '<th nowrap>' + moment(row.moi).format('MMM YYYY') + '</th>'
+      buffer += '<td><span id=\'sparklineActual' + row.moi + '\'></span><br>'
       rowHeadings.push(row.moi)
       ctrl = row.moi
       monthDelta = 0
     }
     monthDelta += 1
     cellColor = baseColor.desaturateByAmount(1 - row.retained_percentage).lightenByAmount((1 - row.retained_percentage) / 6.2)
-    buffer += "<td style='background-color: " + cellColor + "' class='retentionCell'>" + st(row.retained_percentage * 100) + "</td>"
+    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(row.retained_percentage * 100) + '</td>'
   }
-  buffer += "<td><span id='sparklineDelta" + monthDelta + "'></span><br>"
-  buffer += "</tr>"
-  buffer += "</table>"
+  buffer += '<td><span id=\'sparklineDelta' + monthDelta + '\'></span><br>'
+  buffer += '</tr>'
+  buffer += '</table>'
 
   // insert elements
-  var div = $("#retentionMonthTableContainer")
+  const div = $('#retentionMonthTableContainer')
   div.empty()
   div.append(buffer)
 
   // heading sparklines
   for (i = 0; i < 12; i++) {
     sparkData = rows.filter((row) => { return row.month_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100)})
-    $("#sparklineDelta" + i).sparkline(sparkData, sparklineOptions)
+    $('#sparklineDelta' + i).sparkline(sparkData, sparklineOptions)
   }
 
   // installation month sparklines
   rowHeadings.forEach((heading) => {
     sparkData = rows.filter((row) => { return row.moi === heading }).map((row) => { return parseInt(row.retained_percentage * 100)})
-    $("#sparklineActual" + heading).sparkline(sparkData, sparklineOptions)
+    $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
   })
 }
 
 // Data type success handlers
-var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', { colourBy: 'label' })
+var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
-var retentionHandler = buildSuccessHandler('ymd', 'woi', 'Date', 'Week of installation', { colourBy: 'index' })
+var retentionHandler = buildSuccessHandler('ymd', 'woi', 'Date', 'Week of installation', {colourBy: 'index'})
 
-var aggMAUHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', { colourBy: 'label', growth_rate: true })
+var aggMAUHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', growth_rate: true})
 
-var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', { colourBy: 'index' })
+var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index'})
 
-var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', { colourBy: 'label' })
+var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
 var telemetryHandler = buildTelemetryChartBuilder('ymd')
 
-var walletsTotalHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', { showGrandTotal: true })
+var walletsTotalHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {showGrandTotal: true})
 
-var walletsCurrencyHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', { showGrandTotal: true, currency: true })
+var walletsCurrencyHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
+  showGrandTotal: true,
+  currency: true
+})
 
-var walletsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', { showGrandTotal: false, percentage: true })
+var walletsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
+  showGrandTotal: false,
+  percentage: true
+})
 
-var walletsBalanceAverageHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', { showGrandTotal: false, currency: true })
+var walletsBalanceAverageHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
+  showGrandTotal: false,
+  currency: true
+})
 
 // Array of content panels
 var contents = [
-  "usageContent",
-  "publisherContent",
-  "usageTelemetry",
-  "crashesContent",
-  "overviewContent",
-  "statsContent",
-  "topCrashContent",
-  "recentCrashContent",
-  "developmentCrashContent",
-  "crashRatioContent",
-  "searchContent",
-  "retentionMonthContent"
+  'usageContent',
+  'publisherContent',
+  'usageTelemetry',
+  'crashesContent',
+  'overviewContent',
+  'statsContent',
+  'topCrashContent',
+  'recentCrashContent',
+  'developmentCrashContent',
+  'crashRatioContent',
+  'searchContent',
+  'retentionMonthContent',
+  'weeklyRetentionContent'
 ]
 
 var serializePlatformParams = function () {
-  var filterPlatforms = _.filter(platformKeys, function(id) {
+  var filterPlatforms = _.filter(platformKeys, function (id) {
     return pageState.platformFilter[id]
   })
   return filterPlatforms.join(',')
 }
 
 var serializeChannelParams = function () {
-  var filterChannels = _.filter(channelKeys, function(id) {
+  var filterChannels = _.filter(channelKeys, function (id) {
     return pageState.channelFilter[id]
   })
   return filterChannels.join(',')
 }
 
-var standardParams = function() {
+var standardParams = function () {
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
@@ -736,7 +834,7 @@ var standardParams = function() {
   })
 }
 
-var standardTelemetryParams = function() {
+var standardTelemetryParams = function () {
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
@@ -748,7 +846,7 @@ var standardTelemetryParams = function() {
   })
 }
 
-var retentionRetriever = function() {
+var retentionRetriever = function () {
   $.ajax('/api/1/retention?' + standardParams(), {
     success: (rows) => {
       // map week of installation field to 'Month Day'
@@ -761,7 +859,7 @@ var retentionRetriever = function() {
   })
 }
 
-var retentionMonthRetriever = function() {
+var retentionMonthRetriever = function () {
   $.ajax('/api/1/retention_month?' + standardParams(), {
     success: (rows) => {
       retentionMonthHandler(rows)
@@ -769,98 +867,111 @@ var retentionMonthRetriever = function() {
   })
 }
 
-var versionsRetriever = function() {
+const weeklyRetentionRetriever = () => {
+  console.log(standardParams())
+  $.ajax('/api/1/retention_week?' + standardParams(), {
+    success: (rows) => {
+      weeklyRetentionHandler(rows)
+    },
+    error: () => {
+      console.log('failed to communicate with endpoint')
+    }
+  })
+
+}
+
+var versionsRetriever = function () {
   $.ajax('/api/1/versions?' + standardParams(), {
     success: usageVersionHandler
   })
 }
 
-var DAUPlatformRetriever = function() {
+var DAUPlatformRetriever = function () {
   $.ajax('/api/1/dau_platform?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var DAUReturningPlatformRetriever = function() {
+var DAUReturningPlatformRetriever = function () {
   $.ajax('/api/1/dau_platform_minus_first?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var MAUPlatformRetriever = function() {
+var MAUPlatformRetriever = function () {
   $.ajax('/api/1/mau_platform?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var MAUAggPlatformRetriever = function() {
+var MAUAggPlatformRetriever = function () {
   $.ajax('/api/1/mau?' + standardParams(), {
     success: aggMAUHandler
   })
 }
 
-var MAUAverageAggPlatformRetriever = function() {
+var MAUAverageAggPlatformRetriever = function () {
   $.ajax('/api/1/dau_monthly_average?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var MAUAveragePlatformRetriever = function() {
+var MAUAveragePlatformRetriever = function () {
   $.ajax('/api/1/dau_monthly_average_platform?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var MAUAverageNewAggPlatformRetriever = function() {
+var MAUAverageNewAggPlatformRetriever = function () {
   $.ajax('/api/1/dau_first_monthly_average?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var MAUAverageNewPlatformRetriever = function() {
+var MAUAverageNewPlatformRetriever = function () {
   $.ajax('/api/1/dau_first_monthly_average_platform?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var DNUPlatformRetriever = function() {
+var DNUPlatformRetriever = function () {
   $.ajax('/api/1/dau_platform_first?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var DAURetriever = function() {
+var DAURetriever = function () {
   $.ajax('/api/1/dau?' + standardParams(), {
     success: usagePlatformHandler
   })
 }
 
-var DUSRetriever = function() {
+var DUSRetriever = function () {
   $.ajax('/api/1/dus?' + standardParams(), {
     success: statsHandler
   })
 }
 
-var topCrashesRetriever = function() {
+var topCrashesRetriever = function () {
   $.ajax('/api/1/crash_reports?' + standardParams(), {
     success: topCrashHandler
   })
 }
 
-var crashRatioRetriever = function() {
+var crashRatioRetriever = function () {
   $.ajax('/api/1/crash_ratios?' + standardParams(), {
     success: crashRatioHandler
   })
 }
 
-var recentCrashesRetriever = function() {
+var recentCrashesRetriever = function () {
   $.ajax('/api/1/recent_crash_report_details?' + standardParams(), {
-    success: function(crashes) {
-      $("#contentTitle").html("Recent Crash Reports")
+    success: function (crashes) {
+      $('#contentTitle').html('Recent Crash Reports')
       var table = $('#recent-crash-list-table tbody')
       table.empty()
-      _.each(crashes, function(crash) {
-        var rowClass = ""
+      _.each(crashes, function (crash) {
+        var rowClass = ''
         if (crash.node_env == 'development') {
           rowClass = 'warning'
         }
@@ -878,14 +989,14 @@ var recentCrashesRetriever = function() {
   })
 }
 
-var developmentCrashesRetriever = function() {
+var developmentCrashesRetriever = function () {
   $.ajax('/api/1/development_crash_report_details?' + standardParams(), {
-    success: function(crashes) {
-      $("#contentTitle").html("Development Crash Reports")
+    success: function (crashes) {
+      $('#contentTitle').html('Development Crash Reports')
       var table = $('#development-crash-list-table tbody')
       table.empty()
-      _.each(crashes, function(crash) {
-        var rowClass = ""
+      _.each(crashes, function (crash) {
+        var rowClass = ''
         var buf = '<tr class="' + rowClass + '">'
         buf = buf + '<td><a href="#crash/' + crash.id + '">' + crash.id + '</a></td>'
         buf = buf + '<td nowrap>' + crash.ymd + '<br/><span class="ago">' + crash.ago + '</span></td>'
@@ -900,19 +1011,19 @@ var developmentCrashesRetriever = function() {
   })
 }
 
-var crashesRetriever = function() {
+var crashesRetriever = function () {
   $.ajax('/api/1/dc_platform?' + standardParams(), {
     success: usageCrashesHandler
   })
 }
 
-var crashesDetailRetriever = function() {
+var crashesDetailRetriever = function () {
   $.ajax('/api/1/dc_platform?' + standardParams(), {
     success: usageCrashesHandler
   })
 }
 
-var crashesVersionRetriever = function() {
+var crashesVersionRetriever = function () {
   $.ajax('/api/1/dc_platform_version?' + standardParams(), {
     success: usagePlatformHandler
   })
@@ -937,37 +1048,37 @@ var overviewRetriever = async function () {
   window.OVERVIEW.ledger(btc, bat, builders)
 }
 
-var eyeshadeRetriever = function() {
+var eyeshadeRetriever = function () {
   $.ajax('/api/1/eyeshade_wallets?' + standardParams(), {
     success: walletsTotalHandler
   })
 }
 
-var eyeshadeFundedRetriever = function() {
+var eyeshadeFundedRetriever = function () {
   $.ajax('/api/1/eyeshade_funded_wallets?' + standardParams(), {
     success: walletsTotalHandler
   })
 }
 
-var eyeshadeFundedPercentageRetriever = function() {
+var eyeshadeFundedPercentageRetriever = function () {
   $.ajax('/api/1/eyeshade_funded_percentage_wallets?' + standardParams(), {
     success: walletsHandler
   })
 }
 
-var eyeshadeFundedBalanceRetriever = function() {
+var eyeshadeFundedBalanceRetriever = function () {
   $.ajax('/api/1/eyeshade_funded_balance_wallets?' + standardParams(), {
     success: walletsCurrencyHandler
   })
 }
 
-var eyeshadeFundedBalanceAverageRetriever = function() {
+var eyeshadeFundedBalanceAverageRetriever = function () {
   $.ajax('/api/1/eyeshade_funded_balance_average_wallets?' + standardParams(), {
     success: walletsBalanceAverageHandler
   })
 }
 
-var eyeshadeFundedBalanceAverageRetriever = function() {
+var eyeshadeFundedBalanceAverageRetriever = function () {
   $.ajax('/api/1/eyeshade_funded_balance_average_wallets?' + standardParams(), {
     success: walletsBalanceAverageHandler
   })
@@ -980,19 +1091,19 @@ var telemetryRetriever = function () {
 }
 
 var fillOptionsIfNotEmpty = function (url, id) {
-  var select = $("#" + id)
+  var select = $('#' + id)
   if (select.children().length <= 1) {
     $.ajax(url, {
-      success: function(results) {
+      success: function (results) {
         results.forEach(function (item) {
-          select.append("<option value='" + item + "'>" + item + "</option>")
+          select.append('<option value=\'' + item + '\'>' + item + '</option>')
         })
       }
     })
   }
 }
 
-var telemetryStandardRetriever = function() {
+var telemetryStandardRetriever = function () {
   fillOptionsIfNotEmpty('/api/1/ci/measures', 'measures')
   fillOptionsIfNotEmpty('/api/1/ci/machines', 'machines')
   fillOptionsIfNotEmpty('/api/1/ci/versions', 'telemetryVersions')
@@ -1001,162 +1112,167 @@ var telemetryStandardRetriever = function() {
 
 // Object of menu item meta data
 var menuItems = {
-  "mnSearch": {
-    show: "searchContent",
-    title: "Search",
-    retriever: function() {} // TODO
+  'mnSearch': {
+    show: 'searchContent',
+    title: 'Search',
+    retriever: function () {} // TODO
   },
-  "mnOverview": {
-    show: "overviewContent",
-    title: "Overview",
+  'mnOverview': {
+    show: 'overviewContent',
+    title: 'Overview',
     retriever: overviewRetriever
   },
-  "mnRetention": {
-    show: "usageContent",
-    title: "Retention",
+  'mnRetention': {
+    show: 'usageContent',
+    title: 'Retention',
     retriever: retentionRetriever
   },
-  "mnRetentionMonth": {
-    show: "retentionMonthContent",
-    title: "Retention Month over Month",
+  'mnRetentionMonth': {
+    show: 'retentionMonthContent',
+    title: 'Retention Month over Month',
     retriever: retentionMonthRetriever
   },
-  "mnUsage": {
-    show: "usageContent",
-    title: "Daily Active Users by Platform (DAU)",
+  'weeklyRetention': {
+    show: 'weeklyRetentionContent',
+    title: 'Weekly Retention',
+    retriever: weeklyRetentionRetriever
+  },
+  'mnUsage': {
+    show: 'usageContent',
+    title: 'Daily Active Users by Platform (DAU)',
     retriever: DAUPlatformRetriever
   },
-  "mnUsageReturning": {
-    show: "usageContent",
-    title: "Daily Returning Active Users by Platform (DAU)",
+  'mnUsageReturning': {
+    show: 'usageContent',
+    title: 'Daily Returning Active Users by Platform (DAU)',
     retriever: DAUReturningPlatformRetriever
   },
-  "mnDailyUsageStats": {
-    show: "statsContent",
-    title: "Daily Usage Stats",
+  'mnDailyUsageStats': {
+    show: 'statsContent',
+    title: 'Daily Usage Stats',
     retriever: DUSRetriever
   },
-  "mnUsageMonth": {
-    show: "usageContent",
-    title: "Monthly Active Users by Platform (MAU)",
+  'mnUsageMonth': {
+    show: 'usageContent',
+    title: 'Monthly Active Users by Platform (MAU)',
     retriever: MAUPlatformRetriever
   },
-  "mnUsageMonthAgg": {
-    show: "usageContent",
-    title: "Monthly Active Users (MAU)",
+  'mnUsageMonthAgg': {
+    show: 'usageContent',
+    title: 'Monthly Active Users (MAU)',
     retriever: MAUAggPlatformRetriever
   },
-  "mnUsageMonthAverageAgg": {
-    show: "usageContent",
-    title: "Monthly Average Daily Active Users (MAU/DAU)",
+  'mnUsageMonthAverageAgg': {
+    show: 'usageContent',
+    title: 'Monthly Average Daily Active Users (MAU/DAU)',
     retriever: MAUAverageAggPlatformRetriever
   },
-  "mnUsageMonthAverage": {
-    show: "usageContent",
-    title: "Monthly Average Daily Active Users by Platform (MAU/DAU)",
+  'mnUsageMonthAverage': {
+    show: 'usageContent',
+    title: 'Monthly Average Daily Active Users by Platform (MAU/DAU)',
     retriever: MAUAveragePlatformRetriever
   },
-  "mnUsageMonthAverageNewAgg": {
-    show: "usageContent",
-    title: "Monthly Average Daily New Users (MAU/DNU)",
+  'mnUsageMonthAverageNewAgg': {
+    show: 'usageContent',
+    title: 'Monthly Average Daily New Users (MAU/DNU)',
     retriever: MAUAverageNewAggPlatformRetriever
   },
-  "mnUsageMonthAverageNew": {
-    show: "usageContent",
-    title: "Monthly Average Daily New Users by Platform (MAU/DNU)",
+  'mnUsageMonthAverageNew': {
+    show: 'usageContent',
+    title: 'Monthly Average Daily New Users by Platform (MAU/DNU)',
     retriever: MAUAverageNewPlatformRetriever
   },
-  "mnDailyNew": {
-    show: "usageContent",
-    title: "Daily New Users by Platform (DNU)",
+  'mnDailyNew': {
+    show: 'usageContent',
+    title: 'Daily New Users by Platform (DNU)',
     retriever: DNUPlatformRetriever
   },
-  "mnUsageAgg": {
-    title: "Daily Active Users (DAU)",
-    show: "usageContent",
+  'mnUsageAgg': {
+    title: 'Daily Active Users (DAU)',
+    show: 'usageContent',
     retriever: DAURetriever
   },
-  "mnVersions": {
-    title: "Daily Active Users by Version (DAU)",
-    show: "usageContent",
+  'mnVersions': {
+    title: 'Daily Active Users by Version (DAU)',
+    show: 'usageContent',
     retriever: versionsRetriever
   },
-  "mnTopCrashes": {
-    title: "Top Crashes By Platform and Version",
-    show: "topCrashContent",
+  'mnTopCrashes': {
+    title: 'Top Crashes By Platform and Version',
+    show: 'topCrashContent',
     retriever: topCrashesRetriever
   },
-  "mnCrashRatio": {
-    title: "Crash Ratio By Platform and Version",
-    show: "crashRatioContent",
+  'mnCrashRatio': {
+    title: 'Crash Ratio By Platform and Version',
+    show: 'crashRatioContent',
     retriever: crashRatioRetriever
   },
-  "mnRecentCrashes": {
-    title: "Recent Crashes",
-    show: "recentCrashContent",
+  'mnRecentCrashes': {
+    title: 'Recent Crashes',
+    show: 'recentCrashContent',
     retriever: recentCrashesRetriever
   },
-  "mnDevelopmentCrashes": {
-    title: "Development Crashes",
-    show: "developmentCrashContent",
-    subtitle: "Most recent development crashes",
+  'mnDevelopmentCrashes': {
+    title: 'Development Crashes',
+    show: 'developmentCrashContent',
+    subtitle: 'Most recent development crashes',
     retriever: developmentCrashesRetriever
   },
-  "mnCrashes": {
-    title: "Daily Crashes by Platform",
-    show: "usageContent",
+  'mnCrashes': {
+    title: 'Daily Crashes by Platform',
+    show: 'usageContent',
     retriever: crashesRetriever
   },
-  "mnCrashesVersion": {
-    title: "Daily Crashes by Version",
-    show: "usageContent",
+  'mnCrashesVersion': {
+    title: 'Daily Crashes by Version',
+    show: 'usageContent',
     retriever: crashesVersionRetriever
   },
-  "mnCrashesDetail": {
-    title: "Crash Details",
-    show: "usageContent",
+  'mnCrashesDetail': {
+    title: 'Crash Details',
+    show: 'usageContent',
     retriever: crashesDetailRetriever
   },
-  "mnEyeshade": {
-    show: "usageContent",
-    title: "Daily Ledger Wallets",
-    subtitle: "Number of ledger wallets created per day",
+  'mnEyeshade': {
+    show: 'usageContent',
+    title: 'Daily Ledger Wallets',
+    subtitle: 'Number of ledger wallets created per day',
     retriever: eyeshadeRetriever
   },
-  "mnFundedEyeshade": {
-    show: "usageContent",
-    title: "Daily Ledger Funded Wallets",
-    subtitle: "Number of funded ledger wallets created per day",
+  'mnFundedEyeshade': {
+    show: 'usageContent',
+    title: 'Daily Ledger Funded Wallets',
+    subtitle: 'Number of funded ledger wallets created per day',
     retriever: eyeshadeFundedRetriever
   },
-  "mnFundedPercentageEyeshade": {
-    show: "usageContent",
-    title: "Daily Ledger Funded Wallets Percentage",
-    subtitle: "Percentage of wallets created that are funded per day",
+  'mnFundedPercentageEyeshade': {
+    show: 'usageContent',
+    title: 'Daily Ledger Funded Wallets Percentage',
+    subtitle: 'Percentage of wallets created that are funded per day',
     retriever: eyeshadeFundedPercentageRetriever
   },
-  "mnFundedBalanceEyeshade": {
-    show: "usageContent",
-    title: "Daily Ledger Funded Wallets Balance",
-    subtitle: "Total balance of funded wallets per day in USD ($)",
+  'mnFundedBalanceEyeshade': {
+    show: 'usageContent',
+    title: 'Daily Ledger Funded Wallets Balance',
+    subtitle: 'Total balance of funded wallets per day in USD ($)',
     retriever: eyeshadeFundedBalanceRetriever
   },
-  "mnFundedBalanceAverageEyeshade": {
-    show: "usageContent",
-    title: "Daily Ledger Funded Wallets Average Balance",
-    subtitle: "Average balance of funded wallets per day in USD ($)",
+  'mnFundedBalanceAverageEyeshade': {
+    show: 'usageContent',
+    title: 'Daily Ledger Funded Wallets Average Balance',
+    subtitle: 'Average balance of funded wallets per day in USD ($)',
     retriever: eyeshadeFundedBalanceAverageRetriever
   },
-  "mnTelemetryStandard": {
-    show: "usageTelemetry",
-    title: "Telemetry Navigator",
-    subtitle: "Browser telemetry by measure, machine and version",
+  'mnTelemetryStandard': {
+    show: 'usageTelemetry',
+    title: 'Telemetry Navigator',
+    subtitle: 'Browser telemetry by measure, machine and version',
     retriever: telemetryStandardRetriever
   },
-  "mnDailyPublishers": {
-    show: "publisherContent",
-    title: "Daily Publisher Status",
-    subtitle: "Publisher activations by day",
+  'mnDailyPublishers': {
+    show: 'publisherContent',
+    title: 'Daily Publisher Status',
+    subtitle: 'Publisher activations by day',
     retriever: window.STATS.PUB.publisherDailyRetriever
   },
 }
@@ -1246,50 +1362,49 @@ var disableMobilePlatforms = function () {
   viewState.platformEnabled.androidbrowser = false
 }
 
-
-$("#daysSelector").on('change', function (evt, value) {
+$('#daysSelector').on('change', function (evt, value) {
   pageState.days = parseInt(this.value, 10)
   refreshData()
 })
 
-$("#machines").on('change', function (evt, value) {
+$('#machines').on('change', function (evt, value) {
   pageState.machine = this.value
   refreshData()
 })
 
-$("#measures").on('change', function (evt, value) {
+$('#measures').on('change', function (evt, value) {
   pageState.measure = this.value
   refreshData()
 })
 
-$("#telemetryVersions").on('change', function (evt, value) {
+$('#telemetryVersions').on('change', function (evt, value) {
   pageState.version = this.value
   refreshData()
 })
 
-$("#crash-ratio-versions").on('change', function (evt, value) {
+$('#crash-ratio-versions').on('change', function (evt, value) {
   pageState.version = this.value
   refreshData()
 })
 
 // Update page based on current state
-var updatePageUIState = function() {
-  $("#controls").show()
-  _.keys(menuItems).forEach(function(id) {
+var updatePageUIState = function () {
+  $('#controls').show()
+  _.keys(menuItems).forEach(function (id) {
     if (id !== pageState.currentlySelected) {
-      $("#" + id).parent().removeClass("active")
+      $('#' + id).parent().removeClass('active')
     } else {
-      $("#" + id).parent().addClass("active")
-      $("#contentTitle").text(menuItems[id].title)
-      $("#contentSubtitle").text(menuItems[id].subtitle || '')
+      $('#' + id).parent().addClass('active')
+      $('#contentTitle').text(menuItems[id].title)
+      $('#contentSubtitle').text(menuItems[id].subtitle || '')
     }
   })
 
-  contents.forEach(function(content) {
+  contents.forEach(function (content) {
     if (menuItems[pageState.currentlySelected].show === content) {
-      $("#" + menuItems[pageState.currentlySelected].show).show()
+      $('#' + menuItems[pageState.currentlySelected].show).show()
     } else {
-      $("#" + content).hide()
+      $('#' + content).hide()
     }
   })
 
@@ -1299,15 +1414,27 @@ var updatePageUIState = function() {
     $('#controls').hide()
   }
 
-  if (viewState.showPromotions) {
-    $("#controlsPromotionsPanel").show()
+  if (viewState.showDaysSelector) {
+    $('#daysSelector').show()
   } else {
-    $("#controlsPromotionsPanel").hide()
+    $('#daysSelector').hide()
+  }
+
+  if (viewState.showShowToday) {
+    $('#btn-show-today').parent().show()
+  } else {
+    $('#btn-show-today').parent().hide()
+  }
+
+  if (viewState.showPromotions) {
+    $('#controlsPromotionsPanel').show()
+  } else {
+    $('#controlsPromotionsPanel').hide()
   }
 }
 
 // Load data for the selected item
-var refreshData = function() {
+var refreshData = function () {
   if (menuItems[pageState.currentlySelected]) {
     menuItems[pageState.currentlySelected].retriever()
   }
@@ -1316,138 +1443,180 @@ var refreshData = function() {
 // Setup menu handler routes
 var router = new Grapnel()
 
-router.get('search', function(req) {
+router.get('search', function (req) {
   pageState.currentlySelected = 'mnSearch'
   viewState.showControls = false
   viewState.showPromotions = false
+  viewState.showShowToday = false
   updatePageUIState()
   refreshData()
 })
 
-router.get('overview', function(req) {
+router.get('overview', function (req) {
   pageState.currentlySelected = 'mnOverview'
   viewState.showControls = false
   viewState.showPromotions = false
+  viewState.showShowToday = false
   updatePageUIState()
   refreshData()
 })
 
-router.get('versions', function(req) {
+router.get('versions', function (req) {
   pageState.currentlySelected = 'mnVersions'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('retention', function(req) {
+router.get('retention', function (req) {
   pageState.currentlySelected = 'mnRetention'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('retention_month', function(req) {
+router.get('retention_month', function (req) {
   pageState.currentlySelected = 'mnRetentionMonth'
   viewState.showControls = true
-  viewState.showPromotions = true
+  viewState.showDaysSelector = false
+  viewState.showPromotions = false
+  viewState.showShowToday = false
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage', function(req) {
+router.get('weekly-retention', function (req) {
+  pageState.currentlySelected = 'weeklyRetention'
+  viewState.showControls = true
+  viewState.showDaysSelector = false
+  viewState.showPromotions = false
+  viewState.showShowToday = false
+  updatePageUIState()
+  refreshData()
+})
+
+router.get('usage', function (req) {
   pageState.currentlySelected = 'mnUsage'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = false
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage_returning', function(req) {
+router.get('usage_returning', function (req) {
   pageState.currentlySelected = 'mnUsageReturning'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage_month', function(req) {
+router.get('usage_month', function (req) {
   pageState.currentlySelected = 'mnUsageMonth'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage_month_agg', function(req) {
+router.get('usage_month_agg', function (req) {
   pageState.currentlySelected = 'mnUsageMonthAgg'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage_month_average_agg', function(req) {
+router.get('usage_month_average_agg', function (req) {
   pageState.currentlySelected = 'mnUsageMonthAverageAgg'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage_month_average', function(req) {
+router.get('usage_month_average', function (req) {
   pageState.currentlySelected = 'mnUsageMonthAverage'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage_month_average_new_agg', function(req) {
+router.get('usage_month_average_new_agg', function (req) {
   pageState.currentlySelected = 'mnUsageMonthAverageNewAgg'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage_month_average_new', function(req) {
+router.get('usage_month_average_new', function (req) {
   pageState.currentlySelected = 'mnUsageMonthAverageNew'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('daily_new', function(req) {
+router.get('daily_new', function (req) {
   pageState.currentlySelected = 'mnDailyNew'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('daily_usage_stats', function(req) {
+router.get('daily_usage_stats', function (req) {
   pageState.currentlySelected = 'mnDailyUsageStats'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('usage_agg', function(req) {
+router.get('usage_agg', function (req) {
   pageState.currentlySelected = 'mnUsageAgg'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = true
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('top_crashes', function(req) {
+router.get('top_crashes', function (req) {
   pageState.currentlySelected = 'mnTopCrashes'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 
@@ -1460,7 +1629,9 @@ router.get('top_crashes', function(req) {
 router.get('crash_ratio', function (req) {
   pageState.currentlySelected = 'mnCrashRatio'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 
@@ -1468,101 +1639,120 @@ router.get('crash_ratio', function (req) {
   $('#crash-ratio-detail-table').hide()
 })
 
-router.get('development_crashes', function(req) {
+router.get('development_crashes', function (req) {
   pageState.currentlySelected = 'mnDevelopmentCrashes'
   updatePageUIState()
   refreshData()
 })
 
-router.get('recent_crashes', function(req) {
+router.get('recent_crashes', function (req) {
   pageState.currentlySelected = 'mnRecentCrashes'
   updatePageUIState()
   refreshData()
 })
 
-router.get('crashes_platform_detail/:ymd/:platform', function(req) {
+router.get('crashes_platform_detail/:ymd/:platform', function (req) {
   pageState.currentlySelected = 'mnCrashesDetails'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   //refreshData()
 })
 
-router.get('crashes_platform_version', function(req) {
+router.get('crashes_platform_version', function (req) {
   pageState.currentlySelected = 'mnCrashesVersion'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('crashes_platform', function(req) {
+router.get('crashes_platform', function (req) {
   pageState.currentlySelected = 'mnCrashes'
   updatePageUIState()
   refreshData()
 })
 
-router.get('eyeshade', function(req) {
+router.get('eyeshade', function (req) {
   pageState.currentlySelected = 'mnEyeshade'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('eyeshade_funded', function(req) {
+router.get('eyeshade_funded', function (req) {
   pageState.currentlySelected = 'mnFundedEyeshade'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('eyeshade_funded_percentage', function(req) {
+router.get('eyeshade_funded_percentage', function (req) {
   pageState.currentlySelected = 'mnFundedPercentageEyeshade'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('eyeshade_funded_balance', function(req) {
+router.get('eyeshade_funded_balance', function (req) {
   pageState.currentlySelected = 'mnFundedBalanceEyeshade'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('eyeshade_funded_balance_average', function(req) {
+router.get('eyeshade_funded_balance_average', function (req) {
   pageState.currentlySelected = 'mnFundedBalanceAverageEyeshade'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('telemetry_standard', function(req) {
+router.get('telemetry_standard', function (req) {
   pageState.currentlySelected = 'mnTelemetryStandard'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
-router.get('daily_publishers', function(req) {
+router.get('daily_publishers', function (req) {
   pageState.currentlySelected = 'mnDailyPublishers'
   viewState.showControls = true
+  viewState.showDaysSelector = true
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
 
 // Display a single crash report
-router.get('crash/:id', function(req) {
+router.get('crash/:id', function (req) {
   pageState.currentlySelected = 'mnTopCrashes'
   viewState.showControls = false
   viewState.showPromotions = false
+  viewState.showShowToday = true
   updatePageUIState()
   // Show and hide sub-sections
   $('#top-crash-table').hide()
@@ -1571,7 +1761,7 @@ router.get('crash/:id', function(req) {
   pageState.currentlySelected = null
 
   var table = $('#crash-detail-table tbody')
-  $("#contentTitle").html('Loading...')
+  $('#contentTitle').html('Loading...')
   table.empty()
   $('#crash-download-container').empty()
   $('#crash-detail-stack').empty()
@@ -1580,16 +1770,16 @@ router.get('crash/:id', function(req) {
 
     $.ajax('/api/1/available_crash_tags', {
       success: function (rows) {
-        var ul = $("#availableCrashTags")
+        var ul = $('#availableCrashTags')
         ul.empty()
         _.each(rows, function (row) {
           ul.append('<li><a href="#" data-tag="' + row.tag + '">' + row.tag + '</a></li>')
         })
-        $("#availableCrashTags a").on('click', function (e) {
+        $('#availableCrashTags a').on('click', function (e) {
           var tag = $(e.target).attr('data-tag')
           $.ajax({
-            method: "POST",
-            url: "/api/1/crashes/" + req.params.id + '/tags/' + tag,
+            method: 'POST',
+            url: '/api/1/crashes/' + req.params.id + '/tags/' + tag,
             success: function (results) {
               loadCrashTags(id)
             }
@@ -1604,10 +1794,10 @@ router.get('crash/:id', function(req) {
       success: function (rows) {
         var buf = ''
         _.each(rows, function (row) {
-            buf = buf + '<span class="label label-info tag">' + row.tag + ' <i class="fa fa-trash pointer" data-tag="' + row.tag + '"></i></span> '
+          buf = buf + '<span class="label label-info tag">' + row.tag + ' <i class="fa fa-trash pointer" data-tag="' + row.tag + '"></i></span> '
         })
-        $("#crash-tags").html(buf)
-        $("#crash-tags i").on("click", function (e) {
+        $('#crash-tags').html(buf)
+        $('#crash-tags i').on('click', function (e) {
           var i = $(this)
           $.ajax({
             method: 'DELETE',
@@ -1622,22 +1812,22 @@ router.get('crash/:id', function(req) {
   }
 
   function objectToTable (obj) {
-    var buffer = "<table class='table table-striped'>"
+    var buffer = '<table class=\'table table-striped\'>'
     _.each(_.keys(obj).sort(), function (k) {
       if (!_.isObject(obj[k])) {
         buffer += '<tr><td>' + k + '</td><td>' + obj[k] + '</td></tr>'
       } else {
-        buffer+= '<tr><td>' + k + '</td><td>' + objectToTable(obj[k]) + '</td></tr>'
+        buffer += '<tr><td>' + k + '</td><td>' + objectToTable(obj[k]) + '</td></tr>'
       }
     })
-    buffer += "</table>"
+    buffer += '</table>'
     return buffer
   }
 
   $.ajax('/api/1/crash_report?id=' + req.params.id, {
-    success: function(crash) {
-      $("#controls").hide()
-      $("#contentTitle").html("Crash Report " + req.params.id)
+    success: function (crash) {
+      $('#controls').hide()
+      $('#contentTitle').html('Crash Report ' + req.params.id)
       console.log(crash)
       table.empty()
       loadAvailableCrashTags(req.params.id)
@@ -1651,13 +1841,13 @@ router.get('crash/:id', function(req) {
         }
       })
       $('#crash-detail-stack').html(crash.crash_report)
-      $('#crash-download-container').html("<a class='btn btn-primary' href='/download/crash_report/" + req.params.id + "'>Download Binary Dump</a>")
+      $('#crash-download-container').html('<a class=\'btn btn-primary\' href=\'/download/crash_report/' + req.params.id + '\'>Download Binary Dump</a>')
     }
   })
 })
 
 // Display a list of crash reports
-router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', function(req) {
+router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', function (req) {
   pageState.currentlySelected = 'mnTopCrashes'
   // Show and hide sub-sections
   $('#top-crash-table').hide()
@@ -1674,11 +1864,11 @@ router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', 
   })
 
   $.ajax('/api/1/crash_report_details?' + params, {
-    success: function(crashes) {
-      $("#contentTitle").html("Crash Reports")
+    success: function (crashes) {
+      $('#contentTitle').html('Crash Reports')
       var table = $('#crash-list-table tbody')
       table.empty()
-      _.each(crashes, function(crash) {
+      _.each(crashes, function (crash) {
         var buf = '<tr>'
         buf = buf + '<td><a href="#crash/' + crash.id + '">' + crash.id + '</a></td>'
         buf = buf + '<td nowrap>' + crash.ymd + '<br/><span class="ago">' + crash.ago + '</span></td>'
@@ -1694,95 +1884,98 @@ router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', 
 })
 
 // build platform button handlers
-_.forEach(platformKeys, function(id) {
-  $("#btn-filter-" + id).on('change', function() {
+_.forEach(platformKeys, function (id) {
+  $('#btn-filter-' + id).on('change', function () {
     pageState.platformFilter[id] = this.checked
+    $(this).parent().toggleClass('active')
     refreshData()
   })
 })
 
 // build channel button handlers
-_.forEach(channelKeys, function(id) {
-  $("#btn-channel-" + id).on('change', function() {
+_.forEach(channelKeys, function (id) {
+  $('#btn-channel-' + id).on('change', function () {
     pageState.channelFilter[id] = this.checked
+    $(this).parent().toggleClass('active')
     refreshData()
   })
 })
 
-$("#btn-show-today").on('change', function() {
+$('#btn-show-today').on('change', function () {
   pageState.showToday = this.checked
   refreshData()
 })
 
 var searchInputHandler = function (e) {
   var q = this.value
-  var table = $("#search-results-table tbody")
+  var table = $('#search-results-table tbody')
   if (!q) {
-    $("#searchComments").hide()
+    $('#searchComments').hide()
     table.empty()
     return
   }
-  $("#searchComments").show()
-  $("#searchComments").html('Searching: ' + q)
+  $('#searchComments').show()
+  $('#searchComments').html('Searching: ' + q)
   $.ajax('/api/1/search?query=' + encodeURIComponent(q), {
     success: function (results) {
       table.empty()
-      $("#searchComments").show()
+      $('#searchComments').show()
       if (results.rowCount > results.limit) {
-        $("#searchComments").html("Showing " + results.limit + ' of ' + results.rowCount + ' crashes')
+        $('#searchComments').html('Showing ' + results.limit + ' of ' + results.rowCount + ' crashes')
       } else {
         if (results.rowCount === 0) {
-          $("#searchComments").html("No crashes found")
+          $('#searchComments').html('No crashes found')
         } else {
-          $("#searchComments").html("Showing " + results.rowCount + ' crashes')
+          $('#searchComments').html('Showing ' + results.rowCount + ' crashes')
         }
       }
       var crashes = results.crashes
       _.each(crashes, function (crash, idx) {
-        var rowClass = ""
+        var rowClass = ''
         table.append(tr([
-          td(idx + 1),
-          td('<a href="#crash/' + crash.id + '">' + crash.id + '</a><br>(' + crash.contents.crash_id + ')'),
-          td(crash.contents.ver),
-          td(crash.contents._version),
-          td(crash.contents.year_month_day),
-          td(crash.contents.platform + ' ' + crash.contents.metadata.cpu),
-          td(crash.contents.metadata.operating_system_name),
-          td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>'}).join(' '))
-        ], { "classes": rowClass }
+            td(idx + 1),
+            td('<a href="#crash/' + crash.id + '">' + crash.id + '</a><br>(' + crash.contents.crash_id + ')'),
+            td(crash.contents.ver),
+            td(crash.contents._version),
+            td(crash.contents.year_month_day),
+            td(crash.contents.platform + ' ' + crash.contents.metadata.cpu),
+            td(crash.contents.metadata.operating_system_name),
+            td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>'}).join(' '))
+          ], {'classes': rowClass}
         ))
-        table.append(tr([td(), '<td colspan="7">' + crash.contents.metadata.signature + '</td>'], { "classes": rowClass }))
+        table.append(tr([td(), '<td colspan="7">' + crash.contents.metadata.signature + '</td>'], {'classes': rowClass}))
       })
     }
   })
 }
 
-$("#searchText").on('input', _.debounce(searchInputHandler, 500))
+$('#searchText').on('input', _.debounce(searchInputHandler, 500))
 
-$("#searchComments").hide()
+$('#searchComments').hide()
 
 window.SEARCH_LINKS.setup()
 
-$("#monthly-averages-whats-this").on('click', function (e) {
+$('#monthly-averages-whats-this').on('click', function (e) {
   e.preventDefault()
-  $("#monthly-averages-instructions").show("slow")
+  $('#monthly-averages-instructions').show('slow')
 })
 
-$(document).ajaxStart(function() {
-  $("#hourglassIndicator").fadeIn(200)
-}).ajaxStop(function() {
-  $("#hourglassIndicator").fadeOut(200)
+$(document).ajaxStart(function () {
+  $('#hourglassIndicator').fadeIn(200)
+}).ajaxStop(function () {
+  $('#hourglassIndicator').fadeOut(200)
 })
 
 $('[data-toggle="tooltip"]').tooltip()
 
 var publisherPlatforms
 var publisherPlatformsByPlatform
+
 async function loadInitialData () {
   publisherPlatforms = await $.ajax('/api/1/publishers/platforms')
   publisherPlatformsByPlatform = _.object(publisherPlatforms.map((platform) => { return [platform.platform, platform] }))
   installPromotionsPopoverHandler()
-  $("#clearRef").hide()
+  $('#clearRef').hide()
 
   await window.REFERRAL.referralSummaryStatsRetriever()
 }

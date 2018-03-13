@@ -1,4 +1,4 @@
-export const startup = (id) => {
+const startup = (id) => {
   console.log("Starting - " + id)
   return {
     id: id,
@@ -6,7 +6,9 @@ export const startup = (id) => {
   }
 }
 
-export const shutdown = (runInfo, db, cb) => {
+module.exports.startup = startup
+
+const shutdown = (runInfo, db, cb) => {
   runInfo.duration = ((new Date()).getTime() - runInfo.ts) / 1000
   console.log(`'${runInfo.id}' complete - ${runInfo.duration} seconds`)
   db.query("INSERT INTO dtl.runinfo ( id, duration ) VALUES ( $1, $2 )", [runInfo.id, runInfo.duration], (err) => {
@@ -21,8 +23,9 @@ export const shutdown = (runInfo, db, cb) => {
     })
   })
 }
+module.exports.shutdown = shutdown
 
-export const complete = async (runInfo, db) => {
+const complete = async (runInfo, db) => {
   try {
     runInfo.duration = ((new Date()).getTime() - runInfo.ts) / 1000
     console.log(`'${runInfo.id}' complete - ${runInfo.duration} seconds`)
@@ -32,3 +35,5 @@ export const complete = async (runInfo, db) => {
     console.log("error: " + e)
   }
 }
+
+module.exports.complete = complete

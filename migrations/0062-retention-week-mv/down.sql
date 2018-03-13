@@ -1,0 +1,1 @@
+DROP materialized VIEW IF EXISTS dw.fc_retention_week_mv;

@@ -8,6 +8,8 @@ var assert = require('assert')
 var dataset = require('./dataset')
 var retriever = require('../retriever')
 var common = require('./common')
+const RetentionWeek = require('../models/retention').RetentionWeek
+const moment = require('moment')
 
 const DELTA = `
 SELECT
@@ -169,7 +171,8 @@ FROM dw.fc_retention_month_mv FC
 WHERE
   FC.platform = ANY ($1) AND
   FC.channel  = ANY ($2) AND
-  FC.ref      = ANY ($3)
+  FC.ref      = ANY ($3) AND
+  FC.moi      = ANY ($4)
 GROUP BY
   moi,
   month_delta
@@ -422,17 +425,46 @@ exports.setup = (server, client, mongo) => {
         let platforms = common.platformPostgresArray(request.query.platformFilter)
         let channels = common.channelPostgresArray(request.query.channelFilter)
         let refs = ['none']
-        let rows = (await client.query(RETENTION_MONTH, [platforms, channels, refs])).rows
+
+        const last_three_months = [
+          moment().startOf('month').format('YYYY-MM-DD'),
+          moment().startOf('month').subtract(1, 'months').format('YYYY-MM-DD'),
+          moment().startOf('month').subtract(2, 'months').format('YYYY-MM-DD'),
+          moment().startOf('month').subtract(3, 'months').format('YYYY-MM-DD'),
+        ]
+        let rows = (await client.query(RETENTION_MONTH, [platforms, channels, refs, last_three_months])).rows
         rows.forEach((row) => common.convertPlatformLabels(row))
         rows = rows.map((row) => {
           row.current = parseInt(row.current)
           row.starting = parseInt(row.starting)
           row.retained_percentage = parseFloat(row.retained_percentage)
           row.month_delta = parseInt(row.month_delta)
+          if (row.month_delta === 0) {
+            row.retained_percentage = 1.0
+          }
           return row
         })
         reply(rows)
       } catch (e) {
+        console.log(`There was an error
+        ${e.message}`)
+        reply(e.toString()).code(500)
+      }
+    }
+  })
+  // Retention
+  server.route({
+    method: 'GET',
+    path: '/api/1/retention_week',
+    handler: async function (request, reply) {
+      try {
+        let platforms = common.platformPostgresArray(request.query.platformFilter)
+        let channels = common.channelPostgresArray(request.query.channelFilter)
+        let refs = ['none']
+        const retentions = await RetentionWeek.aggregated(platforms, channels, refs)
+        reply(retentions)
+      } catch (e) {
+        console.log(e.message)
         reply(e.toString()).code(500)
       }
     }
