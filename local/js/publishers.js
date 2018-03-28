@@ -125,7 +125,7 @@
     overviewPublisherHandlerDetails(publishers, currentlySelectedPlatform)
 
     // setup platfrom nav click handlers
-    $("#publisher-platforms-nav-container").delegate("a.publisher-platform-nav-item").click((evt, tg) => {
+    $("#publisher-platforms-nav-container").on('click', "a.publisher-platform-nav-item", (evt, tg) => {
       var li = $(evt.target).closest("li")
       evt.preventDefault()
       evt.stopPropagation()
