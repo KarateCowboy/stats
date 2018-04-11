@@ -27,7 +27,7 @@ const SEARCH = `
 SELECT 
   c.*
 FROM 
-  dtl.crashes c JOIN dtl.fti f ON(f.object_id = c.id)
+  dtl.crashes c LEFT JOIN dtl.fti f ON(f.object_id = c.id)
 WHERE
   f.searchable @@ tsquery($1::text)
   OR c.contents ->> 'crash_id' =  $1
