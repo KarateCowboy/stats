@@ -7,23 +7,21 @@ const FTI = require('./fti')
 
 class Crashes {
 
-  static async archive (months=1) {
+  static async archive (months = 1) {
     const cutoff = moment().subtract(months, 'months').format('YYYY-MM-DD')
-
-
-   const GET_OLD_CRASHES = `SELECT id, ts, contents, github_repo, github_issue_number FROM dtl.crashes WHERE ts < '${cutoff}' LIMIT 10000`
-    let results = await pg.query(GET_OLD_CRASHES)
+    const GET_OLD_CRASHES = `SELECT id, ts, contents, github_repo, github_issue_number FROM dtl.crashes WHERE ts < $1 LIMIT 10000`
+    let results = await pg.query(GET_OLD_CRASHES, [cutoff])
     let transferred = 0
     let keepProcessing = true
-    while(keepProcessing){
+    while (keepProcessing) {
       for (let row of results.rows) {
         const INSERT = `INSERT INTO dtl.crashes_archive (id, ts, contents, github_repo, github_issue_number) VALUES 
         ($1,$2,$3,$4,$5)`
         try {
           const values = [row.id, row.ts, row.contents, row.github_repo, row.github_issue_numebr]
-          await pg.query(INSERT,values)
+          await pg.query(INSERT, values)
           await pg.query(`DELETE FROM dtl.crashes WHERE id = '${row.id}'`)
-          if(row.object_id !== undefined){
+          if (row.object_id !== undefined) {
             await FTI.archive(row.object_id)
           }
           transferred++
