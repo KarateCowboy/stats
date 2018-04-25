@@ -21,7 +21,14 @@ exports.setup = (server, db, mongo) => {
               Authorization: 'Bearer ' + process.env.PROMO_SERVICES_TOKEN
             }
           }
-          let results = JSON.parse(await common.prequest(options))
+          let json = await common.prequest(options)
+          let results
+          try {
+            results = JSON.parse(json)
+          } catch (e) {
+            console.log("Error: referral promo results could not be retrieved")
+            results = {}
+          }
           reply(results)
         } catch (e) {
           console.log(e)
