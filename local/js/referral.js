@@ -91,6 +91,17 @@
 
   $("#referral-search").on('input', _.debounce(referralSearchHandler, 250))
 
+  $("#referral-download").on('click', async (evt) => {
+    let ownerIds = _.chain(sortedChannels).pluck('owner_id').uniq().value()
+    let ownerIdsQuery = ownerIds.map((o) => { return `owner_id=${o}` }).join('&')
+    let hourlySummary = await $.ajax("/api/1/referral/stats/hourly?" + ownerIdsQuery)
+    let buffer = 'OWNER,CHANNEL,TITLE,YMD,HOUR,PLATFORM,DOWNLOADED,FINALIZED\n'
+    hourlySummary.forEach((row) => {
+      buffer += `"${row.owner_id}","${row.channel}","${row.title}","${row.ymd}",${row.hour},"${row.platform}",${row.downloaded},${row.finalized}\n`
+    })
+    window.STATS.COMMON.downloadObjectAs(buffer, 'summary.csv', 'text/csv')
+  })
+
   window.REFERRAL = {
     referralSummaryStatsRetriever
   }
