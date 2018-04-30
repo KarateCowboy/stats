@@ -30,7 +30,7 @@ class Crashes {
           ${e.message}`)
         }
       }
-      results = await pg.query(GET_OLD_CRASHES)
+      results = await pg.query(GET_OLD_CRASHES, [cutoff])
       keepProcessing = results.rows.length > 0
     }
     console.log(`Finished archiving crashes before ${cutoff}. ${transferred} crashes transferred`)
