@@ -26,8 +26,10 @@ class Crashes {
           }
           transferred++
         } catch (e) {
-          console.log(`Error on crash id: ${row.id}:
-          ${e.message}`)
+          if(e.message.includes('violates unique constraint "crashes_archive_pkey"') === false){
+            console.log(`Error on crash id: ${row.id}:
+            ${e.message}`)
+          }
         }
       }
       results = await pg.query(GET_OLD_CRASHES, [cutoff])
