@@ -9,7 +9,7 @@ var _ = require('underscore')
 var path = require('path')
 
 // Set the runtime Mongo URL to eyeshade
-process.env.MONGOLAB_URI = process.env.BAT_EYESHADE_URI
+process.env.MLAB_URI = process.env.BAT_EYESHADE_URI
 
 var mongoc = require('../dist/mongoc')
 var pgc = require('../dist/pgc')
