@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ *  You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const moment = require('moment')
@@ -8,13 +14,15 @@ const define = () => {
 
   class IosUsageRecord {
     async save () {
+      await mongo_client.collection('ios_usage').insert(this)
     }
 
     async destroy () {
+      await mongo_client.collection('ios_usage').remove({_id: this._id})
     }
   }
 
-  factory.define('ios_usage_aggregate_woi', IosUsageRecord, {
+  factory.define('ios_usage', IosUsageRecord, {
     '_id': () => (new ObjectID()),
     'daily': true,
     'weekly': true,
@@ -29,8 +37,16 @@ const define = () => {
     'year_month_day': () => moment().subtract(2, 'months').format('YYYY-MM-DD')
 
   })
-  factory.extend('ios_usage_aggregate_woi', 'ios_usage_record_bad_woi', {
+  factory.extend('ios_usage', 'ios_usage_bad_woi', {
     'woi': '12-34-56'
+  })
+  factory.extend('ios_usage', 'ios_usage_malformed_woi', {
+    'woi': () => {
+      const date = moment().subtract(3, 'months').format('YYYY-MM-DD').split('')
+      date.splice(5, 1)
+      date.splice(7, 1)
+      return date.join('')
+    }
   })
 
 }

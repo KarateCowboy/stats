@@ -1,7 +1,13 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ *  You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 const common = require('../api/common')
 const moment = require('moment')
-const IosUsageRecord = require('./ios_usage_record')
-const AndroidUsageAggregateWeek = require('./android_usage_aggregate_week')
+const AndroidUsageAggregateWOI = require('./android_usage_aggregate_week')
+const UsageAggregateWOI = require('./usage_aggregate_woi').UsageAggregateWOI
 
 const WEEKLY_RETENTION_QUERY = `
 SELECT
@@ -14,9 +20,8 @@ FROM dw.fc_retention_week_mv FC
 WHERE
   FC.platform = ANY ($1) AND
   FC.channel  = ANY ($2) AND
-  FC.ref      = ANY ($3) AND
-  fc.woi::date > (current_date - interval '90' day)::date AND
-  fc.woi::date <= (current_date - interval '1' day)::date 
+  FC.ref = 'none' AND
+  fc.woi::date > $3::date
 GROUP BY
   woi,
   week_delta
@@ -38,7 +43,8 @@ class RetentionWeek {
 
   static async aggregated (platform, channel, ref) {
     let rows
-    const result = await pg_client.query(WEEKLY_RETENTION_QUERY, [platform, channel, ref])
+    const woi = moment().subtract(90, 'days').startOf('week').add(1, 'days').format('YYYY-MM-DD')
+    const result = await pg_client.query(WEEKLY_RETENTION_QUERY, [platform, channel, woi])
     rows = result.rows.filter(row => {
       const monday = moment(row.woi).startOf('week').add(1, 'days')
       return (moment(row.woi).diff(monday, 'days') === 0)
@@ -62,15 +68,15 @@ class RetentionWeek {
 
 class WeekOfInstall {
   static async transfer_platform_aggregate (collection_name, start_date) {
+    let nearest_week = moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
+    console.log(nearest_week)
+    console.log(start_date)
     let results = await mongo_client.collection(collection_name).aggregate([
       {
         $match: {
-          year_month_day: {$gte: start_date},
-          woi: {$exists: true}
+          year_month_day: {$gte: start_date, $lt: nearest_week},
+          woi: {$gte: start_date}
         }
-      },
-      {
-        $match: {daily: true}
       },
       {
         $project: {
@@ -137,12 +143,21 @@ class WeekOfInstall {
       await mongo_client.collection(aggregate_collection).drop()
     }
     await mongo_client.createCollection(aggregate_collection)
+    console.log(`results length ${results.length}`)
     for (let i in results) {
+      let good_to_insert = true
       try {
-        if (results[i]._id.platform === 'android') {
-          results[i] = AndroidUsageAggregateWeek.scrub(results[i])
+        if (aggregate_collection.includes('android_usage')) {
+          results[i] = AndroidUsageAggregateWOI.scrub(results[i])
         }
-        await mongo_client.collection(aggregate_collection).insert(results[i])
+        if (results[i]._id.platform === 'ios' && !UsageAggregateWOI.is_valid(results[i])) {
+          good_to_insert = false
+        }
+        if (good_to_insert) {
+          await mongo_client.collection(aggregate_collection).insert(results[i])
+        } else {
+          console.log('not inserting for some reason')
+        }
       } catch (e) {
         if (e.message.match(/11000/) === undefined) {
           console.log(`Error inserting ${results[i]._id} to ${aggregate_collection}
@@ -153,11 +168,9 @@ class WeekOfInstall {
   }
 
   static from_usage_aggregate_woi (entry) {
-    let actual_record = entry._id
-    if (actual_record.platform === 'ios') {
-      actual_record = IosUsageRecord.scrub(actual_record)
-    }
-    actual_record.total = entry.count
+    const cleaned_entry = UsageAggregateWOI.scrub(entry)
+    let actual_record = Object.assign({}, cleaned_entry._id)
+    actual_record.total = cleaned_entry.count
     return actual_record
   }
 }
@@ -165,4 +178,3 @@ class WeekOfInstall {
 module.exports.RetentionMonth = RetentionMonth
 module.exports.RetentionWeek = RetentionWeek
 module.exports.WeekOfInstall = WeekOfInstall
-

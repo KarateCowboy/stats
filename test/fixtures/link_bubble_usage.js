@@ -12,9 +12,9 @@ const ObjectID = require('mongodb').ObjectID
 const define = () => {
   factory.setAdapter(new FactoryGirl.ObjectAdapter())
 
-  class AndroidUsage {
+  class Usage {
     async save () {
-      await mongo_client.collection('android_usage').insert({
+      await mongo_client.collection('usage').insert({
           '_id': this._id,
           'daily': this.daily,
           'weekly': this.weekly,
@@ -32,16 +32,16 @@ const define = () => {
     }
 
     async destroy () {
-      await mongo_client.collection('android_usage').destroy({'_id': this._id})
+      await mongo_client.collection('usage').destroy({'_id': this._id})
     }
   }
 
-  factory.define('android_usage', AndroidUsage, {
+  factory.define('link_bubble_usage', Usage, {
     '_id': () => { return (new ObjectID()) },
     'daily': true,
     'weekly': true,
     'monthly': true,
-    'platform': 'androidbrowser',
+    'platform': 'android',
     'version': '1.0.42',
     'first': true,
     'channel': 'stable',

@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ *  You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 const pg = require('pg')
 const mongo = require('mongodb')
 const Knex = require('knex')
@@ -6,6 +12,8 @@ require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
 require('./fixtures/android_usage_aggregate_week').define()
+require('./fixtures/usage_aggregate_woi').define()
+require('./fixtures/link_bubble_usage').define()
 
 class TestHelper {
   constructor () {
@@ -13,15 +21,16 @@ class TestHelper {
       throw Error('Please set TEST_DATABASE_URL')
     }
     this.testDatabaseUrl = process.env.TEST_DATABASE_URL
-    if (!process.env.TEST_MONGO_URI) {
-      throw Error('Please set TEST_MONGO_URI')
+    if (!process.env.TEST_MLAB_URI) {
+      throw Error('Please set TEST_MLAB_URI')
     }
-    this.testMongoUri = process.env.TEST_MONGO_URI
+    this.testMongoUri = process.env.TEST_MLAB_URI
     global.expect = require('chai').expect
 
     this.mongo_collections = [
       'android_usage',
-      'android_usage_aggregate_woi'
+      'android_usage_aggregate_woi',
+      'ios_usage'
     ]
     this.postgres_tables = {
       'dw': [
@@ -80,10 +89,6 @@ class TestHelper {
     await global.pg_client.end()
     await global.knex.destroy()
   }
-
-}
-
-const suite = () => {
 
 }
 

@@ -512,12 +512,14 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
-  // Monthly active users
+  // Monthly active u/**/sers
   server.route({
     method: 'GET',
     path: '/api/1/mau',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      console.dir(channels)
+      console.dir(ref)
       var results = await client.query(MAU, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')

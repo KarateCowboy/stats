@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ *  You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 const joi = require('joi')
 const moment = require('moment')
 
@@ -34,9 +40,6 @@ class IosUsageRecord {
     this.validate(row)
     if (this.validationErrors && this.validationErrors.message.match(/woi/)) {
       row.woi = this.woiFromYMD(row.year_month_day)
-    }
-    if (row.version.match(/[\d]{1,2}(\.[\d]{1,2}){2,2}/) === null) {
-      row.version = `${row.version.trim()}.0`
     }
     return row
   }

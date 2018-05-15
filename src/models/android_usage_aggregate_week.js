@@ -1,5 +1,5 @@
 
-class AndroidUsageAggregateWeek{
+class AndroidUsageAggregateWOI{
   static scrub(record){
     if(record._id.platform !== 'androidbrowser'){
       record._id.platform = 'androidbrowser'
@@ -8,4 +8,4 @@ class AndroidUsageAggregateWeek{
   }
 }
 
-module.exports = AndroidUsageAggregateWeek
+module.exports = AndroidUsageAggregateWOI
