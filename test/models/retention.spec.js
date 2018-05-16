@@ -89,10 +89,11 @@ describe('WeekOfInstall', function () {
       await android_usage.save()
       const link_bubble_usage = await factory.build('link_bubble_usage')
       await link_bubble_usage.save()
-      const cutoff = moment(android_usage._id.woi).subtract(3, 'days')
+      const cutoff = moment(android_usage.woi).subtract(10, 'days')
 
       // execution
-      await WeekOfInstall.transfer_platform_aggregate('ios_usage', cutoff.format('YYYY-MM-DD'))
+      await WeekOfInstall.transfer_platform_aggregate('android_usage', cutoff.format('YYYY-MM-DD'))
+      await WeekOfInstall.transfer_platform_aggregate('usage', cutoff.format('YYYY-MM-DD'))
       // validation
       const android_usage_aggs = await mongo_client.collection('android_usage_aggregate_woi').find().toArray()
       const usage_aggs = await mongo_client.collection('usage_aggregate_woi').find().toArray()

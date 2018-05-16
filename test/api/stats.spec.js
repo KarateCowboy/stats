@@ -27,7 +27,6 @@ describe('/retention_week', async function () {
     await test_helper.truncate()
     let usages = []
     let week_of_install = moment().subtract(12, 'weeks').startOf('week').add(1, 'days')
-    console.log(`week of install ${week_of_install.format('YYYY-MM-DD')}`)
     for (let week = 1; week <= 12; week++) {
       const ymd = moment().subtract((week * 7 + 2), 'days').format('YYYY-MM-DD')
       for (let i = 1; i <= 100 * week; i++) {
@@ -67,7 +66,7 @@ describe('/retention_week', async function () {
     }
     const response = await server.inject(params)
     const payload = JSON.parse(response.payload)
-    expect(payload).to.have.property('length', 11)
+    expect(payload).to.have.property('length', 12)
 
     let week = payload.find(i => i.week_delta === 0)
     expect(week.retained_percentage.toFixed(2) * 100).to.be.closeTo(99, 100)

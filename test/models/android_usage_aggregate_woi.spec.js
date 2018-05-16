@@ -19,7 +19,7 @@ describe('AndroidUsageAggregateWOI', function () {
   describe('#scrub', function(){
     it('changes the platform from "android" to "androidbrowser"', async function(){
       //setup
-      const bad_platform = await factory.build('android_usage_aggregate_week')
+      const bad_platform = await factory.build('android_usage_aggregate_woi')
       //execution
       const scrubbed_record = AndroidUsageAggregateWOI.scrub(bad_platform)
       //validation

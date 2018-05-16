@@ -69,8 +69,6 @@ class RetentionWeek {
 class WeekOfInstall {
   static async transfer_platform_aggregate (collection_name, start_date) {
     let nearest_week = moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
-    console.log(nearest_week)
-    console.log(start_date)
     let results = await mongo_client.collection(collection_name).aggregate([
       {
         $match: {
@@ -143,7 +141,6 @@ class WeekOfInstall {
       await mongo_client.collection(aggregate_collection).drop()
     }
     await mongo_client.createCollection(aggregate_collection)
-    console.log(`results length ${results.length}`)
     for (let i in results) {
       let good_to_insert = true
       try {

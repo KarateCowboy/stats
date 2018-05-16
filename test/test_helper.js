@@ -28,6 +28,8 @@ class TestHelper {
     global.expect = require('chai').expect
 
     this.mongo_collections = [
+      'usage',
+      'usage_aggregate_woi',
       'android_usage',
       'android_usage_aggregate_woi',
       'ios_usage'
