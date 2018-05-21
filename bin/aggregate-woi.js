@@ -16,6 +16,7 @@ const WeekOfInstall = require('../src/models/retention').WeekOfInstall
 const RetentionWeek = require('../src/models/retention').RetentionWeek
 const RetentionMonth = require('../src/models/retention').RetentionMonth
 const UsageAggregateWOI = require('../src/models/usage_aggregate_woi').UsageAggregateWOI
+const Util = require('../src/models/util').Util
 commander.option('-d --days [num]', 'Days to go back in reporting', 90)
   .option('-s, --skip-aggregation')
   .option('-a, --android')
@@ -51,7 +52,11 @@ const run = async () => {
     if (!commander.skipAggregation) {
       for (let platform of collections) {
         global.mongo_client = await mongoc.setupConnection()
-        console.log(`Generating aggregates for ${platform} installed week of ${cutoff}`)
+        if (platform === 'ios_usage') {
+          console.log(`Scrubbing ${platform}`)
+          await scrub_usage_dates(cutoff, platform)
+        }
+        console.log(`Generating aggregates for ${platform} installed week of ${cutoff} and later`)
         await WeekOfInstall.transfer_platform_aggregate(platform, cutoff)
         global.mongo_client.close()
       }
@@ -73,7 +78,7 @@ const run = async () => {
     await reporter.complete(runInfo, pg_client)
     pg_client.end()
   } catch (e) {
-    console.log(e)
+    console.log(e.message)
     process.exit(1)
   }
   process.exit(0)
@@ -87,10 +92,6 @@ const processResults = async (results) => {
     width: 25,
     total: total_entries
   })
-  const QUERY = `
-INSERT INTO dw.fc_retention_woi (ymd, platform, version, channel, woi, ref, total)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-ON CONFLICT (ymd, platform, version, channel, woi, ref) DO UPDATE SET total = EXCLUDED.total`
   let rejected = []
   let summed_totals = 0
   let platforms = [...new Set(results.map(r => r._id.platform))]
@@ -98,6 +99,7 @@ ON CONFLICT (ymd, platform, version, channel, woi, ref) DO UPDATE SET total = EX
     try {
       await knex('dw.fc_retention_woi').where('platform', platform).andWhere('woi', '>', cutoff).delete()
     } catch (e) {
+      console.log('Error cleansing')
       console.log(e.message)
     }
   }
@@ -110,16 +112,73 @@ ON CONFLICT (ymd, platform, version, channel, woi, ref) DO UPDATE SET total = EX
       const scrubbed_row = UsageAggregateWOI.scrub(current)
       row = WeekOfInstall.from_usage_aggregate_woi(scrubbed_row)
       if (UsageAggregateWOI.is_valid(scrubbed_row)) {
-        // await pg_client.query(QUERY, [row.ymd, row.platform, row.version, row.channel, row.woi, row.ref, row.total])
         await UsageAggregateWOI.transfer_to_retention_woi(scrubbed_row)
         summed_totals += row.total
       } else {
         rejected.push(scrubbed_row)
       }
     } catch (e) {
+      console.log('Error transfering')
     }
   }
   console.log(`summed_totals ${summed_totals}`)
+}
+
+scrub_usage_dates = async (cutoff, collection) => {
+  const cutoff_as_ts = new Date(cutoff).getTime()
+  let records = await mongo_client.collection(collection).find({
+    ts: {$gte: cutoff_as_ts},
+    $or: [{
+      woi: {
+        $nin: [/[\d]{4,4}-[\d]{2,2}-[\d]{2,2}/], $exists: true, $in: [/^20[\d]{2,2}/]
+      }
+    },
+      {
+        year_month_day: {
+          $nin: [/[\d]{4,4}-[\d]{2,2}-[\d]{2,2}/], $exists: true, $in: [/^20[\d]{2,2}/]
+        }
+      }
+    ]
+  }).toArray()
+  console.log(`${records.length} records`)
+  const bar = ProgressBar({
+    tmpl: `Loading ... :bar :percent :eta`,
+    width: 25,
+    total: records.length
+  })
+  while (records.length > 0) {
+    const batch = records.length > 50000 ? records.splice(0, 50000) : records.splice(0, records.length)
+    await Promise.all(batch.map(async (original_usage) => {
+      bar.tick(1)
+      const usage_clone = Object.assign({}, original_usage)
+      let adjusted = false
+      if (Util.is_valid_date_string(usage_clone.woi) === false) {
+        adjusted = true
+        usage_clone.woi = Util.fix_date_string(usage_clone.woi)
+      }
+      if (Util.is_valid_date_string(usage_clone.year_month_day)) {
+        adjusted = true
+        usage_clone.year_month_day = Util.fix_date_string(usage_clone.year_month_day)
+      }
+
+      if (adjusted) {
+        try {
+          await mongo_client.collection(collection).update({_id: original_usage._id}, {
+            $set: {
+              woi: usage_clone.woi,
+              year_month_day: usage_clone.year_month_day
+            }
+          })
+          await mongo_client.collection(`${collection}_fixed_backup`).insert(original_usage)
+        } catch (e) {
+          if (!e.message.includes('duplicate') && !e.message.includes('not inserting for some')) {
+            console.log(e.message)
+          }
+        }
+      }
+      return 0
+    }))
+  }
 }
 
 run()

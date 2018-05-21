@@ -29,3 +29,4 @@ describe('#woiFromYMD', function () {
     expect(correctResult).to.equal(woi)
   })
 })
+
