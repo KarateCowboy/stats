@@ -16,7 +16,7 @@ class Crashes {
     while (keepProcessing) {
       for (let row of results.rows) {
         const INSERT = `INSERT INTO dtl.crashes_archive (id, ts, contents, github_repo, github_issue_number) VALUES 
-        ($1,$2,$3,$4,$5) ON CONFLICT DO UPDATE SET
+        ($1,$2,$3,$4,$5) ON CONFLICT (id) DO UPDATE SET
         ts = $2,
         contents = $3,
         github_repo = $4,
