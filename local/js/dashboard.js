@@ -1978,4 +1978,6 @@ async function loadInitialData () {
   await window.REFERRAL.referralSummaryStatsRetriever()
 }
 
-loadInitialData()
+$(document).ready(function(){
+  loadInitialData()
+})
