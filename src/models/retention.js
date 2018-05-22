@@ -74,7 +74,7 @@ class WeekOfInstall {
       {
         $match: {
           year_month_day: {$gte: start_date, $lt: nearest_week},
-          woi: {$exists: true, $lte: nearest_week },
+          woi: {$exists: true, $lte: nearest_week, $gte: start_date },
           ts: {$gte: cutoff_as_ts}
         }
       },
