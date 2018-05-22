@@ -625,7 +625,6 @@ const weeklyRetentionHandler = function (rows) {
 
   // headings
   buffer += '<table class=\'table\'>'
-  buffer += `<tr style="color: red;"><th>Statistics for iOS/Android are not accurate</th></tr>`
   buffer += '<tr class=\'active\'><th colspan=\'2\'>Weeks since installation</th>'
   for (i = 0; i < 12; i++) {
     buffer += '<th class="retentionCell">' + i + '</th>'
@@ -702,7 +701,6 @@ const retentionMonthHandler = function (rows) {
 
   // headings
   buffer += '<table class=\'table\'>'
-  buffer += `<tr style="color: red;"><th>Statistics for iOS/Android are not accurate</th></tr>`
   buffer += '<tr class=\'active\'><th colspan=\'2\'>Months from installation</th>'
   for (i = 0; i < 12; i++) {
     buffer += '<th class="retentionCell">' + i + '</th>'
