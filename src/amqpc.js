@@ -9,7 +9,7 @@ const MQ_URL = process.env.RABBITMQ_BIGWIG_RX_URL || process.env.AMQP_URL || 'am
 const MQ_QUEUE = process.env.MQ_QUEUE || 'crashes'
 
 // Connect to messaging system and return a communication channel
-export function setup (cb) {
+exports.setup = function (cb) {
   console.log('Connecting to AMQP server at ' + MQ_URL)
   amqp.connect(MQ_URL, (err, conn) => {
     if (err != null) {
@@ -31,7 +31,7 @@ export function setup (cb) {
   })
 }
 
-export function send (msg, ch) {
+exports.send = function (msg, ch) {
   console.log(`Message sent to '${MQ_QUEUE}'`)
   ch.sendToQueue(
     MQ_QUEUE,
@@ -40,7 +40,7 @@ export function send (msg, ch) {
   )
 }
 
-export function sendToVersionQueue (msg, ch, version) {
+exports.sendToVersionQueue = function (msg, ch, version) {
   const queueName = MQ_QUEUE + ':' + version
   console.log(`Message sent to '${queueName}'`)
   ch.sendToQueue(

@@ -21,7 +21,7 @@ const APPANNIE_API_KEY = process.env.APPANNIE_API_KEY
 
 const BASE_URL = 'https://api.appannie.com'
 
-export function checkForCredentials () {
+exports.checkForCredentials = function () {
   if (!(APPANNIE_ACCOUNT_ID && APPANNIE_PRODUCT_ID && APPANNIE_API_KEY)) {
     console.log(APPANNIE_ACCOUNT_ID, APPANNIE_PRODUCT_ID, APPANNIE_API_KEY)
     throw new Error('AppAnnie credentials need to be stored in APPANNIE_ACCOUNT_ID, APPANNIE_PRODUCT_ID and APPANNIE_API_KEY environment variables')
@@ -45,7 +45,7 @@ function requestOptions (url) {
 //   { country_name: 'Gibraltar', country_code: 'GI' },
 //   ..
 // ]
-export function countryCodes (r, cb) {
+exports.countryCodes = function (r, cb) {
   checkForCredentials()
   var options = requestOptions(`${BASE_URL}/v1.2/meta/countries`)
   r(options, (err, request, response) => {
@@ -66,7 +66,7 @@ export function countryCodes (r, cb) {
 //   },
 //   ..
 // ]
-export function downloadsByCountry (r, cb) {
+exports.downloadsByCountry = function (r, cb) {
   checkForCredentials()
   var options = requestOptions(`${BASE_URL}/v1.2/accounts/${APPANNIE_ACCOUNT_ID}/products/${APPANNIE_PRODUCT_ID}/sales?break_down=country`)
   r(options, (err, request, response) => {
@@ -93,7 +93,7 @@ export function downloadsByCountry (r, cb) {
 //   },
 //   ..
 // ]
-export function downloadsByCountryStart (r, start, cb) {
+exports.downloadsByCountryStart = function (r, start, cb) {
   checkForCredentials()
   var options = requestOptions(`${BASE_URL}/v1.2/accounts/${APPANNIE_ACCOUNT_ID}/products/${APPANNIE_PRODUCT_ID}/sales?break_down=country&start_date=${start}`)
   r(options, (err, request, response) => {

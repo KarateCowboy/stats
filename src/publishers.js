@@ -48,7 +48,7 @@ function summarizePublishers (publishers) {
   return mapped
 }
 
-export function verifiedPublishers (publishers) {
+exports.verifiedPublishers = function (publishers) {
   return publishers.filter((publisher) => {
     return publisher.verified
   }).map((publisher) => {
@@ -62,7 +62,7 @@ export function verifiedPublishers (publishers) {
   })
 }
 
-export function allPublishers (publishers) {
+exports.allPublishers = function (publishers) {
   return publishers.map((publisher) => {
     return {
       publisher: publisher.publisher,
@@ -76,7 +76,7 @@ export function allPublishers (publishers) {
   })
 }
 
-export function all (url, done) {
+exports.all = function (url, done) {
   var intervalID
   var limit = 10
   var delay = 20000

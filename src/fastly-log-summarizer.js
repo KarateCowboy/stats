@@ -22,12 +22,12 @@ AWS.config.update({
   sslEnabled: true
 })
 
-export function recordsForHour (ymd, hour, match, done) {
+exports.recordsForHour = function (ymd, hour, match, done) {
   const prefix = `${ymd}T${hour}`
   recordsForPrefix(prefix, match, done)
 }
 
-export function recordsForDay (ymd, match, done) {
+exports.recordsForDay = function (ymd, match, done) {
   const prefix = `${ymd}`
   recordsForPrefix(prefix, match, done)
 }
@@ -39,7 +39,7 @@ function filterExtensionLines (text) {
 }
 
 // Retrieve parsed download records with a prefix
-export function recordsForPrefix (prefix, match, done) {
+exports.recordsForPrefix = function (prefix, match, done) {
   var s3 = new AWS.S3()
   var allRecords = []
 
