@@ -1029,6 +1029,7 @@ var crashesVersionRetriever = function () {
 
 // Retrieve overview stats and dispatch UI build
 var overviewRetriever = async function () {
+  publisherPlatforms = publisherPlatforms !== undefined ? publisherPlatforms : await $.ajax('/api/1/publishers/platforms')
   var downloads = await $.ajax('/api/1/dau_platform_first_summary')
   window.OVERVIEW.firstRun(downloads, builders)
 
@@ -1978,4 +1979,6 @@ async function loadInitialData () {
   await window.REFERRAL.referralSummaryStatsRetriever()
 }
 
-loadInitialData()
+$(document).ready(async function(){
+  await loadInitialData()
+})

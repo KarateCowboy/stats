@@ -17,7 +17,7 @@
     }
   }
 
-  var overviewPublisherHandlerDetails = async function (publishers, platform) {
+  var overviewPublisherHandlerDetails = function (publishers, platform) {
     if (!publishers.length) return
     var i, publisher, createdWhen, details, grouped, selectedPublishers
     var buf = ""
