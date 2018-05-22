@@ -5,10 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const path = require('path')
-const reporter = require('../dist/reporter')
+const reporter = require('../src/reporter')
 const commander = require('commander')
 const pgd = require('pg')
-let Crashes = require('../dist/models/crashes')
+let Crashes = require('../src/models/crashes')
 
 commander.option('-m --months', 'months back to keep', 1).parse(process.argv)
 
