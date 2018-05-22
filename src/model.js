@@ -59,7 +59,7 @@ GROUP BY ymd, platform, version, channel, first_time, ref
 ON CONFLICT (ymd, platform, version, first_time, channel, ref) DO UPDATE SET total = EXCLUDED.total
 `
 
-export function moveFastlyToUsageForDay (pg, ymd, cb) {
+exports.moveFastlyToUsageForDay = function(pg, ymd, cb) {
   pg.query(MOVE_FASTLY_SQL, [ymd], cb)
 }
 
@@ -72,7 +72,7 @@ GROUP BY ymd, platform, version, channel, ref
 ON CONFLICT (ymd, platform, version, channel, ref) DO UPDATE SET total = EXCLUDED.total
 `
 
-export function moveFastlyMonthlyToUsageForDay (pg, ymd, cb) {
+export.moveFastlyMonthlyToUsageForDay  = function(pg, ymd, cb) {
   pg.query(MOVE_FASTLY_MONTH_SQL, [ymd], cb)
 }
 

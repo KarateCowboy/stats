@@ -8,7 +8,7 @@ const elasticsearch = require('elasticsearch')
 const ES_URL = process.env.SEARCHBOX_URL || 'localhost:9200'
 
 // Connect to Elastic Search at a host and port
-export function setup (cb) {
+exports.setup = function (cb) {
   console.log('Connecting to ElasticSearch at ' + ES_URL)
   var es = new elasticsearch.Client({
     host: ES_URL,

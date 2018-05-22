@@ -32,7 +32,7 @@ const _ = require('underscore')
 
 */
 
-export const parseLine = (line) => {
+exports.parseLine = (line) => {
   var attributes = {}
   var tokens = line.split(/\s+/)
 
@@ -75,7 +75,7 @@ export const parseLine = (line) => {
   return attributes
 }
 
-export const parseMobileLine = (line) => {
+exports.parseMobileLine = (line) => {
   var attributes = {}
   var tokens = line.split(/\s+/)
 
@@ -116,7 +116,7 @@ export const parseMobileLine = (line) => {
 
   Returns an Array of Objects
 */
-export const parseFile = (filename) => {
+export.parseFile = (filename) => {
   return fs.readFileSync(filename, 'utf-8').split(/\n/)
     .filter((line) => { return line.length })
     .filter((line) => { return line.match(/releases/) })
@@ -124,7 +124,7 @@ export const parseFile = (filename) => {
     .filter((line) => { return !line.invalid })
 }
 
-export const parseContents = (contents, match) => {
+exports.parseContents = (contents, match) => {
   var parser = parseLine
   if (match === 'android' || match === 'ios') {
     parser = parseMobileLine
@@ -145,7 +145,7 @@ export const parseContents = (contents, match) => {
 
   summary will be an object keyed on countryCode containing the number of rows that have a daily=true attribute
 */
-export const groupedSummaryBy = (records, fields, predicates) => {
+exports.groupedSummaryBy = (records, fields, predicates) => {
   // default to no predicates
   predicates = predicates || {}
 
