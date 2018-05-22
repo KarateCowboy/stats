@@ -12,7 +12,7 @@
     "selenium": "java -jar -Dwebdriver.chrome.driver=./test/features/support/chromedriver  ./test/features/support/selenium-server-standalone-3.5.3.jar",
     "cucumber": "./node_modules/.bin/cucumber-js ./test",
     "lint": "standard",
-    "postinstall": "./node_modules/.bin/babel src --out-dir dist --source-maps && bower cache clean && bower install",
+    "postinstall": "bower cache clean && bower install",
     "test": "tap test/*.js"
   },
   "author": "Brave Software",
