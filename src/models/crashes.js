@@ -16,7 +16,11 @@ class Crashes {
     while (keepProcessing) {
       for (let row of results.rows) {
         const INSERT = `INSERT INTO dtl.crashes_archive (id, ts, contents, github_repo, github_issue_number) VALUES 
-        ($1,$2,$3,$4,$5)`
+        ($1,$2,$3,$4,$5) ON CONFLICT DO UPDATE SET
+        ts = $2,
+        contents = $3,
+        github_repo = $4,
+        github_issue_number = $5`
         try {
           const values = [row.id, row.ts, row.contents, row.github_repo, row.github_issue_numebr]
           await pg.query(INSERT, values)
