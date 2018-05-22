@@ -39,3 +39,8 @@ tmp/
 # Heroku environment variables
 .env
 .env.*
+
+# Webstorm Project Data
+.idea
+scratch.js
+scratch.sql

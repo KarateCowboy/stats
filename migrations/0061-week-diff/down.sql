@@ -1,0 +1,1 @@
+DROP FUNCTION week_diff;

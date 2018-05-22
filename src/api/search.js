@@ -8,20 +8,6 @@ var tokenize = function (text) {
   return text.split(/\s+/)
 }
 
-// const SEARCH = `
-// SELECT
-//   *
-// FROM dtl.crashes CR WHERE contents->>'crash_id' = $1 OR id IN ( select object_id from (
-//   SELECT
-//   object_id,
-//   object_type,
-//   ts_rank(searchable, tsquery($1::text)) AS rank
-// FROM dtl.fti
-//   WHERE searchable @@ tsquery($1::text)
-// ORDER BY rank DESC
-// ) S ) order by contents->'ts' DESC
-// LIMIT 100
-// `
 
 const SEARCH = `
 SELECT 

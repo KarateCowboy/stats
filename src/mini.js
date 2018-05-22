@@ -176,7 +176,7 @@ exports.readAndStore = (id, cb) => {
     send()
 }
 
-export function readSymbolized (id, cb) {
+module.exports.readSymbolized = function (id, cb) {
   var s3 = new AWS.S3()
   var params = {
     Bucket: S3_CRASH_BUCKET,
@@ -206,7 +206,7 @@ const windowsVersionMatchers = [
 ]
 
 // Match a Windows operating system version to a label
-export function matchWindowsOperatingSystem (os) {
+module.exports.matchWindowsOperatingSystem = function (os) {
   var matches = windowsVersionMatchers.filter((matcher) => {
     return os.match(new RegExp(`^${matcher[0]}`))
   })

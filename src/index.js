@@ -7,8 +7,6 @@ let _ = require('underscore')
 
 let Hapi = require('hapi')
 let Inert = require('inert')
-let assert = require('assert')
-let async = require('async')
 
 let ui = require('./ui')
 
@@ -29,20 +27,14 @@ let setGlobalHeader = require('hapi-set-header')
 let profile = process.env.NODE_ENV || 'development'
 let config = require('../config/config.' + profile + '.js')
 
-let pgc = require('./pgc')
-let mgc = require('./mongoc')
-
 let slack = require('./slack')
 let npminfo = require(path.join(__dirname, '..', 'package'))
 config.npminfo = _.pick(npminfo, 'name', 'version', 'description', 'author', 'license', 'bugs', 'homepage')
-
+let server
 // This is fired after all resources connected
-let kickoff = (err, connections) => {
-  if (err) {
-    throw new Error(err)
-  }
-  let server = new Hapi.Server()
-  let connection = server.connection({
+module.exports.setup = async(connections) => {
+  server = new Hapi.Server()
+  const connection = await server.connection({
     host: config.host,
     port: config.port
   })
@@ -63,20 +55,35 @@ let kickoff = (err, connections) => {
 
   // Setup the UI for the dashboard
   ui.setup(server, connections.pg)
-  slack.setup(server, config)
-
-  server.start((err) => {
-    assert(!err, `error starting service ${err}`)
-    console.log('Analytics service started')
-    slack.notify( { text: require('os').hostname() + ' ' + npminfo.name + '@' + npminfo.version + ' started' } )
+  // slack.setup(server, config)
+  return server
+}
+module.exports.kickoff = async () => {
+  return new Promise((resolve, reject) => {
+    return server.start((err) => {
+      if (err) {
+        reject(err)
+      } else {
+        console.log('Analytics service started')
+        //slack.notify({text: require('os').hostname() + ' ' + npminfo.name + '@' + npminfo.version + ' started'})
+        return resolve(() => {
+          console.log('Analytics service started')
+          slack.notify({text: require('os').hostname() + ' ' + npminfo.name + '@' + npminfo.version + ' started'})
+        })
+      }
+    })
   })
 }
 
-// Connect to Postgres and Mongo
-async.parallel(
-  {
-    pg: pgc.setup,
-    mg: mgc.setup
-  },
-  kickoff
-)
+module.exports.shutdown = async () => {
+  return new Promise((resolve, reject) => {
+    server.stop((err) => {
+      if (err) {
+        reject(err)
+      } else {
+        console.log('Analytics service stopped')
+        resolve()
+      }
+    })
+  })
+}

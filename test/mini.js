@@ -1,7 +1,7 @@
 var tap = require('tap')
 var _ = require('underscore')
 
-// Check for environment variables
+// // Check for environment variables
 tap.throw(function() {
   require('../dist/mini')
 }, /S3_CRASH_KEY/g, "mini requires S3 environment variables")

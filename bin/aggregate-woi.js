@@ -5,49 +5,179 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const path = require('path')
-const _ = require('underscore')
+const commander = require('commander')
+const ProgressBar = require('smooth-progress')
+const moment = require('moment')
 const pg = require('pg')
-const mongoc = require('../dist/mongoc')
-const retriever = require('../dist/retriever')
-const reporter = require('../dist/reporter')
-const util = require('util')
+const mongoc = require('../src/mongoc')
+const Knex = require('knex')
+const reporter = require('../src/reporter')
+const WeekOfInstall = require('../src/models/retention').WeekOfInstall
+const RetentionWeek = require('../src/models/retention').RetentionWeek
+const RetentionMonth = require('../src/models/retention').RetentionMonth
+const UsageAggregateWOI = require('../src/models/usage_aggregate_woi').UsageAggregateWOI
+const Util = require('../src/models/util').Util
+commander.option('-d --days [num]', 'Days to go back in reporting', 90)
+  .option('-s, --skip-aggregation')
+  .option('-a, --android')
+  .option('-i, --ios')
+  .option('-g, --general').parse(process.argv)
 
-const collections = ['usage', 'android_usage', 'ios_usage']
+const possible_collections = {
+  android: 'android_usage',
+  ios: 'ios_usage',
+  usage: 'usage'
+}
+let collections = []
 
-const QUERY = `
-INSERT INTO dw.fc_retention_woi (ymd, platform, version, channel, woi, ref, total)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-ON CONFLICT (ymd, platform, version, channel, woi, ref) DO UPDATE SET total = EXCLUDED.total
-`
+let jobName = path.basename(__filename)
+let runInfo = reporter.startup(jobName)
+let cutoff
 
-var jobName = path.basename(__filename)
-var runInfo = reporter.startup(jobName)
-
-async function run (args) {
-  var i, j, results, row
+const run = async () => {
+  if (commander.android) {
+    collections.push(possible_collections.android)
+  } else if (commander.ios) {
+    collections.push(possible_collections.ios)
+  } else if (commander.general) {
+    collections.push(possible_collections.usage)
+  } else {
+    collections = Object.values(possible_collections)
+  }
+  cutoff = moment().subtract(Number(commander.days), 'days').startOf('week').format('YYYY-MM-DD')
   try {
-    const db = await pg.connect(process.env.DATABASE_URL)
-    const mg = await mongoc.setupConnection()
+    global.pg_client = await pg.connect(process.env.DATABASE_URL)
+    global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
 
-    for (i = 0; i < collections.length; i++) {
-      results = await retriever.aggregatedWOI(mg, collections[i], 2)
-      console.log(`Aggregating ${results.length} records from ${collections[i]}`)
-      for (j = 0; j < results.length; j++) {
-        row = results[j]._id
-        row.total = results[j].count
-        if (row.version.match(new RegExp("^\\d+\\.\\d+\\.\\d+$"))) {
-          await db.query(QUERY, [row.ymd, row.platform, row.version, row.channel, row.woi, row.ref, row.total])
-        } else {
-          console.log("Ignoring row because of version error " + util.inspect(row))
+    if (!commander.skipAggregation) {
+      for (let platform of collections) {
+        global.mongo_client = await mongoc.setupConnection()
+        if (platform === 'ios_usage') {
+          console.log(`Scrubbing ${platform}`)
+          await scrub_usage_dates(cutoff, platform)
         }
+        console.log(`Generating aggregates for ${platform} installed week of ${cutoff} and later`)
+        await WeekOfInstall.transfer_platform_aggregate(platform, cutoff)
+        global.mongo_client.close()
       }
     }
-    await reporter.complete(runInfo, db)
-    mg.close()
-    db.end()
+
+    for (let collection of collections) {
+      global.mongo_client = await mongoc.setupConnection()
+      const agg_collection = `${collection}_aggregate_woi`
+      console.log(`fetching from ${agg_collection} installed week of ${cutoff} and later`)
+      const results = await mongo_client.collection(agg_collection).find({}).toArray()
+      await processResults(results)
+      global.mongo_client.close()
+    }
+    console.log(`Refreshing retention month view`)
+    await RetentionMonth.refresh()
+    console.log(`Refreshing retention week view`)
+    await RetentionWeek.refresh()
+    console.log('Finalizing...')
+    await reporter.complete(runInfo, pg_client)
+    pg_client.end()
   } catch (e) {
-    console.log(e)
+    console.log(e.message)
     process.exit(1)
+  }
+  process.exit(0)
+}
+
+const processResults = async (results) => {
+  const total_entries = results.length
+  console.log(`total is ${total_entries}`)
+  const bar = ProgressBar({
+    tmpl: `Loading ... :bar :percent :eta`,
+    width: 25,
+    total: total_entries
+  })
+  let rejected = []
+  let summed_totals = 0
+  let platforms = [...new Set(results.map(r => r._id.platform))]
+  for (let platform of platforms) {
+    try {
+      await knex('dw.fc_retention_woi').where('platform', platform).andWhere('woi', '>', cutoff).delete()
+    } catch (e) {
+      console.log('Error cleansing')
+      console.log(e.message)
+    }
+  }
+
+  for (let i = 0; i < results.length; i++) {
+    bar.tick(1)
+    const current = results[i]
+    let row
+    try {
+      const scrubbed_row = UsageAggregateWOI.scrub(current)
+      row = WeekOfInstall.from_usage_aggregate_woi(scrubbed_row)
+      if (UsageAggregateWOI.is_valid(scrubbed_row)) {
+        await UsageAggregateWOI.transfer_to_retention_woi(scrubbed_row)
+        summed_totals += row.total
+      } else {
+        rejected.push(scrubbed_row)
+      }
+    } catch (e) {
+      console.log('Error transfering')
+    }
+  }
+  console.log(`summed_totals ${summed_totals}`)
+}
+
+scrub_usage_dates = async (cutoff, collection) => {
+  const cutoff_as_ts = new Date(cutoff).getTime()
+  let records = await mongo_client.collection(collection).find({
+    ts: {$gte: cutoff_as_ts},
+    $or: [{
+      woi: {
+        $nin: [/[\d]{4,4}-[\d]{2,2}-[\d]{2,2}/], $exists: true, $in: [/^20[\d]{2,2}/]
+      }
+    },
+      {
+        year_month_day: {
+          $nin: [/[\d]{4,4}-[\d]{2,2}-[\d]{2,2}/], $exists: true, $in: [/^20[\d]{2,2}/]
+        }
+      }
+    ]
+  }).toArray()
+  console.log(`${records.length} records`)
+  const bar = ProgressBar({
+    tmpl: `Loading ... :bar :percent :eta`,
+    width: 25,
+    total: records.length
+  })
+  while (records.length > 0) {
+    const batch = records.length > 50000 ? records.splice(0, 50000) : records.splice(0, records.length)
+    await Promise.all(batch.map(async (original_usage) => {
+      bar.tick(1)
+      const usage_clone = Object.assign({}, original_usage)
+      let adjusted = false
+      if (Util.is_valid_date_string(usage_clone.woi) === false) {
+        adjusted = true
+        usage_clone.woi = Util.fix_date_string(usage_clone.woi)
+      }
+      if (Util.is_valid_date_string(usage_clone.year_month_day)) {
+        adjusted = true
+        usage_clone.year_month_day = Util.fix_date_string(usage_clone.year_month_day)
+      }
+
+      if (adjusted) {
+        try {
+          await mongo_client.collection(collection).update({_id: original_usage._id}, {
+            $set: {
+              woi: usage_clone.woi,
+              year_month_day: usage_clone.year_month_day
+            }
+          })
+          await mongo_client.collection(`${collection}_fixed_backup`).insert(original_usage)
+        } catch (e) {
+          if (!e.message.includes('duplicate') && !e.message.includes('not inserting for some')) {
+            console.log(e.message)
+          }
+        }
+      }
+      return 0
+    }))
   }
 }
 

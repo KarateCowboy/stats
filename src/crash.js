@@ -16,7 +16,7 @@ exports.parsedCrash = (pg, id, cb) => {
   })
 }
 
-export function storedCrash (pg, id, cb) {
+module.exports.storedCrash = function (pg, id, cb) {
   pg.query('SELECT * FROM dtl.crashes WHERE id = $1', [id], (err, results) => {
     mini.readSymbolized(id, (s3err, minidump) => {
       var payload = {}

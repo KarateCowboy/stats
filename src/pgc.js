@@ -4,18 +4,19 @@
 
 const pg = require('pg')
 
-const DATABASE_URL = process.env.DATABASE_URL
-if (!DATABASE_URL) {
+if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL must be set to the Postgres connection URL')
 }
 
-export function setup (cb) {
-  console.log('Connecting to Postgres at ' + DATABASE_URL)
+module.exports.setup = async () => {
+  console.log('Connecting to Postgres at ' + process.env.DATABASE_URL)
   // Connect to Postgres
-  pg.connect(DATABASE_URL, function (err, client) {
-    if (err) {
-      throw new Error(err)
-    }
-    cb(err, client)
+  return new Promise((resolve, reject) => {
+    pg.connect(process.env.DATABASE_URL, function (err, client) {
+      if (err) {
+        reject(err)
+      }
+      resolve(client)
+    })
   })
 }
