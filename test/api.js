@@ -1,7 +1,7 @@
 var tap = require('tap')
 var _ = require('underscore')
 
-var apiCommon = require('../dist/api/common')
+var apiCommon = require('../src/api/common')
 
 tap.ok(_.isArray(apiCommon.allPlatforms) && apiCommon.allPlatforms.length > 0, 'allPlatforms is defined correctly')
 

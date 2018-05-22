@@ -1,7 +1,7 @@
 var tap = require('tap')
 var _ = require('underscore')
 
-var model = require('../dist/model')
+var model = require('../src/model')
 
 // Test usageUpserter model function
 tap.test('usageUpserter', function (clientTest) {

@@ -3,14 +3,14 @@ var _ = require('underscore')
 
 // // Check for environment variables
 tap.throw(function() {
-  require('../dist/mini')
+  require('../src/mini')
 }, /S3_CRASH_KEY/g, "mini requires S3 environment variables")
 
 process.env.S3_CRASH_KEY = 'XXX'
 process.env.S3_CRASH_SECRET = 'XXX'
 
 // Require the mini module
-var mini = require('../dist/mini')
+var mini = require('../src/mini')
 tap.ok(mini.metadataFromMachineCrash, 'Require successful')
 
 // Async test for successfully parsing win32 crash dump

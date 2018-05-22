@@ -3,8 +3,8 @@ var request = require('request')
 var async = require('async')
 var _ = require('underscore')
 
-var pgc = require('../dist/pgc')
-var model = require('../dist/model')
+var pgc = require('../src/pgc')
+var model = require('../src/model')
 
 if (!process.env.FABRIC_SESSION) {
   throw new Error("The FABRIC_SESSION environment variable must be set to the contents of the Fabric _fabric_session cookie. Warning! this value is generally valid for two weeks only.")

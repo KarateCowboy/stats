@@ -1,5 +1,5 @@
 var tap = require('tap')
-var fastly = require('../dist/fastly-log-parser')
+var fastly = require('../src/fastly-log-parser')
 
 tap.test('fastly log file parsing', function (t) {
   var rows = fastly.parseFile('./test/fixtures/fastly-logs/sample-set.txt')

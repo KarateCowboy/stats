@@ -8,7 +8,7 @@ process.env.APPANNIE_ACCOUNT_ID = 'ACCOUNT_ID'
 process.env.APPANNIE_PRODUCT_ID = 'PRODUCT_ID'
 process.env.APPANNIE_API_KEY = 'API_KEY'
 
-var appannie = require('../dist/appannie')
+var appannie = require('../src/appannie')
 
 tap.test('countryCodes', function(childTest) {
   var requestMock = function(o, cb) {

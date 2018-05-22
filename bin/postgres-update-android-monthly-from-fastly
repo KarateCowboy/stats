@@ -6,7 +6,7 @@
 
 var pg = require('pg')
 var path = require('path')
-var reporter = require('../dist/reporter')
+var reporter = require('../src/reporter')
 
 var jobName = path.basename(__filename)
 var runInfo = reporter.startup(jobName)
