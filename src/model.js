@@ -72,7 +72,7 @@ GROUP BY ymd, platform, version, channel, ref
 ON CONFLICT (ymd, platform, version, channel, ref) DO UPDATE SET total = EXCLUDED.total
 `
 
-export.moveFastlyMonthlyToUsageForDay  = function(pg, ymd, cb) {
+exports.moveFastlyMonthlyToUsageForDay  = function(pg, ymd, cb) {
   pg.query(MOVE_FASTLY_MONTH_SQL, [ymd], cb)
 }
 
