@@ -12,8 +12,8 @@
     "selenium": "java -jar -Dwebdriver.chrome.driver=./test/features/support/chromedriver  ./test/features/support/selenium-server-standalone-3.5.3.jar",
     "cucumber": "./node_modules/.bin/cucumber-js ./test",
     "lint": "standard",
-    "test": "tap test/integration/compatibility_issues.js",
-    "mocha": "mocha ./test/**/*.spec.js"
+    "postinstall": "./node_modules/.bin/babel src --out-dir dist --source-maps && bower cache clean && bower install",
+    "test": "tap test/*.js"
   },
   "author": "Brave Software",
   "license": "ISC",
