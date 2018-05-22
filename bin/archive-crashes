@@ -20,7 +20,7 @@ const main = async () => {
   global.pg = await pgd.connect(process.env.DATABASE_URL)
   await Crashes.archive(commander.months)
   await reporter.complete(runInfo, db)
-  pg.close()
+  pg.end()
 }
 
 main()
