@@ -19,9 +19,19 @@
     if (!d || d === 0) return def
     return n / d
   }
-  
+
+  var downloadObjectAs = (exportObj, exportName, mime) => {
+    var dataStr = "data:" + mime + ";charset=utf-8," + encodeURIComponent(exportObj)
+    var downloadAnchorNode = document.createElement('a')
+    downloadAnchorNode.setAttribute("href", dataStr)
+    downloadAnchorNode.setAttribute("download", exportName)
+    downloadAnchorNode.click()
+    downloadAnchorNode.remove()
+  }
+
   window.STATS.COMMON = {
     standardYAxisOptions: standardYAxisOptions,
-    safeDivide: safeDivide
+    safeDivide: safeDivide,
+    downloadObjectAs: downloadObjectAs
   }
 })()
