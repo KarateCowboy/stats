@@ -11,10 +11,10 @@ var path = require('path')
 // Set the runtime Mongo URL to eyeshade
 process.env.MLAB_URI = process.env.BAT_EYESHADE_URI
 
-var mongoc = require('../dist/mongoc')
-var pgc = require('../dist/pgc')
-var eyeshade = require('../dist/bat_eyeshade')
-var reporter = require('../dist/reporter')
+var mongoc = require('../src/mongoc')
+var pgc = require('../src/pgc')
+var eyeshade = require('../src/bat_eyeshade')
+var reporter = require('../src/reporter')
 
 var jobName = path.basename(__filename)
 var runInfo = reporter.startup(jobName)

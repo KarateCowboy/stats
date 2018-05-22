@@ -16,8 +16,8 @@ process.env.APPANNIE_PRODUCT_ID = process.env.APPANNIE_ANDROID_PRODUCT_ID
 
 const async = require('async')
 
-const appannie = require('../dist/appannie')
-const pgc = require('../dist/pgc')
+const appannie = require('../src/appannie')
+const pgc = require('../src/pgc')
 
 const startDate = process.env.START_DATE || '2016-01-20'
 

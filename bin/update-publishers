@@ -8,9 +8,9 @@ var async = require('async')
 var _ = require('underscore')
 var path = require('path')
 
-var pgc = require('../dist/pgc')
-var publishers = require('../dist/publishers')
-var reporter = require('../dist/reporter')
+var pgc = require('../src/pgc')
+var publishers = require('../src/publishers')
+var reporter = require('../src/reporter')
 
 var jobName = path.basename(__filename)
 var runInfo = reporter.startup(jobName)

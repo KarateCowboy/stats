@@ -1,7 +1,7 @@
 var tap = require('tap')
 var _ = require('underscore')
 
-var reporter = require('../dist/reporter')
+var reporter = require('../src/reporter')
 
 var job = reporter.startup('JOB1')
 tap.equal(job.id, 'JOB1', 'identifier retained')

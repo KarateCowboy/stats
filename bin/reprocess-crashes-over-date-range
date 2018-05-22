@@ -13,8 +13,8 @@
 
 const async = require('async')
 
-const pgc = require('../dist/pgc')
-const amqpc = require('../dist/amqpc')
+const pgc = require('../src/pgc')
+const amqpc = require('../src/amqpc')
 
 var start = process.argv[2]
 var end = process.argv[3]

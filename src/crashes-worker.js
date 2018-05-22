@@ -5,11 +5,11 @@
 const async = require('async')
 
 // resources
-const pgc = require('../dist/pgc')
-const esc = require('../dist/esc')
-const amqpc = require('../dist/amqpc')
+const pgc = require('../src/pgc')
+const esc = require('../src/esc')
+const amqpc = require('../src/amqpc')
 
-const mini = require('../dist/mini')
+const mini = require('../src/mini')
 
 // This is triggered when connections to all resources are established
 const resourcesReady = function (asyncError, resources) {

@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var mongoc = require('../dist/mongoc')
-var pgc = require('../dist/pgc')
-var retriever = require('../dist/retriever')
-var model = require('../dist/model')
-var reporter = require('../dist/reporter')
+var mongoc = require('../src/mongoc')
+var pgc = require('../src/pgc')
+var retriever = require('../src/retriever')
+var model = require('../src/model')
+var reporter = require('../src/reporter')
 
 var async = require('async')
 var _ = require('underscore')

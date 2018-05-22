@@ -8,12 +8,12 @@ var async = require('async')
 var _ = require('underscore')
 var path = require('path')
 
-var retriever = require('../dist/retriever')
-var model = require('../dist/model')
-var reporter = require('../dist/reporter')
-var pgc = require('../dist/pgc')
-var mongoc = require('../dist/mongoc')
-var common = require('../dist/api/common')
+var retriever = require('../src/retriever')
+var model = require('../src/model')
+var reporter = require('../src/reporter')
+var pgc = require('../src/pgc')
+var mongoc = require('../src/mongoc')
+var common = require('../src/api/common')
 
 var channels = _.object(common.allChannels.map((c) => { return [c, {}] }))
 
