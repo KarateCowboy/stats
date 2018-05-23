@@ -1886,7 +1886,11 @@ router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', 
 _.forEach(platformKeys, function (id) {
   $('#btn-filter-' + id).on('change', function () {
     pageState.platformFilter[id] = this.checked
-    $(this).parent().toggleClass('active')
+    if(this.checked && $(this).parent().hasClass('active') === false){
+      $(this).parent().addClass('active')
+    }else if(!this.checked && $(this).parent().hasClass('active')){
+      $(this).parent().removeClass('active')
+    }
     refreshData()
   })
 })
@@ -1895,7 +1899,11 @@ _.forEach(platformKeys, function (id) {
 _.forEach(channelKeys, function (id) {
   $('#btn-channel-' + id).on('change', function () {
     pageState.channelFilter[id] = this.checked
-    $(this).parent().toggleClass('active')
+    if(this.checked){
+      $(this).parent().addClass('active')
+    }else{
+      $(this).parent().removeClass('active')
+    }
     refreshData()
   })
 })
