@@ -1505,7 +1505,7 @@ router.get('usage', function (req) {
   viewState.showControls = true
   viewState.showDaysSelector = true
   viewState.showPromotions = true
-  viewState.showShowToday = false
+  viewState.showShowToday = true
   updatePageUIState()
   refreshData()
 })
