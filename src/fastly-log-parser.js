@@ -116,7 +116,7 @@ exports.parseMobileLine = (line) => {
 
   Returns an Array of Objects
 */
-export.parseFile = (filename) => {
+exports.parseFile = (filename) => {
   return fs.readFileSync(filename, 'utf-8').split(/\n/)
     .filter((line) => { return line.length })
     .filter((line) => { return line.match(/releases/) })
