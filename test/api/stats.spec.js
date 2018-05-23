@@ -66,7 +66,7 @@ describe('/retention_week', async function () {
     }
     const response = await server.inject(params)
     const payload = JSON.parse(response.payload)
-    expect(payload.length).to.be.closeTo(11, 12)
+    expect(payload.length).to.equal(12)
 
     let week = payload.find(i => i.week_delta === 0)
     expect(week.retained_percentage.toFixed(2) * 100).to.be.closeTo(99, 100)
