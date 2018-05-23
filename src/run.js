@@ -7,9 +7,9 @@ const mgc = require('./mongoc')
 const server = require('./index')
 
 const run = async () => {
-  const pgh = await pgc.setup()
+  const pgh = await pgc.setupConnection()
   global.pg_client = pgh
-  const mgh = await mgc.setup()
+  const mgh = await mgc.setupConnection()
   global.mongo_client = mgh
   await server.setup({pg: pgh, mg: mgh})
   await server.kickoff()

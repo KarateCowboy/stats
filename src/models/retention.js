@@ -68,13 +68,14 @@ class RetentionWeek {
 
 class WeekOfInstall {
   static async transfer_platform_aggregate (collection_name, start_date) {
-    let nearest_week = moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
-    let cutoff_as_ts = new Date(start_date).getTime()
+    // let nearest_week = moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
+    let today = moment().format('YYYY-MM-DD')
+    // let cutoff_as_ts = new Date(start_date).getTime()
     let results = await mongo_client.collection(collection_name).aggregate([
       {
         $match: {
-          year_month_day: {$gte: start_date, $lt: nearest_week},
-          woi: {$exists: true, $lte: nearest_week, $gte: start_date }
+          year_month_day: {$gte: start_date, $lte: today},
+          woi: {$exists: true, $lte: today, $gte: start_date }
         }
       },
       {
