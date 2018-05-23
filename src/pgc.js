@@ -8,7 +8,17 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL must be set to the Postgres connection URL')
 }
 
-module.exports.setup = async () => {
+module.exports.setup = function (cb) {
+  console.log('Connecting to Postgres at ' + process.env.DATABASE_URL)
+  // Connect to Postgres
+  pg.connect(process.env.DATABASE_URL, function (err, client) {
+    if (err) {
+      throw new Error(err)
+    }
+    cb(err, client)
+  })
+}
+module.exports.setupConnection = async () => {
   console.log('Connecting to Postgres at ' + process.env.DATABASE_URL)
   // Connect to Postgres
   return new Promise((resolve, reject) => {
