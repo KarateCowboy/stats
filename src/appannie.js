@@ -21,12 +21,13 @@ const APPANNIE_API_KEY = process.env.APPANNIE_API_KEY
 
 const BASE_URL = 'https://api.appannie.com'
 
-exports.checkForCredentials = function () {
+let checkForCredentials = function () {
   if (!(APPANNIE_ACCOUNT_ID && APPANNIE_PRODUCT_ID && APPANNIE_API_KEY)) {
     console.log(APPANNIE_ACCOUNT_ID, APPANNIE_PRODUCT_ID, APPANNIE_API_KEY)
     throw new Error('AppAnnie credentials need to be stored in APPANNIE_ACCOUNT_ID, APPANNIE_PRODUCT_ID and APPANNIE_API_KEY environment variables')
   }
 }
+exports.checkForCredentials = checkForCredentials
 
 // Take URL and issue request object containing API KEY header
 function requestOptions (url) {

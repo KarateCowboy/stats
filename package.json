@@ -13,7 +13,8 @@
     "cucumber": "./node_modules/.bin/cucumber-js ./test",
     "lint": "standard",
     "postinstall": "bower cache clean && bower install",
-    "test": "tap test/*.js"
+    "test": "tap test/*.js",
+    "mocha": "mocha test/**/*.spec.js"
   },
   "author": "Brave Software",
   "license": "ISC",
