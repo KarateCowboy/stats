@@ -39,7 +39,7 @@ function filterExtensionLines (text) {
 }
 
 // Retrieve parsed download records with a prefix
-exports.recordsForPrefix = function (prefix, match, done) {
+let recordsForPrefix = function (prefix, match, done) {
   var s3 = new AWS.S3()
   var allRecords = []
 
@@ -82,3 +82,5 @@ exports.recordsForPrefix = function (prefix, match, done) {
     }
   })
 }
+
+exports.recordsForPrefx = recordsForPrefix
