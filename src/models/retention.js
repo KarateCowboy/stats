@@ -73,10 +73,23 @@ class WeekOfInstall {
     // let cutoff_as_ts = new Date(start_date).getTime()
     let results = await mongo_client.collection(collection_name).aggregate([
       {
-        $match: {
-          year_month_day: {$gte: start_date, $lte: today},
-          woi: {$exists: true, $lte: today, $gte: start_date }
-        }
+        $match:
+          {
+            'woi': {
+              '$gte': start_date,
+              '$lte': today
+            },
+            'year_month_day': {
+              '$gte': start_date,
+              '$lte': today
+            },
+            'ref': {
+              '$in': [
+                null,
+                'none'
+              ]
+            },
+          }
       },
       {
         $project: {
