@@ -32,7 +32,7 @@ const _ = require('underscore')
 
 */
 
-exports.parseLine = (line) => {
+const parseLine = (line) => {
   var attributes = {}
   var tokens = line.split(/\s+/)
 
@@ -74,6 +74,7 @@ exports.parseLine = (line) => {
 
   return attributes
 }
+exports.parseLine = parseLine
 
 exports.parseMobileLine = (line) => {
   var attributes = {}
