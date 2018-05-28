@@ -76,7 +76,7 @@ const parseLine = (line) => {
 }
 exports.parseLine = parseLine
 
-exports.parseMobileLine = (line) => {
+const parseMobileLine = (line) => {
   var attributes = {}
   var tokens = line.split(/\s+/)
 
@@ -111,6 +111,7 @@ exports.parseMobileLine = (line) => {
 
   return attributes
 }
+exports.parseMobileLine = parseMobileLine
 
 /*
   Process log file, running each release line through parseLine
