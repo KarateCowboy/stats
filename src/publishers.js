@@ -62,7 +62,7 @@ exports.verifiedPublishers = function (publishers) {
   })
 }
 
-exports.allPublishers = function (publishers) {
+let allPublishers = function (publishers) {
   return publishers.map((publisher) => {
     return {
       publisher: publisher.publisher,
@@ -75,6 +75,8 @@ exports.allPublishers = function (publishers) {
     }
   })
 }
+
+exports.allPublishers = allPublishers
 
 exports.all = function (url, done) {
   var intervalID
