@@ -7,7 +7,7 @@
 const moment = require('moment')
 const TestHelper = require('../test_helper').TestHelper
 const WeekOfInstall = require('../../src/models/retention').WeekOfInstall
-const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateWOI
+const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
 const main = require('../../src/index')
 
 let test_helper

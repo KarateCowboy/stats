@@ -7,6 +7,7 @@
 const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const moment = require('moment')
+const { ObjectID } = require('mongodb')
 
 const define = () => {
   factory.setAdapter(new FactoryGirl.ObjectAdapter())
@@ -35,7 +36,9 @@ const define = () => {
       'woi': () => moment().subtract(2, 'months').startOf('week').add(1, 'days').format('YYYY-MM-DD'),
       'ref': 'none'
     },
-    'count': 1
+    'count': 1,
+    usages: () => { return [ new ObjectID() ]}
+
   })
 }
 module.exports.define = define

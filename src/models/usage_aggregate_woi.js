@@ -3,6 +3,8 @@
  *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+const mongoose = require('mongoose')
+mongoose.connect(process.env.MLAB_URI)
 
 const joi = require('joi')
 const moment = require('moment')
@@ -17,10 +19,11 @@ const schema = joi.object().keys({
     channel: joi.any().valid('beta', 'stable', 'developer', 'nightly', 'dev').required(),
     ref: joi.any().optional()
   }).required(),
-  count: joi.number().min(1).required()
+  count: joi.number().min(1).required(),
+  usages: joi.array()
 })
 
-class UsageAggregateWOI {
+class UsageAggregateUtil {
   static is_valid (record) {
     try {
       const result = joi.validate(record, schema)
@@ -74,12 +77,12 @@ class UsageAggregateWOI {
         channel: record._id.channel,
         woi: record._id.woi,
         ref: record._id.ref,
-        total: record.count
+        total: record.usages.length
       })
 
     } catch (e) {
       if (e.message.includes('duplicate key value violates unique constraint "fc_retention_woi_pkey"')) {
-        await knex('dw.fc_retention_woi').increment('total', record.count)
+        await knex('dw.fc_retention_woi').increment('total', record.usages.length)
           .where({
             ymd: record._id.ymd,
             platform: record._id.platform,
@@ -94,4 +97,38 @@ class UsageAggregateWOI {
 
 }
 
-module.exports.UsageAggregateWOI = UsageAggregateWOI
+const db_schema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.Mixed,
+  usages: [mongoose.Schema.Types.Mixed]
+}, {
+  timestamps: true,
+  collection: 'usage_aggregate_woi'
+})
+
+db_schema.statics.woi_for_weeks_ago = function(weeks) {
+  return moment().subtract(weeks, 'weeks').startOf('week').add(1, 'days')
+}
+db_schema.methods.find_usages = async function() {
+  const usages_cursor = await mongo_client.collection('usage').find({
+    daily: true,
+    woi: this._id.woi,
+    year_month_day: this._id.ymd,
+    ref: this._id.ref,
+    platform: this._id.platform,
+    channel: this._id.channel,
+    first: this._id.first
+  })
+  let all_usages = []
+  while(await usages_cursor.hasNext()){
+    const current = await usages_cursor.next()
+    this.usages.push(current._id)
+    all_usages.push(current)
+  }
+  this.usages = _.uniq(this.usages)
+  return all_usages
+}
+
+const UsageAggregate = mongoose.model('UsageAggregate', db_schema)
+module.exports.UsageAggregate = UsageAggregate
+
+module.exports.UsageAggregateUtil = UsageAggregateUtil

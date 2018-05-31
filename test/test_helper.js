@@ -8,12 +8,14 @@ const pg = require('pg')
 const mongo = require('mongodb')
 const Knex = require('knex')
 const factory = require('factory-girl').factory
+const mongoose = require('mongoose')
 require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
 require('./fixtures/android_usage_aggregate_week').define()
 require('./fixtures/usage_aggregate_woi').define()
 require('./fixtures/link_bubble_usage').define()
+require('./fixtures/desktop_usage').define()
 
 class TestHelper {
   constructor () {
@@ -51,6 +53,8 @@ class TestHelper {
   async setup () {
     this.mongo_client = await mongo.connect(this.testMongoUri)
     global.mongo_client = this.mongo_client
+    await mongoose.connect(this.testMongoUri)
+
 
     this.pg_client = await pg.connect(this.testDatabaseUrl)
     global.pg_client = this.pg_client
@@ -90,6 +94,7 @@ class TestHelper {
     await global.mongo_client.close()
     await global.pg_client.end()
     await global.knex.destroy()
+    await mongoose.connection.close()
   }
 
 }

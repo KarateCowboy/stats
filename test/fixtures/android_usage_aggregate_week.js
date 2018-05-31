@@ -33,7 +33,15 @@ const define = () => {
       'woi': () => moment().subtract(2, 'months').startOf('week').add(5, 'days').format('YYYY-MM-DD'),
       'ref': () => _.shuffle((new ObjectID()).toString().split('')).join('').toUpperCase().slice(0, 6)
     },
-    'count': () => (Math.random() * 100).toFixed(0)
+    'count': () => (Math.random() * 100).toFixed(0),
+    usages: () => { return [
+      (new ObjectID()),
+      (new ObjectID()),
+      (new ObjectID()),
+      (new ObjectID()),
+      (new ObjectID()),
+      (new ObjectID())
+    ]}
   })
 
 }

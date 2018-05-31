@@ -5,7 +5,7 @@
  */
 
 const TestHelper = require('../test_helper').TestHelper
-const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateWOI
+const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
 
 let test_helper
 before(async function () {
@@ -16,7 +16,7 @@ before(async function () {
 after(async function () {
   await test_helper.tear_down()
 })
-describe('UsageAggregateWOI', async function () {
+describe('UsageAggregateUtil', async function () {
   describe('#is_valid', async function () {
     it('requires a correctly formatted _id.woi', async function () {
       const invalid_woi = await factory.build('ios_usage_aggregate_woi')
@@ -135,7 +135,6 @@ describe('UsageAggregateWOI', async function () {
   })
   describe('#transfer_to_retention_woi', async function () {
     it('takes a collection of usage_aggregate_woi objects and moves it to the retention_woi table', async function () {
-      //setup
       const usages = []
       for (let i = 1; i <= 25; i++) {
         let usage = await factory.build('android_usage_aggregate_woi')
@@ -143,18 +142,8 @@ describe('UsageAggregateWOI', async function () {
         usages.push(usage)
         await UsageAggregateWOI.transfer_to_retention_woi(usage)
         const retention_woi = await knex('dw.fc_retention_woi').where('ref', usage._id.ref)
-        expect(retention_woi[0]).to.have.property('total', usage.count)
+        expect(retention_woi[0]).to.have.property('total', usage.usages.length.toString())
       }
-    })
-    it('sums the total on duplicate', async function(){
-      let usage = await factory.build('android_usage_aggregate_woi', { count: 40 })
-      await usage.save()
-      const orignal_count = usage.count
-      await UsageAggregateWOI.transfer_to_retention_woi(usage)
-      usage.count = 50
-      await UsageAggregateWOI.transfer_to_retention_woi(usage)
-      const retention_woi = await knex('dw.fc_retention_woi').where('ref', usage._id.ref)
-      expect(retention_woi[0]).to.have.property('total', (orignal_count + usage.count).toString())
     })
   })
 })
