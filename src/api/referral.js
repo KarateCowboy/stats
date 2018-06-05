@@ -13,7 +13,6 @@ const proxyForwards = [
   ['GET', '/api/1/referral/stats/summary', '/api/1/promo/stats/summary', 'Retrieve referral promo summary stats', 'PROMO_SERVICES'],
   ['GET', '/api/1/referral/stats/hourly', '/api/1/promo/stats/hourly', 'Retrieve hourly referral promo summary stats', 'PROMO_SERVICES']
 ]
-
 const buildProxyRouteWithAuthorizationInsertion = (line) => {
   return {
     method: line[0],

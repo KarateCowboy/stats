@@ -7,7 +7,9 @@
 const common = require('../api/common')
 const moment = require('moment')
 const AndroidUsageAggregateWOI = require('./android_usage_aggregate_week')
-const UsageAggregateWOI = require('./usage_aggregate_woi').UsageAggregateWOI
+const UsageAggregateWOI = require('./usage_aggregate_woi').UsageAggregateUtil
+const ProgressBar = require('smooth-progress')
+const _ = require('underscore')
 
 const WEEKLY_RETENTION_QUERY = `
 SELECT
@@ -63,116 +65,76 @@ class RetentionWeek {
     }
     return rows
   }
+}
 
+aggregate_id = (usage, collection_name) => {
+
+  platform = collection_name === 'android_usage' ? 'androidbrowser' : usage.platform
+  return {
+    ymd: usage.year_month_day,
+    platform: platform,
+    version: usage.version,
+    channel: usage.channel,
+    woi: usage.woi,
+    ref: 'none',
+    first_time: usage.first
+  }
 }
 
 class WeekOfInstall {
-  static async transfer_platform_aggregate (collection_name, start_date) {
-    // let nearest_week = moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
-    let today = moment().format('YYYY-MM-DD')
-    // let cutoff_as_ts = new Date(start_date).getTime()
-    let results = await mongo_client.collection(collection_name).aggregate([
-      {
-        $match:
-          {
-            'woi': {
-              '$gte': start_date,
-              '$lte': today
-            },
-            'year_month_day': {
-              '$gte': start_date,
-              '$lte': today
-            },
-            'ref': {
-              '$in': [
-                null,
-                'none'
-              ]
-            },
-          }
-      },
-      {
-        $project: {
-          date: {
-            $add: [(new Date(0)), '$ts']
-          },
-          platform: {
-            $ifNull: ['$platform', 'unknown']
-          },
-          version: {
-            $ifNull: ['$version', '0.0.0']
-          },
-          first_time: {
-            $ifNull: ['$first', false]
-          },
-          channel: {
-            $ifNull: ['$channel', 'dev']
-          },
-          ymd: {
-            $ifNull: ['$year_month_day', '2016-02-10']
-          },
-          woi: {
-            $ifNull: ['$woi', '2016-01-04']
-          },
-          ref: {
-            $ifNull: ['$ref', 'none']
-          }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            ymd: '$ymd',
-            platform: '$platform',
-            version: '$version',
-            first_time: '$first_time',
-            channel: '$channel',
-            woi: '$woi',
-            ref: '$ref'
-          },
-          count: {
-            $sum: 1
-          }
-        }
-      },
-      {
-        $sort: {
-          '_id.ymd': -1,
-          '_id.woi': -1,
-          '_id.platform': 1,
-          '_id.version': 1,
-          '_id.first_time': 1,
-          '_id.channel': 1,
-          '_id.ref': 1
-        }
-      }
-    ], {
-      explain: false,
-      allowDiskUse: true
-    }).toArray()
+  static async transfer_platform_aggregate (collection_name, start_date, force) {
     const aggregate_collection = `${collection_name}_aggregate_woi`
-    const collections = await mongo_client.collections()
-    if (collections.map(c => c.name).includes(aggregate_collection)) {
-      await mongo_client.collection(aggregate_collection).drop()
+    let nearest_week = moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
+    const usage_params = {
+      daily: true,
+      woi: {$gte: start_date, $lt: nearest_week},
+      year_month_day: {$gte: start_date, $lt: nearest_week},
+      ref: {
+        '$in': [
+          'none'
+        ]
+      },
+      aggregated_at: {
+        $exists: false
+      }
     }
-    await mongo_client.createCollection(aggregate_collection)
-    for (let i in results) {
-      let good_to_insert = true
-      try {
-        if (aggregate_collection.includes('android_usage')) {
-          results[i] = AndroidUsageAggregateWOI.scrub(results[i])
-        }
-        if (results[i]._id.platform === 'ios' && !UsageAggregateWOI.is_valid(results[i])) {
-          good_to_insert = false
-        }
-        if (good_to_insert) {
-          await mongo_client.collection(aggregate_collection).insert(results[i])
-        }
-      } catch (e) {
-        if (e.message.match(/11000/) === undefined) {
-          console.log(`Error inserting ${results[i]._id} to ${aggregate_collection}
-          ${e.message}`)
-        }
+    if (force) {
+      delete usage_params.aggregated_at
+    }
+    let usages = await mongo_client.collection(collection_name).find(usage_params)
+
+    let batch = []
+    let sum = 0
+    await usages.maxTimeMS(360000000)
+    while (await usages.hasNext()) {
+      let usage = await usages.next()
+      let has_next = await usages.hasNext()
+      batch.push(usage)
+      if (batch.length > 10000 || has_next === false) {
+        await Promise.all(batch.map(async (usage) => {
+          const usage_aggregate_id = aggregate_id(usage, collection_name)
+          try {
+            await mongo_client.collection(aggregate_collection).update(
+              {
+                _id: usage_aggregate_id
+              }, {
+                $addToSet: {usages: usage._id}
+              }, {
+                upsert: true
+              }
+            )
+            await mongo_client.collection(collection_name).update({_id: usage._id}, {
+              $set: {
+                aggregated_at: Date.now()
+              }
+            })
+          } catch (e) {
+            console.log(e.message)
+          }
+        }))
+        sum += 10000
+        console.log(`writing ${sum}`)
+        batch = []
       }
     }
   }
@@ -180,7 +142,7 @@ class WeekOfInstall {
   static from_usage_aggregate_woi (entry) {
     const cleaned_entry = UsageAggregateWOI.scrub(entry)
     let actual_record = Object.assign({}, cleaned_entry._id)
-    actual_record.total = cleaned_entry.count
+    actual_record.total = cleaned_entry.usages.length
     return actual_record
   }
 }

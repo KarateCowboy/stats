@@ -56,7 +56,7 @@ describe('WeekOfInstall', function () {
       // setup
       const android_usages = []
       for (let i in _.range(10)) {
-        const usage = await factory.build('android_usage')
+        const usage = await factory.build('android_usage', { ref: 'none'})
         await usage.save()
         android_usages.push(usage)
       }
@@ -70,7 +70,8 @@ describe('WeekOfInstall', function () {
       for (let property of properties) {
         expect(android_usage_woi_aggs[0]._id).to.have.property(property)
       }
-      expect(android_usage_woi_aggs[0].count).to.equal(10)
+      expect(android_usage_woi_aggs).to.have.property('length', 1)
+      expect(android_usage_woi_aggs[0].usages).to.have.property('length', 10)
     })
     it('truncates the aggregate_woi table for the platform', async function () {
       // setup
@@ -85,9 +86,9 @@ describe('WeekOfInstall', function () {
       expect(ios_usage_woi_aggs.length).to.equal(0)
     })
     it('applies android scrubbing to android browser but not link bubble', async function () {
-      const android_usage = await factory.build('android_usage', {platform: 'android'})
+      const android_usage = await factory.build('android_usage', {platform: 'android', ref: 'none'})
       await android_usage.save()
-      const link_bubble_usage = await factory.build('link_bubble_usage')
+      const link_bubble_usage = await factory.build('link_bubble_usage', { ref: 'none'})
       await link_bubble_usage.save()
       const cutoff = moment(android_usage.woi).subtract(10, 'days')
 

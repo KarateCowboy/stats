@@ -15,12 +15,14 @@ const reporter = require('../src/reporter')
 const WeekOfInstall = require('../src/models/retention').WeekOfInstall
 const RetentionWeek = require('../src/models/retention').RetentionWeek
 const RetentionMonth = require('../src/models/retention').RetentionMonth
-const UsageAggregateWOI = require('../src/models/usage_aggregate_woi').UsageAggregateWOI
+const UsageAggregateWOI = require('../src/models/usage_aggregate_woi').UsageAggregateUtil
 const Util = require('../src/models/util').Util
+const _ = require('underscore')
 commander.option('-d --days [num]', 'Days to go back in reporting', 90)
   .option('-s, --skip-aggregation')
   .option('-a, --android')
   .option('-i, --ios')
+  .option('-f, --force')
   .option('-g, --general').parse(process.argv)
 
 const possible_collections = {
@@ -28,6 +30,16 @@ const possible_collections = {
   ios: 'ios_usage',
   usage: 'usage'
 }
+const platforms = {
+  android: ['androidbrowser'],
+  usage: ['linux',
+    'winia32',
+    'unknown',
+    'osx',
+    'winx64'],
+  ios: ['ios']
+}
+let relevant_platforms = []
 let collections = []
 
 let jobName = path.basename(__filename)
@@ -37,10 +49,13 @@ let cutoff
 const run = async () => {
   if (commander.android) {
     collections.push(possible_collections.android)
+    relevant_platforms.push(platforms.android)
   } else if (commander.ios) {
     collections.push(possible_collections.ios)
+    relevant_platforms.push(platforms.ios)
   } else if (commander.general) {
     collections.push(possible_collections.usage)
+    relevant_platforms.push(platforms.usage)
   } else {
     collections = Object.values(possible_collections)
   }
@@ -57,7 +72,7 @@ const run = async () => {
           await scrub_usage_dates(cutoff, platform)
         }
         console.log(`Generating aggregates for ${platform} installed week of ${cutoff} and later`)
-        await WeekOfInstall.transfer_platform_aggregate(platform, cutoff)
+        await WeekOfInstall.transfer_platform_aggregate(platform, cutoff, commander.force)
         global.mongo_client.close()
       }
     }
@@ -66,8 +81,7 @@ const run = async () => {
       global.mongo_client = await mongoc.setupConnection()
       const agg_collection = `${collection}_aggregate_woi`
       console.log(`fetching from ${agg_collection} installed week of ${cutoff} and later`)
-      const results = await mongo_client.collection(agg_collection).find({}).toArray()
-      await processResults(results)
+      await processResults(agg_collection, cutoff)
       global.mongo_client.close()
     }
     console.log(`Refreshing retention month view`)
@@ -84,39 +98,32 @@ const run = async () => {
   process.exit(0)
 }
 
-const processResults = async (results) => {
-  const total_entries = results.length
+const processResults = async (agg_collection, cutoff) => {
+  const results = await mongo_client.collection(agg_collection).find({'_id.woi': {$gte: cutoff}})
+  results.maxTimeMS(3600000)
+  const total_entries = await results.count()
   console.log(`total is ${total_entries}`)
   const bar = ProgressBar({
     tmpl: `Loading ... :bar :percent :eta`,
     width: 25,
     total: total_entries
   })
-  let rejected = []
   let summed_totals = 0
-  let platforms = [...new Set(results.map(r => r._id.platform))]
-  for (let platform of platforms) {
+  for (let platform of relevant_platforms) {
     try {
-      await knex('dw.fc_retention_woi').where('platform', platform).andWhere('woi', '>', cutoff).delete()
+      await knex('dw.fc_retention_woi').where('platform', platform).andWhere('woi', '>=', cutoff).delete()
     } catch (e) {
       console.log('Error cleansing')
       console.log(e.message)
     }
   }
 
-  for (let i = 0; i < results.length; i++) {
+  while (await results.hasNext()) {
     bar.tick(1)
-    const current = results[i]
-    let row
+    const current = await results.next()
     try {
-      const scrubbed_row = UsageAggregateWOI.scrub(current)
-      row = WeekOfInstall.from_usage_aggregate_woi(scrubbed_row)
-      if (UsageAggregateWOI.is_valid(scrubbed_row)) {
-        await UsageAggregateWOI.transfer_to_retention_woi(scrubbed_row)
-        summed_totals += row.total
-      } else {
-        rejected.push(scrubbed_row)
-      }
+      await UsageAggregateWOI.transfer_to_retention_woi(current)
+      summed_totals += current.usages.length
     } catch (e) {
       console.log('Error transfering')
     }
