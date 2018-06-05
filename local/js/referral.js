@@ -25,7 +25,7 @@
 
   var referralSummaryStatsRetriever = async () => {
 
-    var results = await $.ajax('/api/1/referral/stats/summary')
+    results = await $.ajax('/api/1/referral/stats/summary')
 
     console.log(results)
     totalDownloads = _.reduce(results.platform_summary, (memo, summary) => { return memo + summary.downloads }, 0)
@@ -110,4 +110,3 @@
     referralSummaryStatsRetriever
   }
 })()
-
