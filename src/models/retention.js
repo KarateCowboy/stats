@@ -133,7 +133,6 @@ class WeekOfInstall {
           }
         }))
         sum += 10000
-        console.log(`writing ${sum}`)
         batch = []
       }
     }
