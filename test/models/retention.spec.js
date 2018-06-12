@@ -7,6 +7,7 @@
 const moment = require('moment')
 const TestHelper = require('../test_helper').TestHelper
 const _ = require('underscore')
+const UsageAggregateUtil = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
 // io
 const fs = require('fs-extra')
 
@@ -71,7 +72,7 @@ describe('WeekOfInstall', function () {
         expect(android_usage_woi_aggs[0]._id).to.have.property(property)
       }
       expect(android_usage_woi_aggs).to.have.property('length', 1)
-      expect(android_usage_woi_aggs[0].usages).to.have.property('length', 10)
+      expect(android_usage_woi_aggs[0].usages.length > 9 ).to.equal(true)
     })
     it('truncates the aggregate_woi table for the platform', async function () {
       // setup
@@ -134,6 +135,25 @@ describe('RetentionWeek', function () {
       // validation
       const rows_in_view = await knex('dw.fc_retention_week_mv').count('*')
       expect(Number(rows_in_view[0].count)).to.be.above(0)
+    })
+  })
+  describe('#aggregated', async function () {
+    it('includes all ref types', async function () {
+      const usages = []
+      let usage_day = await factory.build('ios_usage_aggregate_woi')
+      await UsageAggregateUtil.transfer_to_retention_woi(usage_day)
+      usage_day = await factory.build('ios_usage_aggregate_woi')
+      usage_day._id.first_time = true
+      usage_day._id.ref = 'ABCDEF'
+      await UsageAggregateUtil.transfer_to_retention_woi(usage_day)
+      usage_day = await factory.build('ios_usage_aggregate_woi')
+      usage_day._id.first_time = true
+      usage_day._id.ref = '123456'
+      await UsageAggregateUtil.transfer_to_retention_woi(usage_day)
+      await RetentionWeek.refresh()
+
+      const results = await RetentionWeek.aggregated(['ios'], ['beta'])
+      expect(Number(results[0].starting)).to.equal(3)
     })
   })
 })

@@ -22,7 +22,6 @@ FROM dw.fc_retention_week_mv FC
 WHERE
   FC.platform = ANY ($1) AND
   FC.channel  = ANY ($2) AND
-  FC.ref = 'none' AND
   fc.woi::date > $3::date
 GROUP BY
   woi,
@@ -43,7 +42,7 @@ class RetentionWeek {
     await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_retention_week_mv')
   }
 
-  static async aggregated (platform, channel, ref) {
+  static async aggregated (platform, channel) {
     let rows
     const woi = moment().subtract(90, 'days').startOf('week').add(1, 'days').format('YYYY-MM-DD')
     const result = await pg_client.query(WEEKLY_RETENTION_QUERY, [platform, channel, woi])
@@ -89,11 +88,6 @@ class WeekOfInstall {
       daily: true,
       woi: {$gte: start_date, $lt: nearest_week},
       year_month_day: {$gte: start_date, $lt: nearest_week},
-      ref: {
-        '$in': [
-          'none'
-        ]
-      },
       aggregated_at: {
         $exists: false
       }

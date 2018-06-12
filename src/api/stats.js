@@ -460,8 +460,7 @@ exports.setup = (server, client, mongo) => {
       try {
         let platforms = common.platformPostgresArray(request.query.platformFilter)
         let channels = common.channelPostgresArray(request.query.channelFilter)
-        let refs = ['none']
-        const retentions = await RetentionWeek.aggregated(platforms, channels, refs)
+        const retentions = await RetentionWeek.aggregated(platforms, channels)
         reply(retentions)
       } catch (e) {
         console.log(e.message)
