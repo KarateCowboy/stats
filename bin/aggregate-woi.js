@@ -122,10 +122,8 @@ const processResults = async (agg_collection, cutoff) => {
     bar.tick(1)
     const current = await results.next()
     try {
-      if(current._id.ref === "none" || !!current._id.ref.match(/[A-Z0-9]{6,6}/)){
       await UsageAggregateWOI.transfer_to_retention_woi(current)
       summed_totals += current.usages.length
-      }
     } catch (e) {
       console.log('Error transfering')
     }
