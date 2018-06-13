@@ -66,7 +66,7 @@ class RetentionWeek {
   }
 }
 
-aggregate_id = (usage, collection_name) => {
+const aggregate_id = (usage, collection_name) => {
 
   platform = collection_name === 'android_usage' ? 'androidbrowser' : usage.platform
   return {
@@ -75,7 +75,7 @@ aggregate_id = (usage, collection_name) => {
     version: usage.version,
     channel: usage.channel,
     woi: usage.woi,
-    ref: 'none',
+    ref: usage.ref || 'none',
     first_time: usage.first
   }
 }
