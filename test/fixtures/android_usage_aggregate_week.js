@@ -24,7 +24,7 @@ const define = () => {
   }
 
   factory.define('android_usage_aggregate_woi', AndroidUsageAggregateWOI, {
-    '_id': {
+    _id: {
       'ymd': () => moment().subtract(1, 'months').format('YYYY-MM-DD'),
       'platform': 'androidbrowser',
       'version': '1.0.42',
@@ -34,14 +34,16 @@ const define = () => {
       'ref': () => _.shuffle((new ObjectID()).toString().split('')).join('').toUpperCase().slice(0, 6)
     },
     'count': () => (Math.random() * 100).toFixed(0),
-    usages: () => { return [
-      (new ObjectID()),
-      (new ObjectID()),
-      (new ObjectID()),
-      (new ObjectID()),
-      (new ObjectID()),
-      (new ObjectID())
-    ]}
+    'usages': () => {
+      return [
+        (new ObjectID()),
+        (new ObjectID()),
+        (new ObjectID()),
+        (new ObjectID()),
+        (new ObjectID()),
+        (new ObjectID())
+      ]
+    }
   })
 
 }

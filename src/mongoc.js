@@ -5,7 +5,7 @@
 const assert = require('assert')
 const MongoClient = require('mongodb').MongoClient
 
-const mongoURL = process.env.MLAB_URI
+global.mongoURL = process.env.MLAB_URI
 if (!mongoURL) throw new Error('MLAB_URI must be set in environment')
 
 module.exports.setup = function (cb) {

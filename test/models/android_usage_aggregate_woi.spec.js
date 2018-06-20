@@ -26,4 +26,10 @@ describe('AndroidUsageAggregateWOI', function () {
       expect(scrubbed_record._id.platform).to.equal('androidbrowser')
     })
   })
+  describe('#aggregate_from_usages', async function(){
+    it('includes usages that match the primary key', async function(){
+
+
+    })
+  })
 })

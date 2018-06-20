@@ -9,6 +9,7 @@ const TestHelper = require('../test_helper').TestHelper
 const WeekOfInstall = require('../../src/models/retention').WeekOfInstall
 const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
 const main = require('../../src/index')
+const _ = require('underscore')
 
 let test_helper
 before(async function () {
@@ -21,6 +22,25 @@ after(async function () {
 })
 
 describe('/retention_week', async function () {
+  it('allows filtering by ref', async function () {
+    await test_helper.truncate()
+    let excluded_retention_woi = await factory.build('fc_retention_woi', {ref: 'none'})
+    await excluded_retention_woi.save()
+    let included_retention_woi = await factory.build('fc_retention_woi', {ref: '123ABC'})
+    await included_retention_woi.save()
+    await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_retention_week_mv')
+    const server = await main.setup({pg: pg_client, mg: mongo_client})
+
+    // execution
+    let params = {
+      method: 'GET',
+      url: `/api/1/retention_week?platformFilter=winx64&channelFilter=dev&ref=123ABC`
+    }
+    //validation
+    let response = await server.inject(params)
+    let payload = JSON.parse(response.payload)
+    expect(payload[0].starting).to.equal(included_retention_woi.total)
+  })
   it('returns twelve rows/three months of data', async function () {
     this.timeout(10000)
     // Setup

@@ -72,7 +72,6 @@ describe('WeekOfInstall', function () {
         expect(android_usage_woi_aggs[0]._id).to.have.property(property)
       }
       expect(android_usage_woi_aggs).to.have.property('length', 1)
-      expect(android_usage_woi_aggs[0].usages.length > 9 ).to.equal(true)
     })
     it('truncates the aggregate_woi table for the platform', async function () {
       // setup
@@ -108,7 +107,7 @@ describe('WeekOfInstall', function () {
   describe('#from_usage_aggregate_woi', function () {
     const WeekOfInstall = require('../../src/models/retention').WeekOfInstall
     it('scrubs ios_usage records', async function () {
-      const ios_usage_agg_woi = await factory.build('ios_usage_aggregate_woi')
+      const ios_usage_agg_woi = await factory.attrs('ios_usage_aggregate_woi')
       ios_usage_agg_woi._id.woi = '2018-1-1'
       const retention_week = WeekOfInstall.from_usage_aggregate_woi(ios_usage_agg_woi)
       expect(retention_week.woi).to.match(/^[\d]{4,4}-[\d]{2,2}-[\d]{2,2}/)

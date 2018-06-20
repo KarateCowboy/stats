@@ -42,10 +42,18 @@ class RetentionWeek {
     await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_retention_week_mv')
   }
 
-  static async aggregated (platform, channel) {
+  static async aggregated (platform, channel, ref) {
     let rows
-    const woi = moment().subtract(90, 'days').startOf('week').add(1, 'days').format('YYYY-MM-DD')
-    const result = await pg_client.query(WEEKLY_RETENTION_QUERY, [platform, channel, woi])
+    const query = knex('dw.fc_retention_week_mv').select(['woi',
+      'week_delta']).sum({'current': 'current'}).sum({'starting': 'starting'}).select(knex.raw('sum(current)/sum(starting) as retained_percentage'))
+      .whereIn('platform', platform)
+      .whereIn('channel', channel)
+      .groupBy('woi', 'week_delta').orderBy('woi', 'week_delta')
+    if (!!ref) {
+      query.whereIn('ref', ref.split(','))
+    }
+
+    const result = await pg_client.query(query.toString())
     rows = result.rows.filter(row => {
       const monday = moment(row.woi).startOf('week').add(1, 'days')
       return (moment(row.woi).diff(monday, 'days') === 0)
@@ -97,10 +105,18 @@ class WeekOfInstall {
     }
     let usages = await mongo_client.collection(collection_name).find(usage_params)
 
+    let count = await usages.count()
+    console.log(`${count} usages to parse`)
     let batch = []
     let sum = 0
     await usages.maxTimeMS(360000000)
+    const bar = ProgressBar({
+      tmpl: `Loading ... :bar :percent :eta`,
+      width: 100,
+      total: count
+    })
     while (await usages.hasNext()) {
+      bar.tick(1)
       let usage = await usages.next()
       let has_next = await usages.hasNext()
       batch.push(usage)

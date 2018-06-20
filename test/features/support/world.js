@@ -12,6 +12,8 @@ class CustomWorld {
 
     this.adminPassword = 'SOME_TEST_PASSWORD'
     this.sessionSecret = 'SUPER_SECRET_SESSION_SALT_THAT_IS_LONG'
+    process.env.SESSION_SECRET = this.sessionSecret
+    process.env.ADMIN_PASSWORD = this.adminPassword
     const options = {desiredCapabilities: {browserName: 'chrome'}}
     global.browser = webdriver.remote(options)
   }

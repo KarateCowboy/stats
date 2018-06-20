@@ -4,7 +4,6 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 const mongoose = require('mongoose')
-mongoose.connect(process.env.MLAB_URI)
 
 const joi = require('joi')
 const moment = require('moment')

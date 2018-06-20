@@ -4,7 +4,7 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const server = require(process.cwd() + '/src/index')
+global.server = require(process.cwd() + '/src/index')
 const {After, Before} = require('cucumber')
 
 const bindHelpers = function () {
@@ -33,6 +33,7 @@ Before(async function () {
   const TestHelper = require('../../../test/test_helper').TestHelper
   this.test_helper = new TestHelper()
   await this.test_helper.setup()
+  await this.test_helper.truncate()
   await server.setup({pg: global.pg_client, mg: global.mongo_client})
   try {
     await server.kickoff()
