@@ -1295,9 +1295,9 @@ var pageState = {
     androidbrowser: true
   },
   channelFilter: {
-    dev: false,
+    dev: true,
     beta: false,
-    stable: true
+    stable: false
   },
   showToday: false
 }
