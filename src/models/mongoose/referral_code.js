@@ -17,12 +17,7 @@ const ReferralCodeSchema = new mongoose.Schema({
 
 ReferralCodeSchema.methods.sample_method = async function () {
 }
-ReferralCodeSchema.statics = {
-  collectionName: 'ReferralCode',
-  routeOptions: {}
-}
 const ReferralCode = mongoose.model('ReferralCode', ReferralCodeSchema)
 module.exports.ReferralCodeSchema = ReferralCodeSchema
 
 module.exports.ReferralCode = ReferralCode
-
