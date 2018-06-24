@@ -258,11 +258,11 @@ exports.dailyActiveAndroidUsersFullGrouped = (db, exceptions, cb) => {
   })
 }
 
-exports.dailyActiveiOSUsersFullGrouped = (db, exceptions, cb) => {
+exports.dailyActiveiOSUsersFullGrouped = async () => {
   var limit = moment().subtract(14, 'days').format('YYYY-MM-DD')
   console.log(`Retrieving records on and after ${limit}`)
 
-  var query = db.collection('ios_usage').aggregate([
+  var query = await mongo_client.collection('ios_usage').aggregate([
     {
       $match: {
         year_month_day: {$gte: limit}
@@ -323,14 +323,7 @@ exports.dailyActiveiOSUsersFullGrouped = (db, exceptions, cb) => {
     }
   ], {explain: false})
 
-  query.toArray((err, result) => {
-    if (err) {
-      throw new Error(err)
-    } else {
-      result = result.concat(exceptions)
-    }
-    cb(err, result)
-  })
+  return query.toArray()
 }
 
 /*
