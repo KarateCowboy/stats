@@ -9,18 +9,21 @@ var pgc = require('../src/pgc')
 var retriever = require('../src/retriever')
 var model = require('../src/model')
 var reporter = require('../src/reporter')
+const moment = require('moment')
 
 var async = require('async')
 var _ = require('underscore')
 var path = require('path')
 
 var args = require('yargs')
-    .default('collection', 'usage')
-    .argv
+  .default('collection', 'usage')
+  .default('start', moment().startOf('month').format('YYYY-MM-DD'))
+  .default('end', moment().format('YYYY-MM-DD'))
+  .argv
 
 var validCollections = ['usage', 'android_usage', 'ios_usage']
 if (validCollections.indexOf(args.collection) === -1) {
-  console.log('Invalid collection ' + args.collection);
+  console.log('Invalid collection ' + args.collection)
   process.exit(1)
 }
 
@@ -33,7 +36,7 @@ var jobName = path.basename(__filename)
 var runInfo = reporter.startup(jobName)
 
 // This is triggered when all resources have valid connections
-var resourcesReady = function(asyncError, resources) {
+var resourcesReady = function (asyncError, resources) {
   var cleanup = function () {
     // Close connections to Postgres and Mongo
     resources.pg.end()
@@ -41,7 +44,7 @@ var resourcesReady = function(asyncError, resources) {
   }
 
   console.log('Update monthly totals for ' + args.collection)
-  var resultsHandler = function(err, results) {
+  var resultsHandler = function (err, results) {
     if (err) {
       throw new Error(err)
     }
@@ -60,26 +63,26 @@ var resourcesReady = function(asyncError, resources) {
 
     // filter out wrong version formats
     results = results.filter(function (result) {
-      return result._id.version.match(new RegExp("^\\d+\\.\\d+\\.\\d+$"))
+      return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$'))
     })
 
     // filter out duplicate ios entries
     if (args.collection === 'ios_usage') {
-      console.log("limiting ios records to ones on or after 2018-01-01")
+      console.log('limiting ios records to ones on or after 2018-01-01')
       results = results.filter(function (results) {
-        return results._id.ymd >= '2018-01-01';
+        return results._id.ymd >= '2018-01-01'
       })
     }
 
-    console.log("Updating " + results.length + " rows")
+    console.log('Updating ' + results.length + ' rows')
 
     // Build funcs to execute
-    var funcs = _.map(results, function(row) {
+    var funcs = _.map(results, function (row) {
       return upsertMaker(resources.pg, row)
     })
 
     // Insert rows
-    async.series(funcs, function(err, results) {
+    async.series(funcs, function (err, results) {
       if (err) {
         throw new Error(err)
       }
@@ -88,7 +91,7 @@ var resourcesReady = function(asyncError, resources) {
     })
   }
   // retrieve the monthly user count and update Postgres
-  retriever.monthlyUsersByDay(resources.mg, resultsHandler, args.collection)
+  retriever.monthlyUsersByDay(resources.mg, resultsHandler, args.collection, args.start, args.end)
 }
 
 // Setup and run
