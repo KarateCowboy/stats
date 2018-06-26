@@ -4,71 +4,60 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var async = require('async')
-var _ = require('underscore')
-var fs = require('fs')
-var path = require('path')
-var moment = require('moment')
+const path = require('path')
+const moment = require('moment')
 
-var mongoc = require('../src/mongoc')
-var retriever = require('../src/retriever')
-var model = require('../src/model')
-var reporter = require('../src/reporter')
-var pgc = require('../src/pgc')
+const mongoc = require('../src/mongoc')
+const retriever = require('../src/retriever')
+const model = require('../src/model')
+const reporter = require('../src/reporter')
+const pgc = require('../src/pgc')
 
-var jobName = path.basename(__filename)
-var runInfo = reporter.startup(jobName)
+const jobName = path.basename(__filename)
+const runInfo = reporter.startup(jobName)
+const _ = require('underscore')
 
 console.log('Update daily totals for iOS browser - ' + jobName)
 
-// This is triggered when all resources have valid connections
-var resourcesReady = function(asyncError, resources) {
-  var cleanup = function () {
-    // Close connections to Postgres and Mongo
-    resources.pg.end()
-    resources.mg.close()
-  }
+const main = async () => {
+  global.mongo_client = await mongoc.setupConnection()
+  global.pg_client = await pgc.setupConnection()
+  let results = await retriever.dailyActiveiOSUsersFullGrouped()
 
-  // Retrieve the daily active user stats
-  retriever.dailyActiveiOSUsersFullGrouped(resources.mg, [], function(err, results) {
-    // set defaults if woi and ref not set
-    results.forEach((result) => {
-      result._id.woi = result._id.woi || '2016-01-04'
-      result._id.ref = result._id.ref || 'none'
-    })
-
-    // filter out wrong version formats
-    results = results.filter(function (result) {
-      if (result._id.version.match(new RegExp("^\\d+\\.\\d+$"))) {
-        result._id.version += '.0'
-      }
-      return result._id.version.match(new RegExp("^\\d+\\.\\d+\\.\\d+$"))
-    })
-
-    // Build funcs to execute
-    var funcs = _.map(results, function(row) {
-      return model.usageiOSUpserter(resources.pg, row)
-    })
-
-    console.log('Retrieved results from Mongo')
-    console.log('Updating ' + results.length + ' rows in Postgres')
-
-    // Insert rows
-    async.series(funcs, async function(err, results) {
-      if (err) {
-        throw new Error(err)
-      }
-      console.log("Moving iOS usage records to canonical usage table")
-      var limit = moment().subtract(14, 'days').format('YYYY-MM-DD')
-      await model.moveiOSUsageToUsage(resources.pg, limit)
-      // Report the results of the job run
-      reporter.shutdown(runInfo, resources.pg, cleanup)
-    })
+  // set defaults if woi and ref not set
+  results.forEach((result) => {
+    result._id.woi = result._id.woi || '2016-01-04'
+    result._id.ref = result._id.ref || 'none'
   })
+
+  // filter out wrong version formats
+  results = results.filter(function (result) {
+    if (result._id.version.match(new RegExp('^\\d+\\.\\d+$'))) {
+      result._id.version += '.0'
+    }
+    return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta'].includes(result._id.channel)
+  })
+  console.log('Retrieved results from Mongo')
+  console.log('Updating ' + results.length + ' rows in Postgres')
+
+  for (let row of results) {
+    try {
+      await pg_client.query('INSERT INTO dw.fc_ios_usage (ymd, platform, version, first_time, channel, woi, ref, total) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) ON CONFLICT (ymd, platform, version, first_time, channel, woi, ref) DO UPDATE SET total = $8', [row._id.ymd, row._id.platform, row._id.version, row._id.first_time, row._id.channel, row._id.woi, row._id.ref, row.count])
+    } catch (e) {
+      console.log(e.message)
+      console.dir(row)
+      if (!e.message.includes('invalid byte sequence')) {
+        throw new Error(e)
+      }
+    }
+  }
+  console.log('Moving iOS usage records to canonical usage table')
+  let limit = moment().subtract(14, 'days').format('YYYY-MM-DD')
+  await model.moveiOSUsageToUsage(pg_client, limit)
+  await reporter.complete(runInfo, pg_client)
+
+  await pg_client.end()
+  await mongo_client.close()
 }
 
-// Setup and run
-async.parallel({
-  pg: pgc.setup,
-  mg: mongoc.setup
-}, resourcesReady)
+main()
