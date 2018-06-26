@@ -1,4 +1,5 @@
 // Platform meta data
+let VueApp
 const platforms = {
   osx: {
     id: 'osx',
@@ -218,7 +219,8 @@ function installPromotionsPopoverHandler () {
       if (partner && ref && description && platform) {
         $('#addRef').popover('hide')
         var result = await $.ajax('/api/1/promotions/refs', {
-          type: 'POST', data: {
+          type: 'POST',
+          data: {
             ref: ref,
             partner: partner,
             description: description,
@@ -639,7 +641,7 @@ const weeklyRetentionHandler = function (rows) {
   // averages
   buffer += '</tr><tr><th>Average</th><td></td>'
   for (i = 0; i < 12; i++) {
-    avg = STATS.STATS.avg(rows.filter((row) => { return row.week_delta === i }).map((row) => { return row.retained_percentage})) || 0
+    avg = STATS.STATS.avg(rows.filter((row) => { return row.week_delta === i }).map((row) => { return row.retained_percentage })) || 0
     cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
     buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(avg * 100) + '</td>'
   }
@@ -672,13 +674,13 @@ const weeklyRetentionHandler = function (rows) {
 
   // heading sparklines
   for (i = 0; i < 12; i++) {
-    sparkData = rows.filter((row) => { return row.week_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100)})
+    sparkData = rows.filter((row) => { return row.week_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100) })
     $('#sparklineDelta' + i).sparkline(sparkData, sparklineOptions)
   }
 
   // installation week sparklines
   rowHeadings.forEach((heading) => {
-    sparkData = rows.filter((row) => { return row.woi === heading }).map((row) => { return parseInt(row.retained_percentage * 100)})
+    sparkData = rows.filter((row) => { return row.woi === heading }).map((row) => { return parseInt(row.retained_percentage * 100) })
     $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
   })
   console.log('finished the weeklyRetentionHandler')
@@ -715,7 +717,7 @@ const retentionMonthHandler = function (rows) {
   // averages
   buffer += '</tr><tr><th>Average</th><td></td>'
   for (i = 0; i < 12; i++) {
-    avg = STATS.STATS.avg(rows.filter((row) => { return row.month_delta === i }).map((row) => { return row.retained_percentage})) || 0
+    avg = STATS.STATS.avg(rows.filter((row) => { return row.month_delta === i }).map((row) => { return row.retained_percentage })) || 0
     cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
     buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(avg * 100) + '</td>'
   }
@@ -749,13 +751,13 @@ const retentionMonthHandler = function (rows) {
 
   // heading sparklines
   for (i = 0; i < 12; i++) {
-    sparkData = rows.filter((row) => { return row.month_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100)})
+    sparkData = rows.filter((row) => { return row.month_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100) })
     $('#sparklineDelta' + i).sparkline(sparkData, sparklineOptions)
   }
 
   // installation month sparklines
   rowHeadings.forEach((heading) => {
-    sparkData = rows.filter((row) => { return row.moi === heading }).map((row) => { return parseInt(row.retained_percentage * 100)})
+    sparkData = rows.filter((row) => { return row.moi === heading }).map((row) => { return parseInt(row.retained_percentage * 100) })
     $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
   })
 }
@@ -822,13 +824,14 @@ var serializeChannelParams = function () {
 }
 
 var standardParams = function () {
+  let referral_codes = VueApp ? VueApp.$data.selected_refs.join(',') : null
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
     channelFilter: serializeChannelParams(),
     showToday: pageState.showToday,
     version: pageState.version,
-    ref: pageState.ref
+    ref: referral_codes
   })
 }
 
@@ -866,6 +869,7 @@ var retentionMonthRetriever = function () {
 }
 
 const weeklyRetentionRetriever = () => {
+  console.log('blah')
   console.log(standardParams())
   $.ajax('/api/1/retention_week?' + standardParams(), {
     success: (rows) => {
@@ -875,7 +879,6 @@ const weeklyRetentionRetriever = () => {
       console.log('failed to communicate with endpoint')
     }
   })
-
 }
 
 var versionsRetriever = function () {
@@ -1273,7 +1276,7 @@ var menuItems = {
     title: 'Daily Publisher Status',
     subtitle: 'Publisher activations by day',
     retriever: window.STATS.PUB.publisherDailyRetriever
-  },
+  }
 }
 
 // Mutable page state
@@ -1294,7 +1297,7 @@ var pageState = {
   channelFilter: {
     dev: true,
     beta: false,
-    stable: true
+    stable: false
   },
   showToday: false
 }
@@ -1657,7 +1660,7 @@ router.get('crashes_platform_detail/:ymd/:platform', function (req) {
   viewState.showPromotions = false
   viewState.showShowToday = true
   updatePageUIState()
-  //refreshData()
+  // refreshData()
 })
 
 router.get('crashes_platform_version', function (req) {
@@ -1766,7 +1769,6 @@ router.get('crash/:id', function (req) {
   $('#crash-detail-stack').empty()
 
   var loadAvailableCrashTags = function (id) {
-
     $.ajax('/api/1/available_crash_tags', {
       success: function (rows) {
         var ul = $('#availableCrashTags')
@@ -1886,9 +1888,9 @@ router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', 
 _.forEach(platformKeys, function (id) {
   $('#btn-filter-' + id).on('change', function () {
     pageState.platformFilter[id] = this.checked
-    if(this.checked && $(this).parent().hasClass('active') === false){
+    if (this.checked && $(this).parent().hasClass('active') === false) {
       $(this).parent().addClass('active')
-    }else if(!this.checked && $(this).parent().hasClass('active')){
+    } else if (!this.checked && $(this).parent().hasClass('active')) {
       $(this).parent().removeClass('active')
     }
     refreshData()
@@ -1899,9 +1901,9 @@ _.forEach(platformKeys, function (id) {
 _.forEach(channelKeys, function (id) {
   $('#btn-channel-' + id).on('change', function () {
     pageState.channelFilter[id] = this.checked
-    if(this.checked){
+    if (this.checked) {
       $(this).parent().addClass('active')
-    }else{
+    } else {
       $(this).parent().removeClass('active')
     }
     refreshData()
@@ -1947,7 +1949,7 @@ var searchInputHandler = function (e) {
             td(crash.contents.year_month_day),
             td(crash.contents.platform + ' ' + crash.contents.metadata.cpu),
             td(crash.contents.metadata.operating_system_name),
-            td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>'}).join(' '))
+            td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>' }).join(' '))
           ], {'classes': rowClass}
         ))
         table.append(tr([td(), '<td colspan="7">' + crash.contents.metadata.signature + '</td>'], {'classes': rowClass}))
@@ -1977,16 +1979,34 @@ $('[data-toggle="tooltip"]').tooltip()
 
 var publisherPlatforms
 var publisherPlatformsByPlatform
+var referral_codes = []
 
 async function loadInitialData () {
   publisherPlatforms = await $.ajax('/api/1/publishers/platforms')
   publisherPlatformsByPlatform = _.object(publisherPlatforms.map((platform) => { return [platform.platform, platform] }))
+  const response = await $.ajax('/api/1/referral_codes')
+  response.forEach(code => {
+    referral_codes.push(code.code_text)
+  })
   installPromotionsPopoverHandler()
   $('#clearRef').hide()
 
   await window.REFERRAL.referralSummaryStatsRetriever()
 }
 
-$(document).ready(function(){
+$(document).ready(function () {
+  Vue.component('v-select', VueSelect.VueSelect)
+  VueApp = new Vue({
+    el: '#ref-filter',
+    components: {VueSelect},
+    data: {
+      selected_refs: ['none'],
+      refcodes: referral_codes
+    },
+    methods: {
+      refresh_data: () => { refreshData() }
+    }
+  })
+  // pageState.referral_codes = VueApp.data.selected_refs
   loadInitialData()
 })

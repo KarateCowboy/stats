@@ -4,6 +4,7 @@
 
 const pgc = require('./pgc')
 const mgc = require('./mongoc')
+const Knex = require('knex')
 const server = require('./index')
 
 const run = async () => {
@@ -11,7 +12,8 @@ const run = async () => {
   global.pg_client = pgh
   const mgh = await mgc.setupConnection()
   global.mongo_client = mgh
-  await server.setup({pg: pgh, mg: mgh})
+  global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
+  await server.setup({pg: pgh, mg: mgh, knex: knex})
   await server.kickoff()
 }
 

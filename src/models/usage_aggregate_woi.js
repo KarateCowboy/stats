@@ -4,7 +4,6 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 const mongoose = require('mongoose')
-mongoose.connect(process.env.MLAB_URI)
 
 const joi = require('joi')
 const moment = require('moment')
@@ -33,8 +32,7 @@ class UsageAggregateUtil {
       if (moment(record._id.ymd).isBefore(moment(record._id.woi))) {
         return false
       }
-    }
-    catch (e) {
+    } catch (e) {
       return false
     }
     return true
@@ -65,21 +63,21 @@ class UsageAggregateUtil {
       record._id.version = `${record._id.version.trim()}.0`
     }
     return record
-
   }
 
   static async transfer_to_retention_woi (record) {
     try {
-      await knex('dw.fc_retention_woi').insert({
-        ymd: record._id.ymd,
-        platform: record._id.platform,
-        version: record._id.version,
-        channel: record._id.channel,
-        woi: record._id.woi,
-        ref: record._id.ref,
-        total: record.usages.length
-      })
-
+      if (record.usages.length > 0 && (record._id.ref === 'none' || !!record._id.ref.match(/[A-Z0-9]{6,6}/))) {
+        await knex('dw.fc_retention_woi').insert({
+          ymd: record._id.ymd,
+          platform: record._id.platform,
+          version: record._id.version,
+          channel: record._id.channel,
+          woi: record._id.woi,
+          ref: record._id.ref,
+          total: record.usages.length
+        })
+      }
     } catch (e) {
       if (e.message.includes('duplicate key value violates unique constraint "fc_retention_woi_pkey"')) {
         await knex('dw.fc_retention_woi').increment('total', record.usages.length)
@@ -105,10 +103,10 @@ const db_schema = new mongoose.Schema({
   collection: 'usage_aggregate_woi'
 })
 
-db_schema.statics.woi_for_weeks_ago = function(weeks) {
+db_schema.statics.woi_for_weeks_ago = function (weeks) {
   return moment().subtract(weeks, 'weeks').startOf('week').add(1, 'days')
 }
-db_schema.methods.find_usages = async function() {
+db_schema.methods.find_usages = async function () {
   const usages_cursor = await mongo_client.collection('usage').find({
     daily: true,
     woi: this._id.woi,
@@ -119,7 +117,7 @@ db_schema.methods.find_usages = async function() {
     first: this._id.first
   })
   let all_usages = []
-  while(await usages_cursor.hasNext()){
+  while (await usages_cursor.hasNext()) {
     const current = await usages_cursor.next()
     this.usages.push(current._id)
     all_usages.push(current)

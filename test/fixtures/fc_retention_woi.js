@@ -7,6 +7,7 @@
 const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const moment = require('moment')
+const {ObjectID} = require('mongoose')
 
 const define = () => {
   factory.setAdapter(new FactoryGirl.ObjectAdapter())
@@ -41,12 +42,15 @@ const define = () => {
       ymd: () => moment().subtract(4, 'weeks').format(),
       platform: 'winx64',
       version: '0.12.4',
-      woi: () => moment().subtract(7, 'weeks').format(),
+      woi: () => moment().subtract(7, 'weeks').startOf('week').add(1, 'days').format(),
       channel: 'dev',
       total: () => Math.floor(Math.random(500) * 1000),
       ref: 'none'
     }
   )
+  factory.extend('fc_retention_woi', 'fc_retention_woi_with_ref', {
+    ref: () => { (new ObjectID).toString().slice(0, 6).toUpperCase() }
+  })
 }
 
 module.exports.define = define

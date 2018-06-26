@@ -460,8 +460,8 @@ exports.setup = (server, client, mongo) => {
       try {
         let platforms = common.platformPostgresArray(request.query.platformFilter)
         let channels = common.channelPostgresArray(request.query.channelFilter)
-        let refs = ['none']
-        const retentions = await RetentionWeek.aggregated(platforms, channels, refs)
+        let ref = request.query.ref ? request.query.ref : null
+        const retentions = await RetentionWeek.aggregated(platforms, channels, ref)
         reply(retentions)
       } catch (e) {
         console.log(e.message)
@@ -518,8 +518,6 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/mau',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      console.dir(channels)
-      console.dir(ref)
       var results = await client.query(MAU, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')

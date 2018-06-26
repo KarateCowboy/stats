@@ -16,6 +16,7 @@ require('./fixtures/android_usage_aggregate_week').define()
 require('./fixtures/usage_aggregate_woi').define()
 require('./fixtures/link_bubble_usage').define()
 require('./fixtures/desktop_usage').define()
+require('./fixtures/referral_code').define()
 
 class TestHelper {
   constructor () {
@@ -27,10 +28,12 @@ class TestHelper {
       throw Error('Please set TEST_MLAB_URI')
     }
     this.testMongoUri = process.env.TEST_MLAB_URI
+    global.MONGO_URI = process.env.TEST_MLAB_URI
     global.expect = require('chai').expect
 
     this.mongo_collections = [
       'usage',
+      'referral_codes',
       'usage_aggregate_woi',
       'android_usage',
       'android_usage_aggregate_woi',
