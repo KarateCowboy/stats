@@ -869,8 +869,6 @@ var retentionMonthRetriever = function () {
 }
 
 const weeklyRetentionRetriever = () => {
-  console.log('blah')
-  console.log(standardParams())
   $.ajax('/api/1/retention_week?' + standardParams(), {
     success: (rows) => {
       weeklyRetentionHandler(rows)
