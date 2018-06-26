@@ -48,6 +48,7 @@ class RetentionWeek {
       'week_delta']).sum({'current': 'current'}).sum({'starting': 'starting'}).select(knex.raw('sum(current)/sum(starting) as retained_percentage'))
       .whereIn('platform', platform)
       .whereIn('channel', channel)
+      .whereRaw(`woi::date > ${ moment().subtract(90, 'days').startOf('week').format('YYYY-MM-DD')}::date`)
       .groupBy('woi', 'week_delta').orderBy('woi', 'week_delta')
     if (!!ref) {
       query.whereIn('ref', ref.split(','))
