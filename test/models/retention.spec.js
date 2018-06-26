@@ -57,7 +57,7 @@ describe('WeekOfInstall', function () {
       // setup
       const android_usages = []
       for (let i in _.range(10)) {
-        const usage = await factory.build('android_usage', { ref: 'none'})
+        const usage = await factory.build('android_usage', {ref: 'none'})
         await usage.save()
         android_usages.push(usage)
       }
@@ -88,7 +88,7 @@ describe('WeekOfInstall', function () {
     it('applies android scrubbing to android browser but not link bubble', async function () {
       const android_usage = await factory.build('android_usage', {platform: 'android', ref: 'none'})
       await android_usage.save()
-      const link_bubble_usage = await factory.build('link_bubble_usage', { ref: 'none'})
+      const link_bubble_usage = await factory.build('link_bubble_usage', {ref: 'none'})
       await link_bubble_usage.save()
       const cutoff = moment(android_usage.woi).subtract(10, 'days')
 
@@ -154,6 +154,24 @@ describe('RetentionWeek', function () {
       const results = await RetentionWeek.aggregated(['ios'], ['beta'])
       expect(Number(results[0].starting)).to.equal(3)
     })
+    it.only('does not return extraneous, current week data', async function () {
+      for (let r = 12; r >= 0; r--) {
+        const woi = moment().subtract(r, 'weeks').startOf('week').add(1, 'days')
+        for (let c = 0; c < r; c++) {
+          const year_month_day = moment().subtract(r, 'weeks').startOf('week').add((c * 7 + 1), 'days')
+          const retention_woi = await factory.build('fc_retention_woi', {
+            woi: woi,
+            ymd: year_month_day,
+            total: (r * 100) - (c * 100)
+          })
+          await retention_woi.save()
+        }
+      }
+      await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_retention_week_mv')
+      expect(true).to.equal(true)
+
+    })
+
   })
 })
 

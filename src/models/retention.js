@@ -106,7 +106,6 @@ class WeekOfInstall {
     let usages = await mongo_client.collection(collection_name).find(usage_params)
 
     let count = await usages.count()
-    console.log(`${count} usages to parse`)
     let batch = []
     let sum = 0
     await usages.maxTimeMS(360000000)
