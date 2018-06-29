@@ -48,15 +48,22 @@ class RetentionWeek {
       'week_delta']).sum({'current': 'current'}).sum({'starting': 'starting'}).select(knex.raw('sum(current)/sum(starting) as retained_percentage'))
       .whereIn('platform', platform)
       .whereIn('channel', channel)
-      .groupBy('woi', 'week_delta').orderBy('woi', 'week_delta')
+      .andWhere('woi','>',moment().subtract(12,'weeks').startOf('week').format('YYYY-MM-DD'))
+      .andWhere('woi','<',moment().startOf('week').format('YYYY-MM-DD'))
+      .andWhere('week_delta','<',12)
+      .andWhere('week_delta','>=',0)
+      .groupBy('woi', 'week_delta')
     if (!!ref) {
       query.whereIn('ref', ref.split(','))
     }
-
+    query.orderBy('woi')
+    query.orderBy('week_delta')
     const result = await pg_client.query(query.toString())
     rows = result.rows.filter(row => {
-      const monday = moment(row.woi).startOf('week').add(1, 'days')
-      return (moment(row.woi).diff(monday, 'days') === 0)
+      const week_monday = moment(row.woi).startOf('week').add(1, 'days')
+      const current_monday = moment().startOf('week')
+      const weeks_ago = current_monday.diff(week_monday,'weeks')
+      return (moment(row.woi).diff(week_monday, 'days') === 0) && row.week_delta <= weeks_ago
     })
 
     for (let row of rows) {

@@ -29,7 +29,6 @@ describe('AndroidUsageAggregateWOI', function () {
   describe('#aggregate_from_usages', async function(){
     it('includes usages that match the primary key', async function(){
 
-
     })
   })
 })
