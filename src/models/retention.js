@@ -53,6 +53,7 @@ class RetentionWeek {
       .andWhere('week_delta','<',12)
       .andWhere('week_delta','>=',0)
       .groupBy('woi', 'week_delta')
+
     if (!!ref) {
       query.whereIn('ref', ref.split(','))
     }
