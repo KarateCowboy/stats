@@ -1,5 +1,5 @@
 // Platform meta data
-let VueApp
+var VueApp
 const platforms = {
   osx: {
     id: 'osx',
@@ -824,7 +824,7 @@ var serializeChannelParams = function () {
 }
 
 var standardParams = function () {
-  let referral_codes = VueApp ? VueApp.$data.selected_refs.join(',') : null
+  let referral_codes = VueApp && viewState.showRefFilter ? VueApp.$data.selected_refs.join(',') : null
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
@@ -1295,7 +1295,7 @@ var pageState = {
   channelFilter: {
     dev: true,
     beta: false,
-    stable: false
+    stable: true
   },
   showToday: false
 }
@@ -1310,7 +1310,8 @@ var viewState = {
     ios: true,
     android: true,
     androidbrowser: true
-  }
+  },
+  showRefFilter: false
 }
 
 var enableAllPlatforms = function () {
@@ -1440,6 +1441,7 @@ var refreshData = function () {
   }
 }
 
+let initialize_router = () => {
 // Setup menu handler routes
 var router = new Grapnel()
 
@@ -1448,6 +1450,7 @@ router.get('search', function (req) {
   viewState.showControls = false
   viewState.showPromotions = false
   viewState.showShowToday = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1457,6 +1460,7 @@ router.get('overview', function (req) {
   viewState.showControls = false
   viewState.showPromotions = false
   viewState.showShowToday = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1467,6 +1471,7 @@ router.get('versions', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1477,6 +1482,7 @@ router.get('retention', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1487,6 +1493,7 @@ router.get('retention_month', function (req) {
   viewState.showDaysSelector = false
   viewState.showPromotions = false
   viewState.showShowToday = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1497,6 +1504,8 @@ router.get('weekly-retention', function (req) {
   viewState.showDaysSelector = false
   viewState.showPromotions = false
   viewState.showShowToday = false
+  viewState.showRefFilter = true
+  VueApp.$data.showRefFilter = true
   updatePageUIState()
   refreshData()
 })
@@ -1507,6 +1516,8 @@ router.get('usage', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  viewState.showRefFilter = false
+  VueApp.$data.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1517,6 +1528,8 @@ router.get('usage_returning', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  viewState.showRefFilter = false
+  VueApp.$data.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1527,6 +1540,8 @@ router.get('usage_month', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  VueApp.$data.showRefFilter = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1537,6 +1552,8 @@ router.get('usage_month_agg', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  VueApp.$data.showRefFilter = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1547,6 +1564,8 @@ router.get('usage_month_average_agg', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  VueApp.$data.showRefFilter = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1557,6 +1576,8 @@ router.get('usage_month_average', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  VueApp.$data.showRefFilter = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1567,6 +1588,8 @@ router.get('usage_month_average_new_agg', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  VueApp.$data.showRefFilter = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1577,6 +1600,8 @@ router.get('usage_month_average_new', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  VueApp.$data.showRefFilter = false
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1587,6 +1612,8 @@ router.get('daily_new', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  viewState.showRefFilter = false
+  VueApp.$data.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1597,6 +1624,8 @@ router.get('daily_usage_stats', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = false
   viewState.showShowToday = true
+  viewState.showRefFilter = false
+  VueApp.$data.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1607,6 +1636,8 @@ router.get('usage_agg', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = true
   viewState.showShowToday = true
+  viewState.showRefFilter = false
+  VueApp.$data.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1617,6 +1648,8 @@ router.get('top_crashes', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = false
   viewState.showShowToday = true
+  viewState.showRefFilter = false
+  VueApp.$data.showRefFilter = false
   updatePageUIState()
   refreshData()
 
@@ -1632,6 +1665,8 @@ router.get('crash_ratio', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = false
   viewState.showShowToday = true
+  viewState.showRefFilter = false
+  VueApp.$data.showRefFilter = false
   updatePageUIState()
   refreshData()
 
@@ -1647,6 +1682,7 @@ router.get('development_crashes', function (req) {
 
 router.get('recent_crashes', function (req) {
   pageState.currentlySelected = 'mnRecentCrashes'
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1657,6 +1693,7 @@ router.get('crashes_platform_detail/:ymd/:platform', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = false
   viewState.showShowToday = true
+  viewState.showRefFilter = false
   updatePageUIState()
   // refreshData()
 })
@@ -1667,6 +1704,7 @@ router.get('crashes_platform_version', function (req) {
   viewState.showDaysSelector = true
   viewState.showPromotions = false
   viewState.showShowToday = true
+  viewState.showRefFilter = false
   updatePageUIState()
   refreshData()
 })
@@ -1881,6 +1919,7 @@ router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', 
     }
   })
 })
+}
 
 // build platform button handlers
 _.forEach(platformKeys, function (id) {
@@ -1940,15 +1979,15 @@ var searchInputHandler = function (e) {
       _.each(crashes, function (crash, idx) {
         var rowClass = ''
         table.append(tr([
-            td(idx + 1),
-            td('<a href="#crash/' + crash.id + '">' + crash.id + '</a><br>(' + crash.contents.crash_id + ')'),
-            td(crash.contents.ver),
-            td(crash.contents._version),
-            td(crash.contents.year_month_day),
-            td(crash.contents.platform + ' ' + crash.contents.metadata.cpu),
-            td(crash.contents.metadata.operating_system_name),
-            td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>' }).join(' '))
-          ], {'classes': rowClass}
+          td(idx + 1),
+          td('<a href="#crash/' + crash.id + '">' + crash.id + '</a><br>(' + crash.contents.crash_id + ')'),
+          td(crash.contents.ver),
+          td(crash.contents._version),
+          td(crash.contents.year_month_day),
+          td(crash.contents.platform + ' ' + crash.contents.metadata.cpu),
+          td(crash.contents.metadata.operating_system_name),
+          td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>' }).join(' '))
+        ], {'classes': rowClass}
         ))
         table.append(tr([td(), '<td colspan="7">' + crash.contents.metadata.signature + '</td>'], {'classes': rowClass}))
       })
@@ -1992,12 +2031,28 @@ async function loadInitialData () {
   await window.REFERRAL.referralSummaryStatsRetriever()
 }
 
-$(document).ready(function () {
+function initializeGlobals () {
+  viewState = {
+    showControls: true,
+    platformEnabled: {
+      osx: true,
+      winx64: true,
+      winia32: true,
+      linux: true,
+      ios: true,
+      android: true,
+      androidbrowser: true
+    },
+    showRefFilter: false
+  }
+}
+function initialize_components(){
   Vue.component('v-select', VueSelect.VueSelect)
   VueApp = new Vue({
     el: '#ref-filter',
     components: {VueSelect},
     data: {
+      showRefFilter: viewState.showRefFilter,
       selected_refs: ['none'],
       refcodes: referral_codes
     },
@@ -2005,6 +2060,11 @@ $(document).ready(function () {
       refresh_data: () => { refreshData() }
     }
   })
-  // pageState.referral_codes = VueApp.data.selected_refs
+
+}
+$(document).ready(function () {
+  initializeGlobals()
   loadInitialData()
+  initialize_components()
+  initialize_router()
 })

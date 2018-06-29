@@ -46,8 +46,8 @@
           <label class="btn btn-default">
             <input type="checkbox" autocomplete="off" id="btn-channel-beta"> beta
           </label>
-          <label class="btn btn-default">
-            <input type="checkbox" autocomplete="off" id="btn-channel-stable"> stable
+          <label class="btn btn-default active">
+            <input type="checkbox" autocomplete="off" id="btn-channel-stable" checked> stable
           </label>
         </div>
 
@@ -57,7 +57,7 @@
           </label>
         </div>
         <div class="btn-group" id="ref-filter" data-toggle="buttons">
-          <v-select label="Referral Code" @input="refresh_data" id="ref" :options="refcodes" multiple v-model="selected_refs"></v-select>
+          <v-select v-if="showRefFilter" label="Referral Code" @input="refresh_data" id="ref" :options="refcodes" multiple v-model="selected_refs"></v-select>
         </div>
 
         <div class="form-group">

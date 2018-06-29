@@ -46,9 +46,8 @@ Before(async function () {
   await browser.init()
 })
 
-After(async function () {
+After({timeout: 10000}, async function () {
   await server.shutdown()
   await browser.end()
   await this.test_helper.tear_down()
-
 })

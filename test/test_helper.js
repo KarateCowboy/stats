@@ -57,14 +57,9 @@ class TestHelper {
     this.mongo_client = await mongo.connect(this.testMongoUri)
     global.mongo_client = this.mongo_client
     await mongoose.connect(this.testMongoUri)
-
-
-    this.pg_client = await pg.connect(this.testDatabaseUrl)
-    global.pg_client = this.pg_client
-
+    global.pg_client = await pg.connect(this.testDatabaseUrl)
     this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
     global.knex = this.knex
-
     this.factory = factory
     global.factory = factory
   }
