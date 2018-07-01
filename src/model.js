@@ -14,20 +14,12 @@ exports.usageiOSUpserter = function (client, row) {
   }
 }
 
-exports.usageMonthlyUpserter = function (client, row) {
-  return function (cb) {
-    client.query('INSERT INTO dw.fc_usage_month (ymd, platform, version, channel, ref, total) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (ymd, platform, version, channel, ref) DO UPDATE SET total = $6', [row._id.ymd, row._id.platform, row._id.version, row._id.channel, row._id.ref, row.count], (err, result) => {
-      cb(err)
-    })
-  }
+exports.usageMonthlyUpserter = async function (client, row) {
+  await client.query('INSERT INTO dw.fc_usage_month (ymd, platform, version, channel, ref, total) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (ymd, platform, version, channel, ref) DO UPDATE SET total = $6', [row._id.ymd, row._id.platform, row._id.version, row._id.channel, row._id.ref, row.count])
 }
 
-exports.usageiOSMonthlyUpserter = function (client, row) {
-  return function (cb) {
-    client.query('INSERT INTO dw.fc_usage_month (ymd, platform, version, channel, ref, total) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (ymd, platform, version, channel, ref) DO UPDATE SET total = $6', [row._id.ymd, row._id.platform, row._id.version, row._id.channel, row._id.ref, row.count], (err, result) => {
-      cb(err)
-    })
-  }
+exports.usageiOSMonthlyUpserter = async function (client, row) {
+  await client.query('INSERT INTO dw.fc_usage_month (ymd, platform, version, channel, ref, total) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (ymd, platform, version, channel, ref) DO UPDATE SET total = $6', [row._id.ymd, row._id.platform, row._id.version, row._id.channel, row._id.ref, row.count])
 }
 
 exports.crashUpserter = function (client, row) {
@@ -44,7 +36,7 @@ var exceptionsSQL = 'INSERT INTO dw.fc_usage ( ymd, platform, version, first_tim
 exports.exceptionsUpserter = function (client) {
   return function (cb) {
     client.query(exceptionsSQL, [], function (err, result) {
-      console.log("Updating exceptions")
+      console.log('Updating exceptions')
       cb(err)
     })
   }
@@ -59,7 +51,7 @@ GROUP BY ymd, platform, version, channel, first_time, ref
 ON CONFLICT (ymd, platform, version, first_time, channel, ref) DO UPDATE SET total = EXCLUDED.total
 `
 
-exports.moveFastlyToUsageForDay = function(pg, ymd, cb) {
+exports.moveFastlyToUsageForDay = function (pg, ymd, cb) {
   pg.query(MOVE_FASTLY_SQL, [ymd], cb)
 }
 
@@ -72,7 +64,7 @@ GROUP BY ymd, platform, version, channel, ref
 ON CONFLICT (ymd, platform, version, channel, ref) DO UPDATE SET total = EXCLUDED.total
 `
 
-exports.moveFastlyMonthlyToUsageForDay  = function(pg, ymd, cb) {
+exports.moveFastlyMonthlyToUsageForDay = function (pg, ymd, cb) {
   pg.query(MOVE_FASTLY_MONTH_SQL, [ymd], cb)
 }
 
