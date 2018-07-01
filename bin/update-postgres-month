@@ -4,98 +4,80 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var mongoc = require('../src/mongoc')
-var pgc = require('../src/pgc')
-var retriever = require('../src/retriever')
-var model = require('../src/model')
-var reporter = require('../src/reporter')
+const mongoc = require('../src/mongoc')
+const pgc = require('../src/pgc')
+const retriever = require('../src/retriever')
+const model = require('../src/model')
+const reporter = require('../src/reporter')
 const moment = require('moment')
 
-var async = require('async')
-var _ = require('underscore')
-var path = require('path')
+const path = require('path')
 
-var args = require('yargs')
+const args = require('yargs')
   .default('collection', 'usage')
   .default('start', moment().startOf('month').format('YYYY-MM-DD'))
   .default('end', moment().format('YYYY-MM-DD'))
   .argv
 
-var validCollections = ['usage', 'android_usage', 'ios_usage']
+const validCollections = ['usage', 'android_usage', 'ios_usage']
 if (validCollections.indexOf(args.collection) === -1) {
   console.log('Invalid collection ' + args.collection)
   process.exit(1)
 }
 
-var upsertMaker = model.usageMonthlyUpserter
+let upsertMaker = model.usageMonthlyUpserter
 if (args.collection === 'ios_usage') {
   upsertMaker = model.usageiOSMonthlyUpserter
 }
 
-var jobName = path.basename(__filename)
-var runInfo = reporter.startup(jobName)
+const jobName = path.basename(__filename)
+const runInfo = reporter.startup(jobName)
+const main = async () => {
+  global.mongo_client = await mongoc.setupConnection()
+  global.pg_client = await pgc.setupConnection()
 
-// This is triggered when all resources have valid connections
-var resourcesReady = function (asyncError, resources) {
-  var cleanup = function () {
-    // Close connections to Postgres and Mongo
-    resources.pg.end()
-    resources.mg.close()
-  }
-
+  let results = await retriever.monthlyUsersByDay(mongo_client, args.collection, args.start, args.end)
   console.log('Update monthly totals for ' + args.collection)
-  var resultsHandler = function (err, results) {
-    if (err) {
-      throw new Error(err)
-    }
-
-    // disambiguate between Link Bubble and tabbed browser
-    if (args.collection === 'android_usage') {
-      results.forEach(function (result) {
-        result._id.platform = 'androidbrowser'
-      })
-    }
-
-    results.forEach((result) => {
-      result._id.woi = result._id.woi || '2016-01-04'
-      result._id.ref = result._id.ref || 'none'
-    })
-
-    // filter out wrong version formats
-    results = results.filter(function (result) {
-      return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$'))
-    })
-
-    // filter out duplicate ios entries
-    if (args.collection === 'ios_usage') {
-      console.log('limiting ios records to ones on or after 2018-01-01')
-      results = results.filter(function (results) {
-        return results._id.ymd >= '2018-01-01'
-      })
-    }
-
-    console.log('Updating ' + results.length + ' rows')
-
-    // Build funcs to execute
-    var funcs = _.map(results, function (row) {
-      return upsertMaker(resources.pg, row)
-    })
-
-    // Insert rows
-    async.series(funcs, function (err, results) {
-      if (err) {
-        throw new Error(err)
-      }
-      // Report the results of the job run
-      reporter.shutdown(runInfo, resources.pg, cleanup)
+  // disambiguate between Link Bubble and tabbed browser
+  if (args.collection === 'android_usage') {
+    results.forEach(function (result) {
+      result._id.platform = 'androidbrowser'
     })
   }
-  // retrieve the monthly user count and update Postgres
-  retriever.monthlyUsersByDay(resources.mg, resultsHandler, args.collection, args.start, args.end)
+  results.forEach((result) => {
+    result._id.woi = result._id.woi || '2016-01-04'
+    result._id.ref = result._id.ref || 'none'
+  })
+  // filter out wrong version formats
+  results = results.filter(function (result) {
+    return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta'].includes(result._id.channel)
+  })
+
+  // filter out duplicate ios entries
+  if (args.collection === 'ios_usage') {
+    console.log('limiting ios records to ones on or after 2018-01-01')
+    results = results.filter(function (results) {
+      return results._id.ymd >= '2018-01-01'
+    })
+  }
+
+  console.log('Updating ' + results.length + ' rows')
+  // Insert rows
+  await Promise.all(results.map(async (row) => {
+    try {
+      await upsertMaker(resources.pg, row)
+    } catch (e) {
+      console.log(e.message)
+      console.dir(row)
+      if (!e.message.includes('invalid byte sequence')) {
+        throw new Error(e)
+      }
+    }
+  }))
+
+  await global.pg_client.end()
+  await global.mongo_client.close()
 }
 
-// Setup and run
-async.parallel({
-  pg: pgc.setup,
-  mg: mongoc.setup
-}, resourcesReady)
+main()
+

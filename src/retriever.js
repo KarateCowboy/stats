@@ -334,12 +334,12 @@ exports.dailyActiveiOSUsersFullGrouped = async () => {
  * @param cb {function(Object, Array[Object]} - Callback
  * @param collection {String} - Name of Mongo collection to inspect
  */
-exports.monthlyUsersByDay = (db, cb, collection, start = (moment().startOf('month').format('YYYY-MM-DD')), end = (moment().format('YYYY-MM-DD'))) => {
+exports.monthlyUsersByDay = async (db, collection, start = (moment().startOf('month').format('YYYY-MM-DD')), end = (moment().format('YYYY-MM-DD'))) => {
   collection = collection || 'usage'
 
   // var limit = moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD')
 
-  var query = db.collection(collection).aggregate([
+  let query = await db.collection(collection).aggregate([
     {
       $match: {
         monthly: true
@@ -401,9 +401,7 @@ exports.monthlyUsersByDay = (db, cb, collection, start = (moment().startOf('mont
     }
   ])
 
-  query.toArray((err, result) => {
-    cb(err, result)
-  })
+  return query.toArray()
 }
 
 exports.dailyTelemetry = (db, collection, days, cb) => {
