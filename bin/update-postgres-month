@@ -65,7 +65,7 @@ const main = async () => {
   // Insert rows
   await Promise.all(results.map(async (row) => {
     try {
-      await upsertMaker(resources.pg, row)
+      await upsertMaker(pg_client, row)
     } catch (e) {
       console.log(e.message)
       console.dir(row)
