@@ -17,6 +17,8 @@ require('./fixtures/usage_aggregate_woi').define()
 require('./fixtures/link_bubble_usage').define()
 require('./fixtures/desktop_usage').define()
 require('./fixtures/referral_code').define()
+require('./fixtures/core-usage').define()
+require('./fixtures/core-usage-day').define()
 
 class TestHelper {
   constructor () {
@@ -37,11 +39,13 @@ class TestHelper {
       'usage_aggregate_woi',
       'android_usage',
       'android_usage_aggregate_woi',
-      'ios_usage'
+      'ios_usage',
+      'brave_core_usage',
+      'brave_core_usage_aggregate_woi'
     ]
     this.postgres_tables = {
       'dw': [
-        'fc_retention_woi'
+        'fc_retention_woi',
       ]
     }
     this.materialized_views = {
@@ -50,7 +54,6 @@ class TestHelper {
         'fc_retention_month_mv'
       ]
     }
-
   }
 
   async setup () {

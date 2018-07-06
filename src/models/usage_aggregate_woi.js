@@ -12,13 +12,13 @@ const schema = joi.object().keys({
   _id: joi.object({
     woi: joi.string().regex(/[\d]{4,4}-[\d]{2,2}-[\d]{2,2}/).required(),
     ymd: joi.string().regex(/[\d]{4,4}-[\d]{2,2}-[\d]{2,2}/).required(),
-    platform: joi.string().valid('ios', 'android', 'androidbrowser', 'osx', 'winia32', 'winx64', 'linux', 'unknown').required(),
+    platform: joi.string().valid('ios', 'android', 'androidbrowser', 'osx', 'winia32', 'winx64', 'linux', 'unknown','osx-bc','linux-bc','winx64-bc','winia32-bc').required(),
     version: joi.string().regex(/[\d]{1,2}\.[\d]{1,2}\.[\d]{1,2}/).required(),
     first_time: joi.boolean().required(),
     channel: joi.any().valid('beta', 'stable', 'developer', 'nightly', 'dev').required(),
     ref: joi.any().optional()
   }).required(),
-  count: joi.number().min(1).required(),
+  total: joi.number().min(1).required(),
   usages: joi.array()
 })
 
@@ -89,6 +89,9 @@ class UsageAggregateUtil {
             woi: record._id.woi,
             ref: record._id.ref
           })
+      }else{
+        console.log(record._id)
+        throw e
       }
     }
   }
@@ -130,3 +133,4 @@ const UsageAggregate = mongoose.model('UsageAggregate', db_schema)
 module.exports.UsageAggregate = UsageAggregate
 
 module.exports.UsageAggregateUtil = UsageAggregateUtil
+module.exports.schema = schema

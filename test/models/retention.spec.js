@@ -103,6 +103,23 @@ describe('WeekOfInstall', function () {
       expect(usage_aggs.length).to.equal(1)
       expect(usage_aggs[0]['_id'].platform).to.equal('android')
     })
+    it('works with brave-core usage data', async function () {
+      const core_usages = []
+      for (let i in _.range(10)) {
+        const usage = await factory.build('core_winx64_usage', {ref: 'none'})
+        delete usage.aggregated_at
+        await usage.save()
+        core_usages.push(usage)
+      }
+      const cutoff = moment(core_usages[0].woi).subtract(3, 'days')
+      // execution
+      await WeekOfInstall.transfer_platform_aggregate('brave_core_usage', cutoff.format('YYYY-MM-DD'))
+      //validation
+      const core_usage_woi_aggs = await mongo_client.collection('brave_core_usage_aggregate_woi').find().toArray()
+      expect(core_usage_woi_aggs[0].usages).to.have.property('length', 10)
+      expect(core_usage_woi_aggs[0]).to.have.property('total', 10)
+
+    })
   })
   describe('#from_usage_aggregate_woi', function () {
     const WeekOfInstall = require('../../src/models/retention').WeekOfInstall
@@ -115,7 +132,7 @@ describe('WeekOfInstall', function () {
     it('sets the row\'s total from the count', async function () {
       const ios_usage_agg_woi = await factory.attrs('ios_usage_aggregate_woi')
       const retention_week = WeekOfInstall.from_usage_aggregate_woi(ios_usage_agg_woi)
-      expect(retention_week.total).to.equal(ios_usage_agg_woi.count)
+      expect(retention_week.total).to.equal(ios_usage_agg_woi.total)
     })
   })
 })
@@ -175,7 +192,7 @@ describe('RetentionWeek', function () {
       for (let group in grouped_results) {
         group_lengths.push(grouped_results[group].length)
       }
-      expect(group_lengths.join(',')).to.equal(_.range(1,13).reverse().join(','))
+      expect(group_lengths.join(',')).to.equal(_.range(1, 13).reverse().join(','))
       let num = results.filter((r) => { return r.week_delta === 0}).length
       expect(num).to.equal(12)
       num = results.filter((r) => { return r.week_delta === 1}).length

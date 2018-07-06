@@ -127,7 +127,7 @@ class WeekOfInstall {
       let usage = await usages.next()
       let has_next = await usages.hasNext()
       batch.push(usage)
-      if (batch.length > 10000 || has_next === false) {
+      if (batch.length === 1 || has_next === false) {
         await Promise.all(batch.map(async (usage) => {
           const usage_aggregate_id = aggregate_id(usage, collection_name)
           try {
@@ -135,7 +135,8 @@ class WeekOfInstall {
               {
                 _id: usage_aggregate_id
               }, {
-                $addToSet: {usages: usage._id}
+                $addToSet: {usages: usage._id},
+                $inc: { total: 1 }
               }, {
                 upsert: true
               }
