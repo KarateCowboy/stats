@@ -6,6 +6,7 @@
 
 const TestHelper = require('../test_helper').TestHelper
 const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
+const schema = require('../../src/models/usage_aggregate_woi').schema
 
 let test_helper
 before(async function () {
@@ -26,13 +27,13 @@ describe('UsageAggregateUtil', async function () {
       const is_valid = UsageAggregateWOI.is_valid(valid_woi)
       expect(is_valid).to.equal(true)
     })
-    it('requires a count number', async function () {
+    it('requires a total number', async function () {
       const ios_usage_agg_woi = await factory.attrs('ios_usage_aggregate_woi')
-      delete ios_usage_agg_woi.count
+      delete ios_usage_agg_woi.total
       expect(UsageAggregateWOI.is_valid(ios_usage_agg_woi)).to.equal(false)
-      ios_usage_agg_woi.count = 0
+      ios_usage_agg_woi.total = 0
       expect(UsageAggregateWOI.is_valid(ios_usage_agg_woi)).to.equal(false)
-      ios_usage_agg_woi.count = 3
+      ios_usage_agg_woi.total = 3
       expect(UsageAggregateWOI.is_valid(ios_usage_agg_woi)).to.equal(true)
     })
     it('requires a correctly formatted ymd date', async function () {
@@ -138,6 +139,16 @@ describe('UsageAggregateUtil', async function () {
         const retention_woi = await knex('dw.fc_retention_woi').where('ref', usage._id.ref)
         expect(retention_woi[0]).to.have.property('total', usage.usages.length.toString())
       }
+    })
+    it('works with brave_core_usage_aggregate_woi', async function () {
+      const usage_days = []
+      let usage_day = await factory.build('core_usage_day')
+      await usage_day.save()
+      usage_days.push(usage_day)
+      await UsageAggregateWOI.transfer_to_retention_woi(usage_day)
+      const retention_woi = await knex('dw.fc_retention_woi').where('ref', usage_day._id.ref)
+      expect(retention_woi[0]).to.have.property('platform', 'winx64-bc')
+      expect(retention_woi[0]).to.have.property('total', usage_day.usages.length.toString())
     })
   })
 })

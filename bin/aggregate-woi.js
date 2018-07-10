@@ -21,6 +21,7 @@ const _ = require('underscore')
 commander.option('-d --days [num]', 'Days to go back in reporting', 90)
   .option('-s, --skip-aggregation')
   .option('-a, --android')
+  .option('-c, --core')
   .option('-i, --ios')
   .option('-f, --force')
   .option('-g, --general').parse(process.argv)
@@ -28,7 +29,8 @@ commander.option('-d --days [num]', 'Days to go back in reporting', 90)
 const possible_collections = {
   android: 'android_usage',
   ios: 'ios_usage',
-  usage: 'usage'
+  usage: 'usage',
+  core: 'brave_core_usage'
 }
 const platforms = {
   android: ['androidbrowser'],
@@ -37,7 +39,8 @@ const platforms = {
     'unknown',
     'osx',
     'winx64'],
-  ios: ['ios']
+  ios: ['ios'],
+  core: ['win64-bc', 'linux-bc', 'winia32-bc', 'osx-bc']
 }
 let relevant_platforms = []
 let collections = []
@@ -56,6 +59,8 @@ const run = async () => {
   } else if (commander.general) {
     collections.push(possible_collections.usage)
     relevant_platforms.push(platforms.usage)
+  } else if (commander.core) {
+    collections.push(possible_collections.core)
   } else {
     collections = Object.values(possible_collections)
   }
