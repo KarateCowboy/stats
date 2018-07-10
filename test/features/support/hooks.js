@@ -5,7 +5,7 @@
  */
 
 global.server = require(process.cwd() + '/src/index')
-const {After, Before} = require('cucumber')
+const {After, AfterAll, Before} = require('cucumber')
 
 const bindHelpers = function () {
   if (browser.click_when_visible === void 0) {
@@ -50,4 +50,9 @@ After({timeout: 10000}, async function () {
   await server.shutdown()
   await browser.end()
   await this.test_helper.tear_down()
+})
+AfterAll(async function () {
+  setTimeout(function () {
+    process.exit()
+  }, 1500)
 })
