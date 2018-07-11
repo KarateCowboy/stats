@@ -46,6 +46,7 @@ class TestHelper {
     this.postgres_tables = {
       'dw': [
         'fc_retention_woi',
+        'fc_usage_month'
       ]
     }
     this.materialized_views = {

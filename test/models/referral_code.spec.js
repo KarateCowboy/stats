@@ -14,6 +14,7 @@ after(async function () {
 describe('ReferralCode', async function () {
   describe('properties', async function () {
     specify('requires code as a string, six or more characters', async function () {
+      await test_helper.truncate()
       let sample_code = new ReferralCode({platform: 'winx64'})
       let thrown = false
       try { await sample_code.save() } catch (e) { thrown = true }

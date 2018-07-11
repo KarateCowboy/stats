@@ -20,7 +20,7 @@ const define = () => {
     'weekly': true,
     'monthly': true,
     'platform': 'winx64-bc',
-    'version': '67.1.2.3',
+    'version': '67.1.2',
     'first': true,
     'channel': 'dev',
     'woi': () => moment().subtract(2, 'months').startOf('week').add(1, 'days').format('YYYY-MM-DD'),

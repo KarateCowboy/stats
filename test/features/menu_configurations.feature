@@ -3,7 +3,7 @@ Feature: Default menu displays for pages
   Scenario: Visit Retention Report
     Given I am logged in to the system
     And I view the Retention Week / Week report
-    Then the "dev,stable" channels should be checked
+    Then the "dev,stable,release" channels should be checked
     And the ref select should be visible and have the 'none' ref entered
     And the this month button should "not" be visible
 
