@@ -8,7 +8,6 @@ module.exports = class UpdateMonth {
       upsertMaker = model.usageiOSMonthlyUpserter
     }
     let results = await retriever.monthlyUsersByDay(global.mongo_client, collection, start, end)
-    console.log(`${results.length} results`)
     console.log('Update monthly totals for ' + collection)
     // disambiguate between Link Bubble and tabbed browser
     if (collection === 'android_usage') {
