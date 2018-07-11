@@ -8,6 +8,7 @@ module.exports = class UpdateMonth {
       upsertMaker = model.usageiOSMonthlyUpserter
     }
     let results = await retriever.monthlyUsersByDay(global.mongo_client, collection, start, end)
+    console.log(`${results.length} results`)
     console.log('Update monthly totals for ' + collection)
     // disambiguate between Link Bubble and tabbed browser
     if (collection === 'android_usage') {
@@ -21,7 +22,7 @@ module.exports = class UpdateMonth {
     })
     // filter out wrong version formats
     results = results.filter(function (result) {
-      return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta'].includes(result._id.channel)
+      return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta','release'].includes(result._id.channel)
     })
 
     // filter out duplicate ios entries
