@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const _ = require('underscore')
+const reporter = require('../src/reporter')
+const pg = require('pg')
+const mongoc = require('../src/mongoc')
+const Knex = require('knex')
+const UpdatePostgresDay = require('../src/services/update-postgres-day.service')
+const path = require('path')
+
+const jobName = path.basename(__filename)
+const runInfo = reporter.startup(jobName)
+console.log(runInfo)
+
+console.log('Update daily totals for laptop - ' + jobName)
+
+let main = async function () {
+  global.pg_client = await pg.connect(process.env.DATABASE_URL)
+  global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
+  global.mongo_client = await mongoc.setupConnection()
+
+  const dau_service = new UpdatePostgresDay()
+  await dau_service.main('brave_core_usage')
+  await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_usage_platform_mv ')
+
+  await global.mongo_client.close()
+  await global.pg_client.end()
+  await global.knex.destroy()
+
+}
+
+main()
