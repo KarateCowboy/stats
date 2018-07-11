@@ -21,7 +21,7 @@ module.exports = class UpdateMonth {
     })
     // filter out wrong version formats
     results = results.filter(function (result) {
-      return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta'].includes(result._id.channel)
+      return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta','release'].includes(result._id.channel)
     })
 
     // filter out duplicate ios entries
