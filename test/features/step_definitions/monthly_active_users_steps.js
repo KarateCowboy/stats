@@ -19,18 +19,18 @@ Given(/^there are "([^"]*)" usages for the prior month$/, {timeout: 100000}, asy
     start_of_month.add(1, 'days')
     for (let j of _.range(1, per_day + 1)) {
       let usage = await factory.attrs('core_winx64_usage', {
-        ymd: start_of_month.format('YYYY-MM-DD'),
+        year_month_day: start_of_month.format('YYYY-MM-DD'),
         ref: 'none'
       })
       usages.push(usage)
     }
   }
-  await mongo_client.collection('brave_core_usage').insertMany(usages.slice(0,number_of_usages))
+  await mongo_client.collection('brave_core_usage').insertMany(usages.slice(0, number_of_usages))
   const month_service = new MonthUpdate()
   await month_service.main('brave_core_usage', moment().subtract(5, 'months').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD'))
 })
 
 Then(/^I should see the "([^"]*)" MAU for the prior month on winx64\-bc$/, async function (number_of_users) {
-  const body = await browser.getHTML('#usageDataTable')
-  expect(body).to.contain(number_of_users)
+  const usage_data_table = await browser.getHTML('#usageDataTable')
+  expect(usage_data_table).to.contain(number_of_users)
 })
