@@ -107,7 +107,7 @@ class WeekOfInstall {
       aggregated_at: {
         $exists: false
       },
-      version: { $not : /\([A-Z0-9]+\)$/ }
+      version: { $not : /\([A-Za-z0-9]+\)$/ }
     }
     if (force) {
       delete usage_params.aggregated_at
