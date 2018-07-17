@@ -106,7 +106,8 @@ class WeekOfInstall {
       year_month_day: {$gte: start_date, $lt: nearest_week},
       aggregated_at: {
         $exists: false
-      }
+      },
+      version: { $not : /\([A-Za-z0-9]+\)$/ }
     }
     if (force) {
       delete usage_params.aggregated_at

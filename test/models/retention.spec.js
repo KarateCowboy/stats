@@ -120,6 +120,23 @@ describe('WeekOfInstall', function () {
       expect(core_usage_woi_aggs[0]).to.have.property('total', 10)
 
     })
+    it('excludes internal builds', async function(){
+      //setup
+      const android_usage = await factory.build('android_usage', {platform: 'android', ref: 'none'})
+      await android_usage.save()
+      const internal_build_usage = await factory.build('android_usage', {ref: 'none', version:'1.0.1(RC1)'})
+      await internal_build_usage.save()
+      const cutoff = moment(android_usage.woi).subtract(10, 'days')
+
+      //execution
+      await WeekOfInstall.transfer_platform_aggregate('android_usage', cutoff.format('YYYY-MM-DD'))
+
+      //validation
+      const android_usage_days = await mongo_client.collection('android_usage_aggregate_woi').find({}).toArray()
+      const id_versions = android_usage_days.map(usage_day => usage_day._id.version)
+      expect(id_versions).to.not.include(internal_build_usage.version)
+      expect(id_versions).to.include(android_usage.version)
+    })
   })
   describe('#from_usage_aggregate_woi', function () {
     const WeekOfInstall = require('../../src/models/retention').WeekOfInstall
