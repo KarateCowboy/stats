@@ -150,5 +150,15 @@ describe('UsageAggregateUtil', async function () {
       expect(retention_woi[0]).to.have.property('platform', 'winx64-bc')
       expect(retention_woi[0]).to.have.property('total', usage_day.usages.length.toString())
     })
+    it('does not transfer brave core aggregates with bad version numbers', async function () {
+      const usage_days = []
+      let usage_day = await factory.build('core_usage_day')
+      usage_day._id.version = '1.2.3.4'
+      await usage_day.save()
+      usage_days.push(usage_day)
+      await UsageAggregateWOI.transfer_to_retention_woi(usage_day)
+      const retention_woi = await knex('dw.fc_retention_woi').where('ref', usage_day._id.version)
+      expect(retention_woi).to.have.property('length', 0)
+    })
   })
 })
