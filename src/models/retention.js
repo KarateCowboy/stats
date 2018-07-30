@@ -6,30 +6,9 @@
 
 const common = require('../api/common')
 const moment = require('moment')
-const AndroidUsageAggregateWOI = require('./android_usage_aggregate_week')
 const UsageAggregateWOI = require('./usage_aggregate_woi').UsageAggregateUtil
 const ProgressBar = require('smooth-progress')
 const _ = require('underscore')
-
-const WEEKLY_RETENTION_QUERY = `
-SELECT
-  woi,
-  week_delta,
-  sum(current) as current,
-  sum(starting) as starting,
-  sum(current) / sum(starting) as retained_percentage
-FROM dw.fc_retention_week_mv FC
-WHERE
-  FC.platform = ANY ($1) AND
-  FC.channel  = ANY ($2) AND
-  fc.woi::date > $3::date
-GROUP BY
-  woi,
-  week_delta
-ORDER BY
-  woi,
-  week_delta
-`
 
 class RetentionMonth {
   static async refresh () {

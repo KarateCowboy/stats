@@ -67,7 +67,7 @@ class UsageAggregateUtil {
 
   static async transfer_to_retention_woi (record) {
     try {
-      if (record.usages.length > 0 && (record._id.ref === 'none' || !!record._id.ref.match(/[A-Z0-9]{6,6}/))) {
+      if (record.usages.length > 0 && (record._id.ref === 'none' || !!record._id.ref.match(/[A-Z0-9]{6,6}/)) && record._id.version.match(/^[\d]+\.[\d]+\.[\d]+$/gm)) {
         await knex('dw.fc_retention_woi').insert({
           ymd: record._id.ymd,
           platform: record._id.platform,
