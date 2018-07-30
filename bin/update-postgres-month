@@ -8,14 +8,14 @@ const mongoc = require('../src/mongoc')
 const pgc = require('../src/pgc')
 const reporter = require('../src/reporter')
 const moment = require('moment')
-const MonthUpdate = require('../src/services/update-postgres-month.service')
+const UpdateMonth = require('../src/services/update-postgres-month.service')
 
 const path = require('path')
 
 const args = require('yargs')
   .default('collection', 'usage')
-  .default('start', moment().startOf('month').format('YYYY-MM-DD'))
-  .default('end', moment().format('YYYY-MM-DD'))
+  .default('start', moment().startOf('month').subtract(1,'days').format('YYYY-MM-DD'))
+  .default('end', moment().add(1,'days').format('YYYY-MM-DD'))
   .argv
 
 const validCollections = ['usage', 'android_usage', 'ios_usage','brave_core_usage']
@@ -29,7 +29,7 @@ const runInfo = reporter.startup(jobName)
 const main = async () => {
   global.mongo_client = await mongoc.setupConnection()
   global.pg_client = await pgc.setupConnection()
-  const month_service = new MonthUpdate()
+  const month_service = new UpdateMonth()
   await month_service.main(args.collection, args.start, args.end)
 
   await global.pg_client.end()

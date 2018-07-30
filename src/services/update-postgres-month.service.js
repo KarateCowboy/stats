@@ -21,7 +21,7 @@ module.exports = class UpdateMonth {
     })
     // filter out wrong version formats
     results = results.filter(function (result) {
-      return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta','release'].includes(result._id.channel)
+      return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta','release'].includes(result._id.channel) && result._id.ymd
     })
 
     // filter out duplicate ios entries
@@ -34,15 +34,15 @@ module.exports = class UpdateMonth {
 
     console.log('Updating ' + results.length + ' rows')
     // Insert rows
-    await Promise.all(results.map(async (row) => {
+    for (let row of results) {
       try {
-        await upsertMaker(pg_client, row)
+        await upsertMaker(global.pg_client, row)
       } catch (e) {
         console.log(e.message)
         if (!e.message.includes('invalid byte sequence')) {
           throw new Error(e)
         }
       }
-    }))
+    }
   }
 }
