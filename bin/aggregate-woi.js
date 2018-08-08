@@ -127,8 +127,10 @@ const processResults = async (agg_collection, cutoff) => {
     bar.tick(1)
     const current = await results.next()
     try {
-      await UsageAggregateWOI.transfer_to_retention_woi(current)
-      summed_totals += current.usages.length
+      if(UsageAggregateWOI.is_valid(current)){
+        await UsageAggregateWOI.transfer_to_retention_woi(current)
+        summed_totals += current.usages.length
+      }
     } catch (e) {
       console.log('Error transfering')
     }

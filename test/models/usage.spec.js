@@ -1,14 +1,4 @@
-const TestHelper = require('../test_helper').TestHelper
-
-let test_helper
-before(async function () {
-  test_helper = new TestHelper()
-  await test_helper.setup()
-  await test_helper.truncate()
-})
-after(async function () {
-  await test_helper.tear_down()
-})
+require('../test_helper')
 
 describe('Usage', async function () {
   it('has a collection_name', async function () {

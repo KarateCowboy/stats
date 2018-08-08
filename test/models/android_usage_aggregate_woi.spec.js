@@ -4,17 +4,9 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const TestHelper = require('../test_helper').TestHelper
+require('../test_helper')
 const AndroidUsageAggregateWOI = require('../../src/models/android_usage_aggregate_week')
 
-let test_helper
-before(async function(){
-  test_helper = new TestHelper()
-  await test_helper.setup()
-})
-after(async function(){
-  await test_helper.tear_down()
-})
 describe('AndroidUsageAggregateWOI', function () {
   describe('#scrub', function(){
     it('changes the platform from "android" to "androidbrowser"', async function(){
@@ -24,11 +16,6 @@ describe('AndroidUsageAggregateWOI', function () {
       const scrubbed_record = AndroidUsageAggregateWOI.scrub(bad_platform)
       //validation
       expect(scrubbed_record._id.platform).to.equal('androidbrowser')
-    })
-  })
-  describe('#aggregate_from_usages', async function(){
-    it('includes usages that match the primary key', async function(){
-
     })
   })
 })

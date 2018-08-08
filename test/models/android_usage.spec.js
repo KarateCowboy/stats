@@ -1,19 +1,6 @@
 const AndroidUsage = require('../../src/models/android_usage').AndroidUsage
 const moment = require('moment')
-const TestHelper = require('../test_helper').TestHelper
-
-let test_helper
-before(async function () {
-  test_helper = new TestHelper()
-  await test_helper.setup()
-})
-after(async function () {
-  await test_helper.tear_down()
-})
-beforeEach(async function () {
-  await test_helper.truncate()
-  await test_helper.refresh_views()
-})
+require('../test_helper')
 
 describe('AndroidUsage', async function () {
   describe('#is_valid', async function () {
