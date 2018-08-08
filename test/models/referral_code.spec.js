@@ -1,15 +1,6 @@
-const {TestHelper} = require('../test_helper')
+require('../test_helper')
 const {expect} = require('chai')
 const {ReferralCode} = require('../../src/models/mongoose/referral_code')
-
-let test_helper
-before(async function () {
-  test_helper = new TestHelper()
-  await test_helper.setup()
-})
-after(async function () {
-  await test_helper.tear_down()
-})
 
 describe('ReferralCode', async function () {
   describe('properties', async function () {

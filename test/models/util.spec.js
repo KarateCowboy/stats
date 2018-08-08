@@ -5,15 +5,7 @@
  */
 
 const Util = require('../../src/models/util').Util
-const TestHelper = require('../test_helper').TestHelper
-let test_helper
-before(async function () {
-  test_helper = test_helper || (new TestHelper())
-  await test_helper.setup()
-})
-after(async function () {
-  await test_helper.tear_down()
-})
+require('../test_helper')
 
 describe('Model Util', async function () {
   describe('#fix_date_string', function () {

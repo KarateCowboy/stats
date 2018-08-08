@@ -31,6 +31,7 @@ class TestHelper {
     }
     this.testMongoUri = process.env.TEST_MLAB_URI
     global.MONGO_URI = process.env.TEST_MLAB_URI
+    process.env.MLAB_URI = process.env.TEST_MLAB_URI
     global.expect = require('chai').expect
 
     this.mongo_collections = [
@@ -56,33 +57,43 @@ class TestHelper {
         'fc_retention_month_mv'
       ]
     }
+    if (process.env.LOADED_MOCHA_OPTS) {
+      process.env.MOCHA = true
+    }
   }
 
   async setup () {
-    this.mongo_client = await mongo.connect(this.testMongoUri)
-    global.mongo_client = this.mongo_client
-    await mongoose.connect(this.testMongoUri)
-    global.pg_client = await pg.connect(this.testDatabaseUrl)
-    this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
-    global.knex = this.knex
+    if (!this.mongo_client) {
+      this.mongo_client = await mongo.connect(this.testMongoUri)
+      global.mongo_client = this.mongo_client
+      await mongoose.connect(this.testMongoUri)
+    }
+    if (!global.pg_client) {
+      global.pg_client = await pg.connect(this.testDatabaseUrl)
+      this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
+      global.knex = this.knex
+    }
     this.factory = factory
     global.factory = factory
   }
 
   async truncate () {
-    for (let collection of this.mongo_collections) {
+    await Promise.all(this.mongo_collections.map(async (collection) => {
       if ((await mongo_client.collection(collection))) {
         await mongo_client.collection(collection).remove({})
       } else {
         await mongo_client.createCollection(collection)
       }
-    }
+    }))
     for (let schema in this.postgres_tables) {
-      for (let relation in this.postgres_tables[schema]) {
-        await knex(`${schema}.${this.postgres_tables[schema][relation]}`).truncate()
-      }
+      let self = this
+      await Promise.all(self.postgres_tables[schema].map(async (relation) => {
+        if (!relation.toString().includes('undefined')) {
+          const sql_string = `${schema}.${relation}`
+          await knex(sql_string).truncate()
+        }
+      }))
     }
-
   }
 
   async refresh_views () {
@@ -95,11 +106,32 @@ class TestHelper {
 
   async tear_down () {
     await global.mongo_client.close()
+    global.mongo_client = null
     await global.pg_client.end()
+    global.pg_client = null
     await global.knex.destroy()
     await mongoose.connection.close()
   }
-
 }
 
-module.exports.TestHelper = TestHelper
+module.exports = (function () {
+  if (!global.test_helper) {
+    global.test_helper = new TestHelper()
+
+    if (process.env.MOCHA) {
+      before(async function () {
+        await global.test_helper.setup()
+      })
+      beforeEach(async function () {
+        await global.test_helper.truncate()
+        await global.test_helper.refresh_views()
+      })
+      after(async function () {
+        await global.test_helper.tear_down()
+        setTimeout(function () {
+          process.exit()
+        }, 1000)
+      })
+    }
+  }
+}())

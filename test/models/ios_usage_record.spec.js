@@ -6,20 +6,8 @@
 
 const IosUsageRecord = require('../../src/models/ios_usage_record')
 const moment = require('moment')
-const TestHelper = require('../test_helper').TestHelper
+require('../test_helper')
 
-let test_helper
-before(async function () {
-  test_helper = new TestHelper()
-  await test_helper.setup()
-})
-after(async function () {
-  await test_helper.tear_down()
-})
-beforeEach(async function () {
-  await test_helper.truncate()
-  await test_helper.refresh_views()
-})
 describe('#woiFromYMD', function () {
   it('returns the prior monday', async function () {
     const bad_woi = await factory.build('ios_usage_bad_woi')

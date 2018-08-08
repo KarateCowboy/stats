@@ -4,19 +4,9 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const TestHelper = require('../test_helper').TestHelper
+require('../test_helper')
 const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
-const schema = require('../../src/models/usage_aggregate_woi').schema
 
-let test_helper
-before(async function () {
-  test_helper = new TestHelper()
-  await test_helper.setup()
-  await test_helper.truncate()
-})
-after(async function () {
-  await test_helper.tear_down()
-})
 describe('UsageAggregateUtil', async function () {
   describe('#is_valid', async function () {
     it('requires a correctly formatted _id.woi', async function () {
