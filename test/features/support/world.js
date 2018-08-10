@@ -17,6 +17,14 @@ class CustomWorld {
     const options = {desiredCapabilities: {browserName: 'chrome'}}
     global.browser = webdriver.remote(options)
   }
+
+  setTo (variable, number) {
+    this[variable] = number
+  }
+
+  incrementBy (number) {
+    this.variable += number
+  }
 }
 
 setWorldConstructor(CustomWorld)

@@ -43,7 +43,6 @@ Before(async function () {
   await browser.init()
 })
 BeforeAll(async function(){
-  console.log('running before')
   process.env.SESSION_SECRET = this.sessionSecret
   process.env.ADMIN_PASSWORD = this.adminPassword
   await test_helper.setup()

@@ -1052,7 +1052,12 @@ var crashesVersionRetriever = function () {
 var overviewRetriever = async function () {
   publisherPlatforms = publisherPlatforms !== undefined ? publisherPlatforms : await $.ajax('/api/1/publishers/platforms')
   var downloads = await $.ajax('/api/1/dau_platform_first_summary')
-  window.OVERVIEW.firstRun(downloads, builders)
+  try {
+    window.OVERVIEW.firstRun(downloads, builders)
+  } catch (e) {
+    console.log('Error running #firstRun')
+    console.log(e.message)
+  }
 
   var platformStats = await $.ajax('/api/1/monthly_average_stats_platform')
   window.OVERVIEW.monthAveragesHandler(platformStats, builders)
@@ -2024,15 +2029,15 @@ var searchInputHandler = function (e) {
       _.each(crashes, function (crash, idx) {
         var rowClass = ''
         table.append(tr([
-          td(idx + 1),
-          td('<a href="#crash/' + crash.id + '">' + crash.id + '</a><br>(' + crash.contents.crash_id + ')'),
-          td(crash.contents.ver),
-          td(crash.contents._version),
-          td(crash.contents.year_month_day),
-          td(crash.contents.platform + ' ' + crash.contents.metadata.cpu),
-          td(crash.contents.metadata.operating_system_name),
-          td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>' }).join(' '))
-        ], {'classes': rowClass}
+            td(idx + 1),
+            td('<a href="#crash/' + crash.id + '">' + crash.id + '</a><br>(' + crash.contents.crash_id + ')'),
+            td(crash.contents.ver),
+            td(crash.contents._version),
+            td(crash.contents.year_month_day),
+            td(crash.contents.platform + ' ' + crash.contents.metadata.cpu),
+            td(crash.contents.metadata.operating_system_name),
+            td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>' }).join(' '))
+          ], {'classes': rowClass}
         ))
         table.append(tr([td(), '<td colspan="7">' + crash.contents.metadata.signature + '</td>'], {'classes': rowClass}))
       })
@@ -2097,7 +2102,18 @@ function initializeGlobals () {
 }
 
 function initialize_components () {
+  window.letters = ['a', 'b', 'c']
   Vue.component('v-select', VueSelect.VueSelect)
+  Vue.component('ma', {
+    template: `<td>{{lettr}}</td>`,
+    props: ['lettr']
+  })
+  var monthly_averages_table = new Vue({
+    el: '#ma-app',
+    data: {
+      'letters': window.letters
+    }
+  })
   VueApp = new Vue({
     el: '#ref-filter',
     components: {VueSelect},
@@ -2115,6 +2131,6 @@ function initialize_components () {
 $(document).ready(function () {
   initializeGlobals()
   loadInitialData()
-  initialize_components()
   initialize_router()
+  initialize_components()
 })

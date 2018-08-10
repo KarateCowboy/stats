@@ -101,7 +101,7 @@ var monthAveragesHandler = function (rows, b) {
   var tblHead = $("#monthly-averages-table thead")
   var tblBody = $("#monthly-averages-table tbody")
 
-  var months = _.uniq(_.pluck(rows, 'ymd')).map(function (ymd) { return ymd.substring(0, 7) })
+  var months = _.uniq(_.pluck(rows, 'ymd')).map(function (ymd) { return ymd.substring(0, 7) }).sort()
   var buf = "<tr><th></th>" + months.map(function (ymd) { return th(ymd, 'right') }).join('') + "</tr>"
   tblHead.html(buf)
 

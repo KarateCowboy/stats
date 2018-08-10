@@ -19,6 +19,8 @@ require('./fixtures/desktop_usage').define()
 require('./fixtures/referral_code').define()
 require('./fixtures/core-usage').define()
 require('./fixtures/core-usage-day').define()
+require('./fixtures/fc_usage_month').define()
+require('./fixtures/fc_usage').define()
 
 class TestHelper {
   constructor () {
@@ -54,7 +56,8 @@ class TestHelper {
     this.materialized_views = {
       'dw': [
         'fc_retention_week_mv',
-        'fc_retention_month_mv'
+        'fc_retention_month_mv',
+        'fc_usage_platform_mv'
       ]
     }
     if (process.env.LOADED_MOCHA_OPTS) {

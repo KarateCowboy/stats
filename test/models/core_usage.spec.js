@@ -5,7 +5,7 @@
  */
 
 require('../test_helper')
-const {CoreUsage} = require('../../src/models/mongoose/core_usage')
+const {CoreUsage} = require('../../src/models/core-usage.model')()
 
 
 describe.skip('CoreUsage', async function () {

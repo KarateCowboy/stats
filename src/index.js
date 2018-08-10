@@ -67,10 +67,7 @@ module.exports.kickoff = async () => {
       if (err) {
         reject(err)
       } else {
-        console.log('Analytics service started')
-        // slack.notify({text: require('os').hostname() + ' ' + npminfo.name + '@' + npminfo.version + ' started'})
         return resolve(() => {
-          console.log('Analytics service started')
           slack.notify({text: require('os').hostname() + ' ' + npminfo.name + '@' + npminfo.version + ' started'})
         })
       }
@@ -84,7 +81,6 @@ module.exports.shutdown = async () => {
       if (err) {
         reject(err)
       } else {
-        console.log('Analytics service stopped')
         resolve()
       }
     })
