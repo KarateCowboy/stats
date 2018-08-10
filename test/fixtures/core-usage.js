@@ -9,6 +9,7 @@ const factory = FactoryGirl.factory
 const moment = require('moment')
 const ObjectID = require('mongodb').ObjectID
 const CoreUsage = require('../../src/models/core-usage.model.js')()
+const _ = require('underscore')
 
 const define = () => {
 
@@ -24,7 +25,7 @@ const define = () => {
     'first': true,
     'channel': 'dev',
     'woi': () => moment().subtract(2, 'months').startOf('week').add(1, 'days').format('YYYY-MM-DD'),
-    'ref': () => (new ObjectID()).toString().toUpperCase().slice(0, 6),
+    'ref': () => _.shuffle((new ObjectID()).toString().split('')).toString().toUpperCase().slice(0, 6),
     'ts': () => moment().subtract(2, 'months').startOf('week').add(5, 'days').toDate().getTime(),
     'year_month_day': () => moment().subtract(2, 'months').startOf('week').add(5, 'days').format('YYYY-MM-DD')
   })

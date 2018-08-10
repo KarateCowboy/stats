@@ -63,9 +63,8 @@ class TestHelper {
   }
 
   async setup () {
-    if (!this.mongo_client) {
-      this.mongo_client = await mongo.connect(this.testMongoUri)
-      global.mongo_client = this.mongo_client
+    if (global.mongo_client === undefined) {
+      global.mongo_client = await mongo.connect(this.testMongoUri)
       await mongoose.connect(this.testMongoUri)
     }
     if (!global.pg_client) {
@@ -73,7 +72,6 @@ class TestHelper {
       this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
       global.knex = this.knex
     }
-    this.factory = factory
     global.factory = factory
   }
 
