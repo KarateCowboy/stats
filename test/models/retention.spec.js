@@ -5,25 +5,11 @@
  */
 
 const moment = require('moment')
-const TestHelper = require('../test_helper').TestHelper
+require('../test_helper')
 const _ = require('underscore')
 const UsageAggregateUtil = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
 // io
 const fs = require('fs-extra')
-
-let test_helper
-
-before(async function () {
-  test_helper = new TestHelper()
-  await test_helper.setup()
-})
-after(async function () {
-  await test_helper.tear_down()
-})
-beforeEach(async function () {
-  await test_helper.truncate()
-  await test_helper.refresh_views()
-})
 
 describe('week_diff', function () {
   before(async function () {
@@ -73,7 +59,7 @@ describe('WeekOfInstall', function () {
       }
       expect(android_usage_woi_aggs).to.have.property('length', 1)
     })
-    it('truncates the aggregate_woi table for the platform', async function () {
+    it('does not truncate the aggregate_woi table for the platform', async function () {
       // setup
       const existing_usage_aggregate_woi = await factory.build('ios_usage_aggregate_woi')
       await existing_usage_aggregate_woi.save()
@@ -83,7 +69,7 @@ describe('WeekOfInstall', function () {
       await WeekOfInstall.transfer_platform_aggregate('ios_usage', cutoff.format('YYYY-MM-DD'))
       // validation
       const ios_usage_woi_aggs = await mongo_client.collection('ios_usage_aggregate_woi').find().toArray()
-      expect(ios_usage_woi_aggs.length).to.equal(0)
+      expect(ios_usage_woi_aggs.length).to.equal(1)
     })
     it('applies android scrubbing to android browser but not link bubble', async function () {
       const android_usage = await factory.build('android_usage', {platform: 'android', ref: 'none'})

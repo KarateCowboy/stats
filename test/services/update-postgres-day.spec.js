@@ -1,17 +1,9 @@
 const moment = require('moment')
-const TestHelper = require('../test_helper').TestHelper
+require('../test_helper')
 const UpdatePostgresDay = require('../../src/services/update-postgres-day.service')
 const _ = require('underscore')
-let test_helper
 
 describe('update-postgres-day', async function () {
-  beforeEach(async function () {
-    test_helper = new TestHelper()
-    await test_helper.setup()
-  })
-  after(async function () {
-    await test_helper.tear_down()
-  })
   describe('main', async function () {
     it('works on the brave core usages', async function () {
       // setup
