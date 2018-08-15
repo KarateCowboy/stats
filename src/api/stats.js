@@ -6,7 +6,6 @@ var _ = require('underscore')
 var assert = require('assert')
 
 var dataset = require('./dataset')
-var retriever = require('../retriever')
 var common = require('./common')
 const RetentionWeek = require('../models/retention').RetentionWeek
 const moment = require('moment')

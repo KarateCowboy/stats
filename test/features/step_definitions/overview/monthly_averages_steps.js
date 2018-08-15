@@ -24,7 +24,7 @@ Then(/^I should see the averages laid out for the core usages$/, async function 
   const table_body_html = await browser.getHTML('#monthly-averages-table > tbody')
   expect(table_body_html).to.contain('winx64-bc')
   expect(table_body_html).to.contain('linux')
-  expect(table_body_html).to.contain('android')
+  expect(table_body_html).to.contain('Android Browser')
   expect(table_body_html).to.contain('osx-bc')
   expect(table_body_html).to.contain(this.total_core_usages)
   expect(table_body_html).to.contain(Math.ceil(this.total_core_usages / 30))

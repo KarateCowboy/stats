@@ -14,15 +14,11 @@ const define = () => {
 
   class UsageAggregateWOI {
     async save () {
-      if (this.platform === 'ios') {
         await mongo_client.collection('ios_usage_aggregate_woi').save(this)
-      }
     }
 
     async destroy () {
-      if (this.platform === 'ios') {
         await mongo_client.collection('ios_usage_aggregate_woi').remove({ '_id': this._id})
-      }
     }
   }
 
@@ -37,7 +33,7 @@ const define = () => {
       'ref': 'none'
     },
     'total': 1,
-    usages: () => { return [ new ObjectID() ]}
+    usages: () => { return [ new ObjectID() ] }
 
   })
 }
