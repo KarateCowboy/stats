@@ -102,3 +102,19 @@ describe('/retention_week', async function () {
     expect(week.retained_percentage.toFixed(2) * 100).to.be.closeTo(16, 17)
   })
 })
+describe('/monthly_average_stats_platform', async function(){
+  it('returns a bunch of things', async function(){
+    const server = await main.setup({pg: pg_client, mg: mongo_client})
+
+    // execution
+    let params = {
+      method: 'GET',
+      url: `/api/1/monthly_average_stats_platform?platformFilter=winx64&channelFilter=dev&ref=123ABC`
+    }
+    let response = await server.inject(params)
+    //validation
+    let payload = JSON.parse(response.payload)
+
+    expect(payload).to.not.equal(null)
+  })
+})

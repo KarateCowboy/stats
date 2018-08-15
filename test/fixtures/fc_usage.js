@@ -11,12 +11,13 @@ const moment = require('moment')
 const define = () => {
   factory.setAdapter(new FactoryGirl.ObjectAdapter())
 
-  class FcUsageMonth {
+  class FcUsage {
     async save () {
-      await knex('dw.fc_usage_month').insert({
+      await knex('dw.fc_usage').insert({
         ymd: this.ymd,
         platform: this.platform,
         version: this.version,
+        first_time: this.first_time,
         channel: this.channel,
         total: this.total,
         ref: this.ref
@@ -24,7 +25,7 @@ const define = () => {
     }
 
     async destroy () {
-      await knex('dw.fc_usage_month').delete({
+      await knex('dw.fc_usage').delete({
         ymd: this.ymd,
         platform: this.platform,
         version: this.version,
@@ -35,11 +36,12 @@ const define = () => {
     }
   }
 
-  factory.define('fc_usage_month', FcUsageMonth, {
+  factory.define('fc_usage', FcUsage, {
     ymd: () => moment().subtract(1, 'months').format(),
     platform: 'winx64',
     version: '0.12.4',
     channel: 'dev',
+    first_time: true,
     total: 200,
     ref: 'none'
   })

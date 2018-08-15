@@ -18,8 +18,8 @@ class CustomWorld {
     global.browser = webdriver.remote(options)
   }
 
-  setTo (number) {
-    this.variable = number
+  setTo (variable, number) {
+    this[variable] = number
   }
 
   incrementBy (number) {

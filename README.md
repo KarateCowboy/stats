@@ -10,6 +10,10 @@ Install dependencies `npm install`
 
 `npm run build && npm start`
 
+**IMPORTANT**
+
+Be sure to set shell variable `LOCAL` to `true` or hapi-cookie-auth may fail to set the browser cookie, per [this issue](https://github.com/hapijs/hapi-auth-cookie/issues/177)
+
 ## Running Tests
 
 `npm run build && npm run test`
