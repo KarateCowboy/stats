@@ -2102,18 +2102,7 @@ function initializeGlobals () {
 }
 
 function initialize_components () {
-  window.letters = ['a', 'b', 'c']
   Vue.component('v-select', VueSelect.VueSelect)
-  Vue.component('ma', {
-    template: `<td>{{lettr}}</td>`,
-    props: ['lettr']
-  })
-  var monthly_averages_table = new Vue({
-    el: '#ma-app',
-    data: {
-      'letters': window.letters
-    }
-  })
   VueApp = new Vue({
     el: '#ref-filter',
     components: {VueSelect},
