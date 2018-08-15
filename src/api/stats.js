@@ -45,16 +45,6 @@ FROM
 ORDER BY USG.ymd DESC
 `
 
-const AVERAGE_MONTHLY_STATS_PLATFORM = `
-SELECT ymd, platform, SUM(average_dau) AS dau, SUM(mau) as MAU, SUM(average_first_time) AS first_time
-FROM dw.fc_average_monthly_usage_mv
-WHERE
-  platform = ANY ($1) AND
-  channel = ANY ($2)
-GROUP BY ymd, platform
-ORDER BY platform, ymd ASC
-`
-
 const AVERAGE_MONTHLY_DAU = `
 SELECT ymd, SUM(average_dau) AS count
 FROM dw.fc_average_monthly_usage_mv
@@ -323,7 +313,17 @@ exports.setup = (server, client, mongo) => {
     handler: function (request, reply) {
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
-      client.query(AVERAGE_MONTHLY_STATS_PLATFORM, [platforms, channels], (err, results) => {
+      const query = knex('dw.fc_average_monthly_usage_mv').select('ymd', 'platform')
+        .sum({dau: 'average_dau'})
+        .sum({mau: 'mau'})
+        .sum({first_time: 'average_first_time'})
+        .whereIn('platform', platforms)
+        .whereIn('channel', channels)
+        .groupBy('ymd', 'platform')
+        .orderBy('platform')
+        .orderBy('ymd')
+      const query_string = query.toString()
+      client.query(query_string, (err, results) => {
         if (err) {
           reply(err.toString())
         } else {

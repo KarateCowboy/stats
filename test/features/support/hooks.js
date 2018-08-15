@@ -5,7 +5,9 @@
  */
 
 global.server = require(process.cwd() + '/src/index')
-const {After, AfterAll, Before} = require('cucumber')
+const {After, AfterAll, Before, BeforeAll} = require('cucumber')
+require('../../../test/test_helper')
+
 
 const bindHelpers = function () {
   if (browser.click_when_visible === void 0) {
@@ -28,12 +30,7 @@ const bindHelpers = function () {
   }
 }
 Before(async function () {
-  process.env.SESSION_SECRET = this.sessionSecret
-  process.env.ADMIN_PASSWORD = this.adminPassword
-  const TestHelper = require('../../../test/test_helper').TestHelper
-  this.test_helper = new TestHelper()
-  await this.test_helper.setup()
-  await this.test_helper.truncate()
+  await test_helper.truncate()
   await server.setup({pg: global.pg_client, mg: global.mongo_client})
   try {
     await server.kickoff()
@@ -45,13 +42,18 @@ Before(async function () {
   bindHelpers()
   await browser.init()
 })
+BeforeAll(async function(){
+  process.env.SESSION_SECRET = this.sessionSecret
+  process.env.ADMIN_PASSWORD = this.adminPassword
+  await test_helper.setup()
+})
 
 After({timeout: 10000}, async function () {
   await server.shutdown()
   await browser.end()
-  await this.test_helper.tear_down()
 })
 AfterAll(async function () {
+  await test_helper.tear_down()
   setTimeout(function () {
     process.exit()
   }, 1500)
