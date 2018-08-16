@@ -13,7 +13,6 @@ module.exports = class GenericUsageDayService {
     } else {
       start_woi = moment().startOf('week').add(1, 'days').subtract(3, 'months').startOf('week').add(1, 'days').format('YYYY-MM-DD')
     }
-    const this_week = moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
     const results = await mongo_client.collection(this.collection).find({
       '_id.woi': start_woi
     }).toArray()

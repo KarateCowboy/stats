@@ -9,8 +9,6 @@
 const commander = require('commander')
 const moment = require('moment')
 const mongoc = require('../src/mongoc')
-const reporter = require('../src/reporter')
-const path = require('path')
 
 const AndroidUsageDayService = require('../src/services/android-usage-day.service')
 const IosUsageDayService = require('../src/services/ios-usage-day.service')
@@ -23,9 +21,6 @@ commander.option('-d --days [num]', 'Days to go back in reporting', 90)
   .option('-i, --ios')
   .option('-f, --force')
   .option('-m, --muon').parse(process.argv)
-
-let jobName = path.basename(__filename)
-let runInfo = reporter.startup(jobName)
 
 const run = async () => {
   let service
