@@ -2025,21 +2025,21 @@ var searchInputHandler = function (e) {
           $('#searchComments').html('Showing ' + results.rowCount + ' crashes')
         }
       }
+      console.log(results)
       var crashes = results.crashes
       _.each(crashes, function (crash, idx) {
         var rowClass = ''
         table.append(tr([
-            td(idx + 1),
-            td('<a href="#crash/' + crash.id + '">' + crash.id + '</a><br>(' + crash.contents.crash_id + ')'),
-            td(crash.contents.ver),
-            td(crash.contents._version),
-            td(crash.contents.year_month_day),
-            td(crash.contents.platform + ' ' + crash.contents.metadata.cpu),
-            td(crash.contents.metadata.operating_system_name),
-            td(_.map(crash.tags, function (tag) { return '<span class="label label-info">' + tag + '</span>' }).join(' '))
-          ], {'classes': rowClass}
+          td(idx + 1),
+          td('<a href="#crash/' + crash.contents.id + '">' + crash.contents.id + '</a><br>(' + crash.contents.crash_id + ')'),
+          td(crash.contents.ver),
+          td(crash.contents.version),
+          td(crash.contents.year_month_day),
+          td(crash.contents.platform + ' ' + crash.contents['metadata->cpu']),
+          td(crash.contents['metadata->operating_system_name'])
+        ], {'classes': rowClass}
         ))
-        table.append(tr([td(), '<td colspan="7">' + crash.contents.metadata.signature + '</td>'], {'classes': rowClass}))
+        table.append(tr([td(), '<td colspan="7">' + crash.contents['metadata->signature'] + '</td>'], {'classes': rowClass}))
       })
     }
   })
