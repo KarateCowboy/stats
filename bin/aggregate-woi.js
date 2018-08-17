@@ -61,9 +61,15 @@ const run = async () => {
     relevant_platforms.push(platforms.usage)
   } else if (commander.core) {
     collections.push(possible_collections.core)
+    relevant_platforms.push(platforms.core)
   } else {
     collections = Object.values(possible_collections)
+    relevant_platforms.push(platforms.core)
+    relevant_platforms.push(platforms.usage)
+    relevant_platforms.push(platforms.ios)
+    relevant_platforms.push(platforms.android)
   }
+  relevant_platforms  = _.flatten(relevant_platforms)
   cutoff = moment().subtract(Number(commander.days), 'days').startOf('week').format('YYYY-MM-DD')
   try {
     global.pg_client = await pg.connect(process.env.DATABASE_URL)
@@ -116,7 +122,7 @@ const processResults = async (agg_collection, cutoff) => {
   let summed_totals = 0
   for (let platform of relevant_platforms) {
     try {
-      await knex('dw.fc_retention_woi').where('platform', platform).andWhere('woi', '>=', cutoff).delete()
+      await knex('dw.fc_retention_woi').where('platform', platform).andWhere(knex.raw(`woi >= '${cutoff}'::date `)).delete()
     } catch (e) {
       console.log('Error cleansing')
       console.log(e.message)
