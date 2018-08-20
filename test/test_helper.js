@@ -19,6 +19,7 @@ require('./fixtures/desktop_usage').define()
 require('./fixtures/referral_code').define()
 require('./fixtures/core-usage').define()
 require('./fixtures/core-usage-day').define()
+require('./fixtures/muon-usage-day').define()
 require('./fixtures/fc_usage_month').define()
 require('./fixtures/fc_usage').define()
 
@@ -43,6 +44,7 @@ class TestHelper {
       'android_usage',
       'android_usage_aggregate_woi',
       'ios_usage',
+      'ios_usage_aggregate_woi',
       'brave_core_usage',
       'brave_core_usage_aggregate_woi'
     ]
