@@ -76,9 +76,9 @@ const aggregate_id = (usage, collection_name) => {
 }
 
 class WeekOfInstall {
-  static async transfer_platform_aggregate (collection_name, start_date, force) {
+  static async transfer_platform_aggregate (collection_name, start_date, end_date, force) {
     const aggregate_collection = `${collection_name}_aggregate_woi`
-    let nearest_week = moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
+    let nearest_week = end_date ? end_date : moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
     const usage_params = {
       daily: true,
       woi: {$gte: start_date, $lt: nearest_week},
