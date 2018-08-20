@@ -19,6 +19,7 @@ const UsageAggregateWOI = require('../src/models/usage_aggregate_woi').UsageAggr
 const Util = require('../src/models/util').Util
 const _ = require('underscore')
 commander.option('-d --days [num]', 'Days to go back in reporting', 90)
+  .option('-e, --end [num]', 'days to cutoff', 1)
   .option('-s, --skip-aggregation')
   .option('-a, --android')
   .option('-c, --core')
@@ -47,7 +48,7 @@ let collections = []
 
 let jobName = path.basename(__filename)
 let runInfo = reporter.startup(jobName)
-let cutoff
+let cutoff, end_date
 
 const run = async () => {
   if (commander.android) {
@@ -69,8 +70,9 @@ const run = async () => {
     relevant_platforms.push(platforms.ios)
     relevant_platforms.push(platforms.android)
   }
-  relevant_platforms  = _.flatten(relevant_platforms)
+  relevant_platforms = _.flatten(relevant_platforms)
   cutoff = moment().subtract(Number(commander.days), 'days').startOf('week').format('YYYY-MM-DD')
+  end_date = moment().subtract(Number(commander.end), 'days').startOf('week').format('YYYY-MM-DD')
   try {
     global.pg_client = await pg.connect(process.env.DATABASE_URL)
     global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
@@ -82,8 +84,8 @@ const run = async () => {
           console.log(`Scrubbing ${platform}`)
           await scrub_usage_dates(cutoff, platform)
         }
-        console.log(`Generating aggregates for ${platform} installed week of ${cutoff} and later`)
-        await WeekOfInstall.transfer_platform_aggregate(platform, cutoff, commander.force)
+        console.log(`Generating aggregates for ${platform} installed week of ${cutoff} and later until ${end_date}`)
+        await WeekOfInstall.transfer_platform_aggregate(platform, cutoff, end_date, commander.force)
         global.mongo_client.close()
       }
     }
@@ -133,7 +135,7 @@ const processResults = async (agg_collection, cutoff) => {
     bar.tick(1)
     const current = await results.next()
     try {
-      if(UsageAggregateWOI.is_valid(current)){
+      if (UsageAggregateWOI.is_valid(current)) {
         await UsageAggregateWOI.transfer_to_retention_woi(current)
         summed_totals += current.usages.length
       }
