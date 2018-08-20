@@ -8,7 +8,7 @@ Clone the repo
 
 Install dependencies `npm install`
 
-`npm run build && npm start`
+`npm start`
 
 **IMPORTANT**
 
