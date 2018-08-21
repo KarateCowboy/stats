@@ -2120,6 +2120,6 @@ function initialize_components () {
 $(document).ready(function () {
   initializeGlobals()
   loadInitialData()
-  initialize_router()
   initialize_components()
+  initialize_router()
 })
