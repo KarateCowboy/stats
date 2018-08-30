@@ -27,13 +27,13 @@ class RetentionWeek {
       'week_delta']).sum({'current': 'current'}).sum({'starting': 'starting'}).select(knex.raw('sum(current)/sum(starting) as retained_percentage'))
       .whereIn('platform', platform)
       .whereIn('channel', channel)
-      .andWhere('woi','>',moment().subtract(12,'weeks').startOf('week').format('YYYY-MM-DD'))
-      .andWhere('woi','<',moment().startOf('week').format('YYYY-MM-DD'))
-      .andWhere('week_delta','<',12)
-      .andWhere('week_delta','>=',0)
+      .andWhere('woi', '>', moment().subtract(12, 'weeks').startOf('week').format('YYYY-MM-DD'))
+      .andWhere('woi', '<', moment().startOf('week').format('YYYY-MM-DD'))
+      .andWhere('week_delta', '<', 12)
+      .andWhere('week_delta', '>=', 0)
       .groupBy('woi', 'week_delta')
 
-    if (!!ref) {
+    if (ref) {
       query.whereIn('ref', ref.split(','))
     }
     query.orderBy('woi')
@@ -42,7 +42,7 @@ class RetentionWeek {
     rows = result.rows.filter(row => {
       const week_monday = moment(row.woi).startOf('week').add(1, 'days')
       const current_monday = moment().startOf('week')
-      const weeks_ago = current_monday.diff(week_monday,'weeks')
+      const weeks_ago = current_monday.diff(week_monday, 'weeks')
       return (moment(row.woi).diff(week_monday, 'days') === 0) && row.week_delta <= weeks_ago
     })
 
@@ -62,7 +62,6 @@ class RetentionWeek {
 }
 
 const aggregate_id = (usage, collection_name) => {
-
   platform = collection_name === 'android_usage' ? 'androidbrowser' : usage.platform
   return {
     ymd: usage.year_month_day,
@@ -78,15 +77,14 @@ const aggregate_id = (usage, collection_name) => {
 class WeekOfInstall {
   static async transfer_platform_aggregate (collection_name, start_date, end_date, force) {
     const aggregate_collection = `${collection_name}_aggregate_woi`
-    let nearest_week = end_date ? end_date : moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
+    let nearest_week = end_date || moment().startOf('week').add(1, 'days').format('YYYY-MM-DD')
     const usage_params = {
       daily: true,
-      woi: {$gte: start_date, $lt: nearest_week},
       year_month_day: {$gte: start_date, $lt: nearest_week},
       aggregated_at: {
         $exists: false
       },
-      version: { $not : /\([A-Za-z0-9]+\)$/ }
+      version: {$not: /\([A-Za-z0-9]+\)$/}
     }
     if (force) {
       delete usage_params.aggregated_at
@@ -98,12 +96,11 @@ class WeekOfInstall {
     let sum = 0
     await usages.maxTimeMS(360000000)
     const bar = ProgressBar({
-      tmpl: `Loading ... :bar :percent :eta`,
+      tmpl: `Loading ${count} ... :bar :percent :eta`,
       width: 100,
       total: count
     })
     while (await usages.hasNext()) {
-      bar.tick(1)
       let usage = await usages.next()
       let has_next = await usages.hasNext()
       batch.push(usage)
@@ -116,7 +113,7 @@ class WeekOfInstall {
                 _id: usage_aggregate_id
               }, {
                 $addToSet: {usages: usage._id},
-                $inc: { total: 1 }
+                $inc: {total: 1}
               }, {
                 upsert: true
               }
@@ -126,11 +123,12 @@ class WeekOfInstall {
                 aggregated_at: Date.now()
               }
             })
+            bar.tick(1)
           } catch (e) {
             console.log(e.message)
           }
         }))
-        sum += 10000
+        sum += 1
         batch = []
       }
     }
