@@ -22,6 +22,7 @@ require('./fixtures/core-usage-day').define()
 require('./fixtures/muon-usage-day').define()
 require('./fixtures/fc_usage_month').define()
 require('./fixtures/fc_usage').define()
+require('./fixtures/download').define()
 
 class TestHelper {
   constructor () {
@@ -36,6 +37,7 @@ class TestHelper {
     global.MONGO_URI = process.env.TEST_MLAB_URI
     process.env.MLAB_URI = process.env.TEST_MLAB_URI
     global.expect = require('chai').expect
+    global.sinon = require('sinon')
 
     this.mongo_collections = [
       'usage',
@@ -52,7 +54,8 @@ class TestHelper {
       'dw': [
         'fc_retention_woi',
         'fc_usage_month',
-        'fc_usage'
+        'fc_usage',
+        'downloads'
       ]
     }
     this.materialized_views = {
