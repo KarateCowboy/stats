@@ -36,7 +36,7 @@ const define = () => {
       type: 'brave-download',
       timestamp: () => moment().format('DD/MMMM/YY:HH:mm:ss ZZ'),
       id_code: () => { return new ObjectID().toString().toUpperCase().substring(0,16)},
-      request_url: 'multi-channel/releases/dev/0.19.123/osx/Brave-0.19.123.zip',
+      request_path: 'multi-channel/releases/dev/0.19.123/osx/Brave-0.19.123.zip',
       rest_operation: 'REST.GET.OBJECT',
       request_string: 'GET /multi-channel/releases/dev/0.19.123/osx/Brave-0.19.123.zip HTTP/1.1',
       request_response_code: 200,

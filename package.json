@@ -59,6 +59,7 @@
     "request": "2.76.0",
     "simple-statistics": "2.2.0",
     "smooth-progress": "1.1.0",
+    "ua-parser-js": "git+https://github.com/KarateCowboy/ua-parser-js.git",
     "underscore": "1.8.3",
     "uuid": "2.0.2",
     "uuid-js": "0.7.5",

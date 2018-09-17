@@ -55,25 +55,30 @@ describe('Downloads Service', async function () {
   })
   describe('#parse', async function () {
     it('returns a hash with correctly parsed values', async function () {
-      const line = `608d9d664ad099538106571744f55ac449c1eb8dc08c08c114039011d43395954 brave-download [01/Jan/2018:02:02:03 +0000] 157.52.69.34 - 922A0961750A507F REST.GET.OBJECT multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe "GET /multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe HTTP/1.1" 304 - - 136855360 9 - "https://brave.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299" -`
+      const line = `608d9d664ad099538106571744f55ac449c1eb8dc08c08c114039011d43395954 brave-download [01/Jan/2018:02:02:03 +0000] 157.52.69.34 - 922A0961750A507F REST.GET.OBJECT multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe "GET /multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe HTTP/1.1" 304 - 236855360 - 136855360 9 9 - "https://brave.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299" -`
       const attributes = service.parse(line)
       expect(attributes).to.have.property('sha', '608d9d664ad099538106571744f55ac449c1eb8dc08c08c114039011d43395954')
       expect(attributes).to.have.property('type', 'brave-download')
       expect(attributes).to.have.property('timestamp', '01/Jan/2018:02:02:03 +0000')
       expect(attributes).to.have.property('ip_address', '157.52.69.34')
       expect(attributes).to.have.property('id_code', '922A0961750A507F')
-      expect(attributes).to.have.property('rest_operation', 'REST.GET.OPERATION')
-      expect(attributes).to.have.property('request_url', download_attrs.request_url)
-      expect(attributes).to.have.property('request_string', download_attrs.request_string)
-      expect(attributes).to.have.property('request_response_code', download_attrs.request_response_code)
-      expect(attributes).to.have.property('junk_number_1', download_attrs.junk_number_1)
-      expect(attributes).to.have.property('junk_number_2', download_attrs.junk_number_2)
-      expect(attributes).to.have.property('junk_number_3', download_attrs.junk_number_3)
-      expect(attributes).to.have.property('junk_number_4', download_attrs.junk_number_4)
-      expect(attributes).to.have.property('domain', download_attrs.domain)
-      expect(attributes).to.have.property('browser_signature', download_attrs.browser_signature)
+      expect(attributes).to.have.property('rest_operation', 'REST.GET.OBJECT')
+      expect(attributes).to.have.property('request_path', 'multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe')
+      expect(attributes).to.have.property('request_string', 'GET /multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe HTTP/1.1')
+      expect(attributes).to.have.property('request_response_code', 304)
+      expect(attributes).to.have.property('junk_number_1', 236855360)
+      expect(attributes).to.have.property('junk_number_2',  136855360)
+      expect(attributes).to.have.property('junk_number_3',  9)
+//      expect(attributes).to.have.property('junk_number_4',  9)
+      expect(attributes).to.have.property('domain', 'https://brave.com')
+
+      expect(attributes).to.have.property('browser_name', 'Mozilla' )
+      expect(attributes).to.have.property('operating_system', 'Windows' )
+      expect(attributes).to.have.property('browser_signature', "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299")
+      /*
       expect(attributes).to.have.property('created_at')
       expect(attributes).to.have.property('updated_at')
+      */
     })
   })
   describe('create', async function () {
@@ -111,8 +116,8 @@ describe('Downloads Service', async function () {
     specify('rest_operation', async function () {
       expect(downloads[0]).to.have.property('rest_operation', download_attrs.rest_operation)
     })
-    specify('request_url', async function () {
-      expect(downloads[0]).to.have.property('request_url', download_attrs.request_url)
+    specify('request_path', async function () {
+      expect(downloads[0]).to.have.property('request_path', download_attrs.request_path)
     })
     specify('request_string', async function () {
       expect(downloads[0]).to.have.property('request_string', download_attrs.request_string)
