@@ -84,7 +84,7 @@ function resourcesReady (err, resources) {
         console.log('Done')
         resources.pg.end()
         process.exit(0)
-      }, 1000)
+      }, 30000)
     })
   })
 }
