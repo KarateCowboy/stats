@@ -40,12 +40,7 @@ const define = () => {
       rest_operation: 'REST.GET.OBJECT',
       request_string: 'GET /multi-channel/releases/dev/0.19.123/osx/Brave-0.19.123.zip HTTP/1.1',
       request_response_code: 200,
-      junk_number_1: Util.random_int(9000),
-      junk_number_2: () => Util.random_int(9000),
-      junk_number_3: () => Util.random_int(9000),
-      junk_number_4: () => Util.random_int(9000),
-      browser_signature: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.84 Safari/537.36" ,
-      domain: "htts://brave.com/downloads"
+      domain: "htts://brave.com/downloads",
     }
   )
 }

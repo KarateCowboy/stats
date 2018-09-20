@@ -66,19 +66,8 @@ describe('Downloads Service', async function () {
       expect(attributes).to.have.property('request_path', 'multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe')
       expect(attributes).to.have.property('request_string', 'GET /multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe HTTP/1.1')
       expect(attributes).to.have.property('request_response_code', 304)
-      expect(attributes).to.have.property('junk_number_1', 236855360)
-      expect(attributes).to.have.property('junk_number_2',  136855360)
-      expect(attributes).to.have.property('junk_number_3',  9)
-//      expect(attributes).to.have.property('junk_number_4',  9)
       expect(attributes).to.have.property('domain', 'https://brave.com')
 
-      expect(attributes).to.have.property('browser_name', 'Mozilla' )
-      expect(attributes).to.have.property('operating_system', 'Windows' )
-      expect(attributes).to.have.property('browser_signature', "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299")
-      /*
-      expect(attributes).to.have.property('created_at')
-      expect(attributes).to.have.property('updated_at')
-      */
     })
   })
   describe('create', async function () {
@@ -125,23 +114,8 @@ describe('Downloads Service', async function () {
     specify('request_response_code', async function () {
       expect(downloads[0]).to.have.property('request_response_code', download_attrs.request_response_code)
     })
-    specify('junk_number_1', async function () {
-      expect(downloads[0]).to.have.property('junk_number_1', download_attrs.junk_number_1)
-    })
-    specify('junk_number_2', async function () {
-      expect(downloads[0]).to.have.property('junk_number_2', download_attrs.junk_number_2)
-    })
-    specify('junk_number_3', async function () {
-      expect(downloads[0]).to.have.property('junk_number_3', download_attrs.junk_number_3)
-    })
-    specify('junk_number_4', async function () {
-      expect(downloads[0]).to.have.property('junk_number_4', download_attrs.junk_number_4)
-    })
     specify('domain', async function () {
       expect(downloads[0]).to.have.property('domain', download_attrs.domain)
-    })
-    specify('browser_signature', async function () {
-      expect(downloads[0]).to.have.property('browser_signature', download_attrs.browser_signature)
     })
     specify('created_at', async function () {
       expect(downloads[0]).to.have.property('created_at')
