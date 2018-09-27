@@ -21,6 +21,8 @@
   "author": "Brave Software",
   "license": "ISC",
   "dependencies": {
+    "@feathersjs/feathers": "3.2.3",
+    "@feathersjs/rest-client": "1.4.5",
     "amqplib": "0.4.1",
     "async": "1.5.2",
     "awis": "1.0.9",
@@ -63,6 +65,8 @@
     "uuid": "2.0.2",
     "uuid-js": "0.7.5",
     "vision": "4.0.1",
+    "webpack": "^4.20.1",
+    "webpack-cli": "^3.1.1",
     "yargs": "3.31.0"
   },
   "devDependencies": {

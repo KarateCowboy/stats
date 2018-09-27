@@ -630,7 +630,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   }
 }
 
-const weeklyRetentionHandler = function (rows) {
+const weeklyRetentionHandler = function (rows, downloads) {
   console.log('executed the weeklyRetentionHandler')
   let i, row, cellColor, weekDelta
   let rowHeadings = []
@@ -648,18 +648,19 @@ const weeklyRetentionHandler = function (rows) {
   // headings
   buffer += '<table class=\'table\'>'
   buffer += '<tr class=\'active\'><th colspan=\'2\'>Weeks since installation</th>'
+  buffer += `<th></th>`
   for (i = 0; i < 12; i++) {
     buffer += '<th class="retentionCell">' + i + '</th>'
   }
 
   // heading sparklines
-  buffer += '</tr><tr><td></td><td></td>'
+  buffer += '</tr><tr><td></td><td></td><td></td>'
   for (i = 0; i < 12; i++) {
     buffer += '<td><span id=\'sparklineDelta' + i + '\'></span></td>'
   }
 
   // averages
-  buffer += '</tr><tr><th>Average</th><td></td>'
+  buffer += '</tr><tr><th>Average</th><th>Downloads</th><td></td>'
   for (i = 0; i < 12; i++) {
     avg = STATS.STATS.avg(rows.filter((row) => { return row.week_delta === i }).map((row) => { return row.retained_percentage })) || 0
     cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
@@ -674,6 +675,8 @@ const weeklyRetentionHandler = function (rows) {
     if (row.woi !== ctrl) {
       buffer += '</tr><tr>'
       buffer += '<th nowrap>' + moment(row.woi).format('MMM DD YYYY') + '</th>'
+      let key = row.woi.substring(0, 10)
+      buffer += `<td class="download-count">${ downloads[key]}</td>`
       buffer += '<td><span id=\'sparklineActual' + row.woi + '\'></span><br>'
       rowHeadings.push(row.woi)
       ctrl = row.woi
@@ -888,15 +891,42 @@ var retentionMonthRetriever = function () {
   })
 }
 
-const weeklyRetentionRetriever = () => {
-  $.ajax('/api/1/retention_week?' + standardParams(), {
-    success: (rows) => {
-      weeklyRetentionHandler(rows)
-    },
-    error: () => {
-      console.log('failed to communicate with endpoint')
+const weeklyRetentionRetriever = async function () {
+  const standard_params = standardParams()
+  const platformFilter = serializePlatformParams().split(',')
+  const start_of_week = moment().subtract(3, 'months').startOf('week').add(1, 'days')
+
+  const week_starts = []
+  while (start_of_week.isBefore(moment())) {
+    week_starts.push(start_of_week.clone())
+    start_of_week.add(7, 'days')
+  }
+  const weeks = {}
+  await Promise.all(week_starts.map(async (week) => {
+    let params = {
+      query: {
+        timestamp: {
+          $gte: week.format('YYYY-MM-DD'),
+          $lt: week.clone().add(7, 'days').format('YYYY-MM-DD')
+        },
+        platform: {$in: platformFilter}
+      }
     }
+    weeks[week.format('YYYY-MM-DD')] = (await app.service('downloads').find(params)).total
+  }))
+  return new Promise((resolve, reject) => {
+    $.ajax('/api/1/retention_week?' + standard_params, {
+      success: (rows) => {
+        weeklyRetentionHandler(rows, weeks)
+        resolve()
+      },
+      error: () => {
+        console.log('failed to communicate with endpoint')
+        reject()
+      }
+    })
   })
+
 }
 
 var versionsRetriever = function () {
@@ -1835,7 +1865,7 @@ let initialize_router = () => {
     refreshData()
   })
 
-// Display a single crash report
+  // Display a single crash report
   router.get('crash/:id', function (req) {
     pageState.currentlySelected = 'mnTopCrashes'
     viewState.showControls = false
@@ -1933,7 +1963,7 @@ let initialize_router = () => {
     })
   })
 
-// Display a list of crash reports
+  // Display a list of crash reports
   router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', function (req) {
     pageState.currentlySelected = 'mnTopCrashes'
     // Show and hide sub-sections
@@ -2030,14 +2060,14 @@ var searchInputHandler = function (e) {
       _.each(crashes, function (crash, idx) {
         var rowClass = ''
         table.append(tr([
-          td(idx + 1),
-          td('<a href="#crash/' + crash.contents.id + '">' + crash.contents.id + '</a><br>(' + crash.contents.crash_id + ')'),
-          td(crash.contents.ver),
-          td(crash.contents.version),
-          td(crash.contents.year_month_day),
-          td(crash.contents.platform + ' ' + crash.contents['metadata->cpu']),
-          td(crash.contents['metadata->operating_system_name'])
-        ], {'classes': rowClass}
+            td(idx + 1),
+            td('<a href="#crash/' + crash.contents.id + '">' + crash.contents.id + '</a><br>(' + crash.contents.crash_id + ')'),
+            td(crash.contents.ver),
+            td(crash.contents.version),
+            td(crash.contents.year_month_day),
+            td(crash.contents.platform + ' ' + crash.contents['metadata->cpu']),
+            td(crash.contents['metadata->operating_system_name'])
+          ], {'classes': rowClass}
         ))
         table.append(tr([td(), '<td colspan="7">' + crash.contents['metadata->signature'] + '</td>'], {'classes': rowClass}))
       })
