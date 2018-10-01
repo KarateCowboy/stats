@@ -9,7 +9,7 @@ const pgc = require('../src/pgc')
 const reporter = require('../src/reporter')
 const moment = require('moment')
 const UpdateMonth = require('../src/services/update-postgres-month.service')
-
+const Knex = require('knex')
 const path = require('path')
 
 const args = require('yargs')
@@ -29,11 +29,13 @@ const runInfo = reporter.startup(jobName)
 const main = async () => {
   global.mongo_client = await mongoc.setupConnection()
   global.pg_client = await pgc.setupConnection()
+  global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
   const month_service = new UpdateMonth()
   await month_service.main(args.collection, args.start, args.end)
 
   await global.pg_client.end()
   await global.mongo_client.close()
+  await global.knex.destroy()
 }
 
 main()

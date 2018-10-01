@@ -21,6 +21,9 @@ class Util {
   static is_valid_date_string(date_string){
     return !!date_string.match(/^[\d]{4,4}-[\d]{2,2}-[\d]{2,2}$/)
   }
+  static random_int(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+  }
 }
 
 module.exports.Util = Util
