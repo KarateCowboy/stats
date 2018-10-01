@@ -21,6 +21,12 @@ const bindHelpers = function () {
       return await browser.getHTML(selector)
     })
   }
+  if (browser.get_text_when_visible === void 0) {
+    browser.addCommand('get_text_when_visible', async function (selector) {
+      await browser.waitForVisible(selector, 3000)
+      return await browser.getText(selector)
+    })
+  }
   if (browser.select_by_value_when_visible === void 0) {
     browser.addCommand('set_value_when_visible', async function (selector, value) {
       await browser.waitForVisible(selector, 3000)

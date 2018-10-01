@@ -42,7 +42,6 @@ module.exports.setup = async (connections) => {
   })
   await mongoose.connect(process.env.MLAB_URI)
   server.register(Inert, function () {})
-  // server.register(require('blipp'), function () {})
 
   // Handle the boom response as well as all other requests (cache control for telemetry)
   setGlobalHeader(server, 'Cache-Control', 'no-cache, no-store, must-revalidate, private, max-age=0')

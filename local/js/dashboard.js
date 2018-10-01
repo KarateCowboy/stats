@@ -894,7 +894,7 @@ var retentionMonthRetriever = function () {
 const weeklyRetentionRetriever = async function () {
   const standard_params = standardParams()
   const platformFilter = serializePlatformParams().split(',')
-  const start_of_week = moment().subtract(3, 'months').startOf('week').add(1, 'days')
+  const start_of_week = moment().subtract(12, 'weeks').startOf('week').add(1, 'days')
 
   const week_starts = []
   while (start_of_week.isBefore(moment())) {
@@ -904,6 +904,7 @@ const weeklyRetentionRetriever = async function () {
   const weeks = {}
   await Promise.all(week_starts.map(async (week) => {
     let params = {
+      $limit: 0,
       query: {
         timestamp: {
           $gte: week.format('YYYY-MM-DD'),

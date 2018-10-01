@@ -98,20 +98,15 @@ let retention_week_spread = async (weeks_ago) => {
 }
 
 Then(/^I should see a column indicating downloads for each week$/, async function () {
-  const download_cells = await browser.get_html_when_visible('.download-count')
-  let downloads = await knex('dw.downloads').select('*')//count(knex.raw(woi_cmd)).select(knex.raw(woi_cmd)).groupBy(knex.raw(woi_cmd)).orderBy(knex.raw(woi_cmd))
-  downloads =  _.groupBy(downloads, (d) => { return moment(d.timestamp).startOf('week').add(1, 'day').format('YYYY-MM-DD')})
-  // console.dir(downloads, { colors: true })
+  const download_cells = await browser.get_text_when_visible('.download-count')
+  let downloads = await knex('dw.downloads').select('*').whereNot('platform', 'android').andWhere('timestamp', '>=', moment().subtract(12, 'weeks').startOf('week').add(1, 'days').format()).andWhere('timestamp', '<', moment().startOf('week').format())
+  downloads = _.groupBy(downloads, (d) => { return moment(d.timestamp).startOf('week').add(1, 'day').format('YYYY-MM-DD')})
   let i = 0
   for (let d of _.uniq(Object.keys(downloads).sort())) {
-    console.log(d)
-    console.log(d, downloads[d].length)
-    expect(download_cells[i]).to.include(downloads[d].length.toString())
+    const cell_num = Number(download_cells[i])
+    expect(cell_num).to.be.closeTo(downloads[d].length, 2)
     i++
-    // console.log(d, downloads[d].length)
   }
-  // console.dir(downloads)
 
   expect(download_cells).to.have.property('length', 12)
-  expect(download_cells[0]).to.include('7')
 })

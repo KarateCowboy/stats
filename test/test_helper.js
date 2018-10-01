@@ -9,6 +9,8 @@ const mongo = require('mongodb')
 const Knex = require('knex')
 const factory = require('factory-girl').factory
 const mongoose = require('mongoose')
+const feathers = require('@feathersjs/feathers')
+const rest_client = require('@feathersjs/rest-client')
 require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
@@ -79,6 +81,12 @@ class TestHelper {
       global.pg_client = await pg.connect(this.testDatabaseUrl)
       this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
       global.knex = this.knex
+    }
+    if(!global.numbers_app){
+      let jquery = require('jquery')
+      let NumbersClient = rest_client('http://localhost:3030')
+      global.numbers_app = feathers()
+      numbers_app.configure(NumbersClient.jquery(jquery))
     }
     global.factory = factory
   }
