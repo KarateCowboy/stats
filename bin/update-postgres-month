@@ -35,6 +35,7 @@ const main = async () => {
 
   await global.pg_client.end()
   await global.mongo_client.close()
+  await global.knex.destroy()
 }
 
 main()
