@@ -2,7 +2,7 @@ const moment = require('moment')
 require('../test_helper')
 const MonthUpdate = require('../../src/services/update-postgres-month.service')
 const _ = require('underscore')
-
+const { Util } = require('../../src/models/util')
 
 describe('update-postres-month', async function () {
   describe('exec', async function () {
@@ -16,6 +16,27 @@ describe('update-postres-month', async function () {
       expect(usage_months).to.have.property('length', 1)
       expect(usage_months[0]).to.have.property('platform', 'winx64-bc')
       expect(moment(usage_months[0].ymd).format('YYYY-MM-DD')).to.equal(core_usage.year_month_day)
+    })
+  })
+  describe('#importExceptions', async function(){
+    it('overwrites the values of existing, bad rows', async function(){
+      const first = await factory.build('fc_usage_month', { platform: 'ios'})
+      await first.save()
+      const replace = await factory.build('fc_usage_month', { platform: 'androidbrowser'})
+      await replace.save()
+      const exception = await factory.build('fc_usage_month_exception', { total : Util.random_int(10000), platform: 'androidbrowser'})
+      await exception.save()
+
+      const service = new MonthUpdate()
+      await service.importExceptions()
+      const updatedMonths = await knex('dw.fc_usage_month').select('*').orderBy('created_at')
+      expect(updatedMonths[0].total).to.equal(first.total)
+      expect(updatedMonths[0]).to.have.property('platform', 'ios')
+      expect(updatedMonths[1].updated_at).to.not.equal(replace.updated_at)
+      expect(updatedMonths[1]).to.have.property('total', exception.total)
+      expect(updatedMonths[1]).to.have.property('platform', 'androidbrowser')
+
+
     })
   })
 })
