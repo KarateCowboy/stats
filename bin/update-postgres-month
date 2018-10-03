@@ -14,25 +14,33 @@ const path = require('path')
 
 const args = require('yargs')
   .default('collection', 'usage')
-  .default('start', moment().startOf('month').subtract(1,'days').format('YYYY-MM-DD'))
-  .default('end', moment().add(1,'days').format('YYYY-MM-DD'))
+  .default('start', moment().startOf('month').subtract(1, 'days').format('YYYY-MM-DD'))
+  .default('end', moment().add(1, 'days').format('YYYY-MM-DD'))
   .argv
 
-const validCollections = ['usage', 'android_usage', 'ios_usage','brave_core_usage']
+const validCollections = ['usage', 'android_usage', 'ios_usage', 'brave_core_usage']
 if (validCollections.indexOf(args.collection) === -1) {
   console.log('Invalid collection ' + args.collection)
   process.exit(1)
 }
 
-const jobName = path.basename(__filename)
-const runInfo = reporter.startup(jobName)
 const main = async () => {
+  const jobName = path.basename(__filename)
+  const runInfo = reporter.startup(jobName)
   global.mongo_client = await mongoc.setupConnection()
   global.pg_client = await pgc.setupConnection()
   global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
   const month_service = new UpdateMonth()
   await month_service.main(args.collection, args.start, args.end)
 
+  try {
+    runInfo.duration = ((new Date()).getTime() - runInfo.ts) / 1000
+    console.log(`'${runInfo.id}' complete - ${runInfo.duration} seconds`)
+    await pg_client.query('INSERT INTO dtl.runinfo ( id, duration ) VALUES ( $1, $2 )', [runInfo.id, runInfo.duration])
+    await pg_client.query('DELETE FROM dtl.runinfo WHERE ts < current_timestamp - \'14 days\'::interval AND id = $1', [runInfo.id])
+  } catch (e) {
+    console.log('error: ' + e)
+  }
   await global.pg_client.end()
   await global.mongo_client.close()
   await global.knex.destroy()
