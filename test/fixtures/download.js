@@ -33,6 +33,10 @@ const define = () => {
         id: this.id
       })
     }
+    timestamp_format_string () {
+     return  'DD/MMM/YYYY:HH:mm:ss ZZ'
+    }
+
   }
 
   factory.define('download', Download, {

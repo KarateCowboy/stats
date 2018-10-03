@@ -9,7 +9,6 @@ const {expect} = require('chai')
 const _ = require('underscore')
 const moment = require('moment')
 const {ReferralCode} = require('../../../../src/models/mongoose/referral_code')
-const DownloadService = require('../../../../src/services/downloads.service')
 
 Given(/^I am logged in to the system$/, {timeout: 7000}, async function () {
   await browser.url('http://localhost:8193')
@@ -64,8 +63,9 @@ Given(/^there are osx downloads for the last twelve weeks$/, async function () {
   const twelve_weeks_ago = moment().subtract(12, 'weeks').startOf('week').add(1, 'days')
   let current_day = twelve_weeks_ago.clone()
   let downloads = []
+
   while (current_day.isBefore(current_week)) {
-    let download = await factory.build('download', {timestamp: current_day.format(DownloadService.timestamp_format_string)})
+    let download = await factory.build('download', {timestamp: current_day.format('DD/MMM/YYYY:HH:mm:ss ZZ')})
     downloads.push(download)
     await download.save()
     current_day.add(1, 'days')

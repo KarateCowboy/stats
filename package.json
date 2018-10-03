@@ -8,7 +8,7 @@
     "npm": "5.6.x"
   },
   "scripts": {
-    "start": "node src/run.js",
+    "start": "webpack-cli && node src/run.js",
     "selenium": "java -jar -Dwebdriver.chrome.driver=./test/features/support/chromedriver  ./test/features/support/selenium-server-standalone-3.12.0.jar",
     "phantom": "phantomjs --webdriver=4444",
     "firefox": "java -jar -Dwebdriver.gecko.driver=./test/features/support/geckodriver ./test/features/support/selenium-server-standalone-3.12.0.jar",

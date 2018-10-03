@@ -4,7 +4,7 @@ const auth = require('@feathersjs/authentication-client')
 
 const app = feathers()
 
-const NumbersClient = Rest('http://localhost:8193/numbers')
+const NumbersClient = Rest(STATS_HOST + '/api/numbers')
 
 app.configure(NumbersClient.jquery($))
 app.configure(auth())
