@@ -6,7 +6,7 @@ module.exports = {
   entry: "./src/ui/app.js",
   plugins: [
     new webpack.DefinePlugin({
-      "STATS_HOST": process.env.STATS_URL || 'http://localhost:8193'
+      STATS_HOST: JSON.stringify(process.env.STATS_HOST)
     })
   ]
 }
