@@ -4,10 +4,7 @@ module.exports = {
 
   development: {
     client: 'postgresql',
-    connection: {
-      database: 'stats',
-      user: 'moriger',
-    },
+    connection: process.env.DEV_DATABASE_URL,
     pool: {
       min: 2,
       max: 10
@@ -19,10 +16,7 @@ module.exports = {
 
   test: {
     client: 'postgresql',
-    connection: {
-      database: 'stats_test',
-      user: 'moriger',
-    },
+    connection: process.env.TEST_DATABASE_URL,
     pool: {
       min: 2,
       max: 10
@@ -34,11 +28,7 @@ module.exports = {
 
   production: {
     client: 'postgresql',
-    connection: {
-      database: 'my_db',
-      user: 'username',
-      password: 'password'
-    },
+    connection: process.env.DATABASE_URL,
     pool: {
       min: 2,
       max: 10
