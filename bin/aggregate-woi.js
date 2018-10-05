@@ -48,7 +48,7 @@ let collections = []
 
 let jobName = path.basename(__filename)
 let runInfo = reporter.startup(jobName)
-let cutoff, end_date
+let start_date, end_date
 
 const run = async () => {
   if (commander.android) {
@@ -71,8 +71,8 @@ const run = async () => {
     relevant_platforms.push(platforms.android)
   }
   relevant_platforms = _.flatten(relevant_platforms)
-  cutoff = moment().subtract(Number(commander.days), 'days').startOf('week').format('YYYY-MM-DD')
-  end_date = moment().subtract(Number(commander.end), 'days').startOf('week').format('YYYY-MM-DD')
+  start_date = moment().subtract(Number(commander.days), 'days').format('YYYY-MM-DD')
+  end_date = moment().subtract(Number(commander.end), 'days').format('YYYY-MM-DD')
   try {
     global.pg_client = await pg.connect(process.env.DATABASE_URL)
     global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
@@ -82,10 +82,11 @@ const run = async () => {
         global.mongo_client = await mongoc.setupConnection()
         if (platform === 'ios_usage') {
           console.log(`Scrubbing ${platform}`)
-          await scrub_usage_dates(cutoff, platform)
+          await scrub_usage_dates(start_date, platform)
         }
-        console.log(`Generating aggregates for ${platform} installed week of ${cutoff} and later until ${end_date}`)
-        await WeekOfInstall.transfer_platform_aggregate(platform, cutoff, end_date, commander.force)
+        console.log(`Generating aggregates for ${platform} from ${start_date} until ${end_date}`)
+        await aggregate_for_range(platform, start_date, end_date, commander.force)
+        // await WeekOfInstall.transfer_platform_aggregate(platform, start_date, end_date, commander.force)
         global.mongo_client.close()
       }
     }
@@ -93,8 +94,8 @@ const run = async () => {
     for (let collection of collections) {
       global.mongo_client = await mongoc.setupConnection()
       const agg_collection = `${collection}_aggregate_woi`
-      console.log(`fetching from ${agg_collection} installed week of ${cutoff} and later`)
-      await processResults(agg_collection, cutoff)
+      console.log(`fetching from ${agg_collection} installed week of ${start_date} and later`)
+      await processResults(agg_collection, start_date)
       global.mongo_client.close()
     }
     console.log(`Refreshing retention month view`)
@@ -109,6 +110,57 @@ const run = async () => {
     process.exit(1)
   }
   process.exit(0)
+}
+aggregate_for_range = async (collection_name, start_date, end_date, force) => {
+
+  const start_day = moment(start_date)
+  let end_day = moment(end_date)
+  console.log(`Aggregating from ${start_day.format('YYYY-MM-DD')} with cutoff ${end_day.format('YYYY-MM-DD')}`)
+  const usage_params = {
+    daily: true,
+    year_month_day: {$gte: start_day.format('YYYY-MM-DD'), $lt: end_day.format('YYYY-MM-DD')},
+    version: {$not: /\([A-Za-z0-9]+\)$/},
+    aggregated_at: {$exists: false}
+  }
+  if (force) {
+    delete usage_params.aggregated_at
+  }
+  let count
+  try {
+    count = await mongo_client.collection(collection_name).count(usage_params, {timeout: false})
+  } catch (e) {
+    console.log('Problem counting usages')
+    console.log(e.message)
+    process.exit()
+  }
+  const bar = ProgressBar({
+    tmpl: `Aggregating ${count} ... :bar :percent :eta`,
+    width: 100,
+    total: count
+  })
+  await mongo_client.close()
+  let current_day = start_day.clone()
+  const {fork} = require('child_process')
+  let dates = []
+  while (current_day.isBefore(end_day)) {
+    dates.push(current_day.format('YYYY-MM-DD'))
+    current_day.add(1, 'days')
+  }
+  await Promise.all(dates.map(async (date) => {
+    return new Promise((resolve, reject) => {
+      const find = fork('./bin/aggregate_for_day.js')
+      find.send({date: date, collection_name: collection_name})
+      find.on('message', msg => {
+        if (msg === 'success') {
+          resolve()
+        } else if (msg === 'tick') {
+          bar.tick(1)
+        } else if (msg === 'error') {
+          reject()
+        }
+      })
+    })
+  }))
 }
 
 const processResults = async (agg_collection, cutoff) => {

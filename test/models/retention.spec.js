@@ -89,7 +89,7 @@ describe('WeekOfInstall', function () {
       expect(usage_aggs.length).to.equal(1)
       expect(usage_aggs[0]['_id'].platform).to.equal('android')
     })
-    it('works with brave-core usage data', async function () {
+    it.only('works with brave-core usage data', async function () {
       const core_usages = []
       for (let i in _.range(10)) {
         const usage = await factory.build('core_winx64_usage', {ref: 'none'})
@@ -97,7 +97,7 @@ describe('WeekOfInstall', function () {
         await usage.save()
         core_usages.push(usage)
       }
-      const cutoff = moment(core_usages[0].woi).subtract(3, 'days')
+      const cutoff = moment(core_usages[0].year_month_day).subtract(3, 'days')
       // execution
       await WeekOfInstall.transfer_platform_aggregate('brave_core_usage', cutoff.format('YYYY-MM-DD'))
       //validation
