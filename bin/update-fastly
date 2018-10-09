@@ -5,28 +5,40 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var _ = require('underscore')
-var path = require('path')
-var async = require('async')
-var moment = require('moment')
+let path = require('path')
+let moment = require('moment')
+const pg = require('pg')
+const urlUtils = require('url')
 
-var pgc = require('../src/pgc')
-var fls = require('../src/fastly-log-summarizer')
-var flp = require('../src/fastly-log-parser')
-var reporter = require('../src/reporter')
-var model = require('../src/model')
+// let fls = require('../src/fastly-log-summarizer')
+let flp = require('../src/fastly-log-parser')
+let reporter = require('../src/reporter')
+let model = require('../src/model')
 
-var jobName = path.basename(__filename)
-var runInfo = reporter.startup(jobName)
+let jobName = path.basename(__filename)
+let runInfo = reporter.startup(jobName)
+const AWS = require('aws-sdk')
+
+const S3_LOG_BUCKET = process.env.S3_LOG_BUCKET || 'brave-logs-production'
+const S3_LOG_REGION = process.env.S3_LOG_REGION || 'us-east-1'
+const S3_UPDATES_KEY = process.env.S3_UPDATES_KEY || 'laptop-updates'
+
+AWS.config.update({
+  accessKeyId: process.env.S3_CRASH_KEY,
+  secretAccessKey: process.env.S3_CRASH_SECRET,
+  region: S3_LOG_REGION,
+  sslEnabled: true
+})
 
 // Argument parsing
-var args = require('yargs')
-    .default('days_ago', 0)
-    .default('match', 'releases')
-    .default('overwrite', false)
-    .argv
+let args = require('yargs')
+  .default('days_ago', 0)
+  .default('match', 'releases')
+  .default('overwrite', false)
+  .argv
 
 // default to X days ago
-var ymd = moment().subtract(args.days_ago, 'days').format('YYYY-MM-DD')
+let ymd = moment().subtract(args.days_ago, 'days').format('YYYY-MM-DD')
 
 // Allow ymd date override
 if (args.ymd) {
@@ -47,116 +59,33 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (ymd, platform, version, channel, country_code, dma, ref) DO UPDATE SET total = $8
 `
 
+const MOVE_FASTLY_SQL = `
+INSERT INTO dw.fc_usage ( ymd, platform, version, channel, first_time, ref, total )
+SELECT ymd, platform, version, channel, first_time, ref, SUM(total) as ftotal
+FROM dw.fc_fastly_usage FC
+WHERE ymd = $1
+GROUP BY ymd, platform, version, channel, first_time, ref
+ON CONFLICT (ymd, platform, version, first_time, channel, ref) DO UPDATE SET total = EXCLUDED.total`
+
+const MOVE_FASTLY_MONTH_SQL = `
+INSERT INTO dw.fc_usage_month ( ymd, platform, version, channel, ref, total )
+SELECT ymd, platform, version, channel, ref, SUM(total) as ftotal
+FROM dw.fc_fastly_calendar_month_usage FC
+WHERE ymd = $1
+GROUP BY ymd, platform, version, channel, ref
+ON CONFLICT (ymd, platform, version, channel, ref) DO UPDATE SET total = EXCLUDED.total`
+
 // Set field to 'unknown' or default value if not truthy
-var un = function(v, def) {
+let un = function (v, def) {
   def = def || 'unknown'
   return !v ? def : v
 }
 
-var platformConverter = function (platform) {
+let platformConverter = function (platform) {
   if (platform === 'android') {
     return 'androidbrowser'
   }
   return platform
-}
-
-// Build function references to upsert daily stats
-var buildFastlyUsageUpserter = function (pg, ymd, record) {
-  record.platform = platformConverter(record.platform)
-  return function (cb) {
-    var params = [
-      ymd,
-      un(record.platform),
-      un(record.version),
-      un(record.channel, 'dev'),
-      un(record.first),
-      un(record.countryCode),
-      un(record.dmaCode),
-      un(record.ref, 'none'),
-      record.count
-    ]
-    pg.query(QUERY, params, cb)
-  }
-}
-
-// Build function references to upsert monthly stats
-var buildFastlyMonthUsageUpserter = function (pg, ymd, record) {
-  record.platform = platformConverter(record.platform)
-  return function (cb) {
-    var params = [
-      ymd,
-      un(record.platform),
-      un(record.version),
-      un(record.channel, 'dev'),
-      un(record.countryCode),
-      un(record.dmaCode),
-      un(record.ref, 'none'),
-      record.count
-    ]
-    pg.query(QUERY_MONTH, params, cb)
-  }
-}
-
-// This is triggered when all resources have valid connections
-var resourcesReady = function(asyncError, resources) {
-  var cleanup = function () {
-    // Close connection to Postgres
-    resources.pg.end()
-  }
-
-  // Retrieve parsed S3 releases access records for a day
-  fls.recordsForDay(ymd, args.match, function (s3err, records) {
-    if (s3err) {
-      throw new Error(s3err)
-    }
-
-    records = records.map(function (record) {
-      if (record.version && record.version.match(new RegExp("^\\d+\\.\\d+$"))) {
-        record.version += '.0'
-      }
-      return record
-    })
-
-    // remove records not conforming to the semver format
-    records = records.filter(function (record) {
-      return record.version && record.version.match(new RegExp("^\\d+\\.\\d+\\.\\d+$"))
-    })
-
-    // Select monthly records
-    var monthlySummarized = flp.groupedSummaryBy(records, ['platform', 'version', 'channel', 'countryCode', 'dmaCode', 'ref'], { monthly: true })
-
-    // Group the records by dimension list
-    var summarized = flp.groupedSummaryBy(records, ['platform', 'version', 'channel', 'first', 'countryCode', 'dmaCode', 'ref'], { daily: true })
-
-    // Build array of function to insert / update DAU into Postgres
-    var dayFuncs = _.map(summarized, function (record) {
-      return buildFastlyUsageUpserter(resources.pg, ymd, record)
-    })
-
-    // Build array of function to insert / update MAU (by day) into Postgres
-    var monthFuncs = _.map(monthlySummarized, function (record) {
-      return buildFastlyMonthUsageUpserter(resources.pg, ymd, record)
-    })
-
-    // Build the complete function list
-    var allFuncs = dayFuncs.concat(monthFuncs)
-
-    console.log('Insert or updating ' + allFuncs.length + ' records')
-
-    // Upsert rows
-    async.series(allFuncs, function(err, results) {
-      if (err) {
-        throw new Error(err)
-      }
-      if (args.overwrite) {
-        overwrite(resources, ymd, function () {
-          reporter.shutdown(runInfo, resources.pg, cleanup)
-        })
-      } else {
-        reporter.shutdown(runInfo, resources.pg, cleanup)
-      }
-    })
-  })
 }
 
 function overwrite (resources, ymd, cb) {
@@ -170,7 +99,141 @@ function overwrite (resources, ymd, cb) {
   })
 }
 
-// Setup and run
-async.parallel({
-  pg: pgc.setup
-}, resourcesReady)
+function filterExtensionLines (text) {
+  return text.split(/\n/)
+    .filter((line) => { return line.indexOf('extensions') === -1 })
+    .join('\n')
+}
+
+const parseLine = (line) => {
+  let attributes = {}
+  let tokens = line.split(/\s+/)
+
+  // parse the URL component of the log line
+  let parseUrl = (url) => {
+    let components = {}
+    let path, query
+    let $, apiVersion, releases, channel, version, os
+    [path, query] = url.split('?')
+    let tokens = path.split('/')
+
+    // Legacy URLs are not handled by the parser (pre 0.8.0)
+    if (tokens.length !== 6) {
+      components.invalid = true
+      return components
+    }
+
+    components.apiVersion = parseInt(tokens[1], 10)
+    components.channel = tokens[3]
+    components.version = tokens[4]
+    components.platform = tokens[5]
+    // legacy handling of undefined platform
+    if (!components.platform || components.platform === 'undefined') {
+      components.platform = 'linux'
+    }
+    components = _.extend(components, urlUtils.parse(url, true).query)
+    // boolean field handling
+    _.each(['daily', 'weekly', 'monthly', 'first'], (attr) => {
+      components[attr] = components[attr] === 'true'
+    })
+    return components
+  }
+
+  _.extend(attributes, parseUrl(tokens[4]))
+
+  attributes.statusCode = parseInt(tokens[3], 10)
+  attributes.countryCode = tokens[5] || 'unknown'
+  attributes.dmaCode = parseInt(tokens[6] || 0)
+
+  return attributes
+}
+
+const parseContents = (contents, match) => {
+  let parser = parseLine
+  if (match === 'android' || match === 'ios') {
+    parser = parseMobileLine
+  }
+  return _.flatten(contents)
+    .filter((line) => { return line.length })
+    .filter((line) => { return line.indexOf(match) !== -1 })
+    .map((line) => { return parser(line) })
+    .filter((line) => { return !line.invalid })
+}
+const main = async (ymd, match) => {
+  global.pg_client = await pg.connect(process.env.DATABASE_URL)
+  const prefix = `${ymd}`
+  const params = {
+    Bucket: S3_LOG_BUCKET,
+    Prefix: `${S3_UPDATES_KEY}/${prefix}`
+  }
+  const s3 = new AWS.S3()
+  let results = await new Promise((resolve, reject) => {
+    s3.listObjects(params, (err, res) => {
+      if (err) {
+        return reject(err)
+      } else {
+        resolve(res)
+      }
+    })
+  })
+  console.log(results.Contents.length + ' files to process')
+  for (let contents of results.Contents) {
+    const params = {
+      Bucket: S3_LOG_BUCKET,
+      Key: contents.Key
+    }
+    console.log(`Downloading ${contents.Key}`)
+    const fileData = await new Promise((resolve, reject) => {
+      s3.getObject(params, (err, data) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(filterExtensionLines(data.Body.toString()).split(/\n/))
+        }
+      })
+    })
+    console.log(`upserting data for ${contents.Key}`)
+    const parsedResults = parseContents(fileData, match)
+    let monthlySummarized = flp.groupedSummaryBy(parsedResults, ['platform', 'version', 'channel', 'countryCode', 'dmaCode', 'ref'], {monthly: true})
+    // Group the records by dimension list
+    let summarized = flp.groupedSummaryBy(parsedResults, ['platform', 'version', 'channel', 'first', 'countryCode', 'dmaCode', 'ref'], {daily: true})
+    for (let record of summarized) {
+      record.platform = platformConverter(record.platform)
+      let params = [
+        ymd,
+        un(record.platform),
+        un(record.version),
+        un(record.channel, 'dev'),
+        un(record.first),
+        un(record.countryCode),
+        un(record.dmaCode),
+        un(record.ref, 'none'),
+        record.count
+      ]
+      await pg_client.query(QUERY, params)
+      if(args.overwrite){
+        await pg_client.query(MOVE_FASTLY_SQL, [record])
+      }
+    }
+    for (let record of monthlySummarized) {
+      record.platform = platformConverter(record.platform)
+      let params = [
+        ymd,
+        un(record.platform),
+        un(record.version),
+        un(record.channel, 'dev'),
+        un(record.countryCode),
+        un(record.dmaCode),
+        un(record.ref, 'none'),
+        record.count
+      ]
+      await pg_client.query(QUERY_MONTH, params)
+      if(args.overwrite){
+        await pg_client.query(MOVE_FASTLY_MONTH_SQL, [record])
+      }
+    }
+    await global.pg_client.end()
+  }
+}
+
+main(ymd, args.match)
