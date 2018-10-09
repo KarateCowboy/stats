@@ -246,7 +246,12 @@ const main = async (ymd, match) => {
         un(record.ref, 'none'),
         record.count
       ]
-      await pg_client.query(QUERY, params)
+      try{
+        await pg_client.query(QUERY, params)
+      }catch(e){
+        console.log(`Error ${e.message}`)
+        console.log(`          ${params}`)
+      }
       if (args.overwrite) {
         await pg_client.query(MOVE_FASTLY_SQL, [record])
       }
@@ -263,7 +268,12 @@ const main = async (ymd, match) => {
         un(record.ref, 'none'),
         record.count
       ]
-      await pg_client.query(QUERY_MONTH, params)
+      try{
+        await pg_client.query(QUERY_MONTH, params)
+      }catch(e){
+        console.log(`Error ${e.message}`)
+        console.log(`          ${params}`)
+      }
       if (args.overwrite) {
         await pg_client.query(MOVE_FASTLY_MONTH_SQL, [record])
       }
