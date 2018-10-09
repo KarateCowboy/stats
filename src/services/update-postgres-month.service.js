@@ -44,5 +44,12 @@ module.exports = class UpdateMonth {
         }
       }
     }
+    await this.importExceptions()
+  }
+
+  async importExceptions(){
+    const exceptionsSQL = 'INSERT INTO dw.fc_usage_month ( ymd, platform, version, channel, ref, total ) SELECT ymd, platform, version, channel, ref, total from dw.fc_usage_month_exceptions ON CONFLICT (ymd, platform, version, channel , ref) DO UPDATE SET total = EXCLUDED.total'
+    await knex.raw(exceptionsSQL)
+
   }
 }

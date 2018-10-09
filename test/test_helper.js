@@ -23,6 +23,7 @@ require('./fixtures/core-usage').define()
 require('./fixtures/core-usage-day').define()
 require('./fixtures/muon-usage-day').define()
 require('./fixtures/fc_usage_month').define()
+require('./fixtures/fc_usage_month_exception').define()
 require('./fixtures/fc_usage').define()
 require('./fixtures/download').define()
 
@@ -57,7 +58,8 @@ class TestHelper {
         'fc_retention_woi',
         'fc_usage_month',
         'fc_usage',
-        'downloads'
+        'downloads',
+        'fc_usage_month_exceptions'
       ]
     }
     this.materialized_views = {
