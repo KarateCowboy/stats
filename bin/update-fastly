@@ -268,8 +268,8 @@ const main = async (ymd, match) => {
         await pg_client.query(MOVE_FASTLY_MONTH_SQL, [record])
       }
     }
-    await global.pg_client.end()
   }
+  await global.pg_client.end()
 }
 
 main(ymd, args.match)
