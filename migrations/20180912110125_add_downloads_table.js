@@ -7,7 +7,6 @@ exports.up = async function (knex, Promise) {
     table.datetime('timestamp')
     table.string('id_code', 16)
     table.string('request_path')
-    table.string('rest_operation')
     table.integer('request_response_code')
     table.string('domain')
     table.string('platform')

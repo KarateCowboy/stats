@@ -1,9 +1,55 @@
 const AWS = require('aws-sdk')
 AWS.config.setPromisesDependency(null)
 const FS = require('fs-extra')
+const request = require('request')
+const feathers = require('@feathersjs/feathers')
+const auth = require('@feathersjs/authentication-client')
+const Rest = require('@feathersjs/rest-client')
+const _ = require('underscore')
 
 const main = async () => {
   const aws_access_key_id = 'AKIAJHU6T5PPVFM22HFA'
+  let numbers_host, numbers_port, numbers_user, numbers_pwd
+  if (!process.env.NUMBERS_HOST) {
+    throw new Error('NUMBERS_HOST must be set in environment')
+  } else {
+    numbers_host = process.env.NUMBERS_HOST || 'localhost'
+  }
+  if (!process.env.NUMBERS_PORT) {
+    throw new Error('NUMBERS_PORT must be set in environment')
+  } else {
+    numbers_port = process.env.NUMBERS_PORT
+  }
+  if (!process.env.NUMBERS_USER) {
+    throw new Error('NUMBERS_USER must be set in environment')
+  } else {
+    numbers_user = process.env.NUMBERS_USER
+  }
+  if (!process.env.NUMBERS_PWD) {
+    throw new Error('NUMBER_PWD must be set in environment')
+  } else {
+    numbers_pwd = process.env.NUMBERS_PWD
+  }
+  if (!process.env.NUMBERS_JWT && !process.env.LOCAL) {
+    throw new Error('NUMBERS_JWT must be set in environment')
+  } else {
+    numbers_jwt = process.env.NUMBERS_JWT
+  }
+  const numbers_app = feathers()
+  const rest_client = Rest('http://' + numbers_host + ':' + numbers_port)
+  numbers_app.configure(rest_client.request(request))
+  numbers_app.configure(auth())
+  try {
+    const res = await numbers_app.authenticate({
+      strategy: 'local',
+      email: process.env.NUMBERS_USER,
+      password: process.env.NUMBERS_PWD
+    })
+  } catch (e) {
+    console.log('stuff')
+    console.log(e.message)
+    process.exit()
+  }
   const key = 'jhjizB6aKE1EJ5PLP4kKwslF5McBHw/O4E+x8OVd'
   AWS.config.update({
     accessKeyId: aws_access_key_id,
@@ -23,14 +69,29 @@ const main = async () => {
 
   // Retrieve list of log files, parse them and return records as
   // an array of objects
+  let objects = []
   let data = await S3.listObjects(params).promise() //, data, (err, data) => { if (err) return reject() resolve(data.Contents)
-  console.log(data.Contents.length + ' files to process')
-  await FS.appendFile('./sample_list_objects.txt', JSON.stringify(data), 'utf8')
+  while (data.Contents.length > 0 && objects.length < 250000) {
+    objects = objects.concat(data.Contents)
+    params.Marker = _.last(data.Contents).Key
+    await FS.appendFile('./sample_list_objects.txt', JSON.stringify(data.Contents), 'utf8')
+    data = await S3.listObjects(params).promise()
+  }
+  console.log(objects.length + ' files to process')
 
   let count = 0
-  for (let file of data.Contents) {
+  for (let file of objects) {
     let object = await  S3.getObject({Bucket: 'brave-download-logs', Key: file.Key}).promise()
-    await FS.appendFile('./results.txt', object.Body.toString(), 'utf8')
+    const body = object.Body.toString()
+    try {
+      // await numbers_app.service('downloads').create({rawString: body})
+    } catch (e) {
+      console.log(`error on ${object}`)
+    }
+    // console.log(body)
+    // console.log('##########################################')
+    await FS.appendFile('./results.txt', body, 'utf8')
+
     count++
   }
   console.log(`${count} total records written`)
