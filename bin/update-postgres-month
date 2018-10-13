@@ -14,8 +14,8 @@ const path = require('path')
 
 const args = require('yargs')
   .default('collection', 'usage')
-  .default('start', moment().startOf('month').subtract(1, 'days').format('YYYY-MM-DD'))
-  .default('end', moment().add(1, 'days').format('YYYY-MM-DD'))
+  .default('start', moment().startOf('month').format('YYYY-MM-DD'))
+  .default('end', moment().format('YYYY-MM-DD'))
   .argv
 
 const validCollections = ['usage', 'android_usage', 'ios_usage', 'brave_core_usage']

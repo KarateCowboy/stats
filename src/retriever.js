@@ -347,7 +347,7 @@ exports.monthlyUsersByDay = async (db, collection, start = (moment().startOf('mo
     },
     {
       $match: {
-        year_month_day: {$gt: start, $lt: end}
+        year_month_day: {$gte: start, $lte: end}
       }
     },
     {
@@ -401,7 +401,8 @@ exports.monthlyUsersByDay = async (db, collection, start = (moment().startOf('mo
     }
   ])
 
-  return query.toArray()
+  const resArray = await query.toArray()
+  return resArray.filter((r) => { return r._id.ymd >= start && r._id.ymd <= end})
 }
 
 exports.dailyTelemetry = (db, collection, days, cb) => {
