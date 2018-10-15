@@ -95,7 +95,7 @@ const run = async () => {
       global.mongo_client = await mongoc.setupConnection()
       const agg_collection = `${collection}_aggregate_woi`
       console.log(`fetching from ${agg_collection} installed week of ${start_date} and later`)
-      await processResults(agg_collection, start_date)
+      await processResults(agg_collection, start_date, end_date)
       global.mongo_client.close()
     }
     console.log(`Refreshing retention month view`)
@@ -163,8 +163,8 @@ aggregate_for_range = async (collection_name, start_date, end_date, force) => {
   }))
 }
 
-const processResults = async (agg_collection, cutoff) => {
-  const results = await mongo_client.collection(agg_collection).find({'_id.woi': {$gte: cutoff}})
+const processResults = async (agg_collection, start_date, end_date) => {
+  const results = await mongo_client.collection(agg_collection).find({'_id.ymd': {$gte: start_date, $lte: end_date}})
   results.maxTimeMS(3600000)
   const total_entries = await results.count()
   console.log(`total is ${total_entries}`)
