@@ -111,7 +111,7 @@ const run = async () => {
   }
   process.exit(0)
 }
-aggregate_for_range = async (collection_name, start_date, end_date, force) => {
+aggregate_for_range = async (collection_name, start_date, end_date, force = false) => {
 
   const start_day = moment(start_date)
   let end_day = moment(end_date)
@@ -149,7 +149,7 @@ aggregate_for_range = async (collection_name, start_date, end_date, force) => {
   await Promise.all(dates.map(async (date) => {
     return new Promise((resolve, reject) => {
       const find = fork('./bin/aggregate_for_day.js')
-      find.send({date: date, collection_name: collection_name})
+      find.send({date: date, collection_name: collection_name, force: force})
       find.on('message', msg => {
         if (msg === 'success') {
           resolve()
