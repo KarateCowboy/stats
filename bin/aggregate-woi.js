@@ -94,7 +94,7 @@ const run = async () => {
     for (let collection of collections) {
       global.mongo_client = await mongoc.setupConnection()
       const agg_collection = `${collection}_aggregate_woi`
-      console.log(`fetching from ${agg_collection} installed week of ${start_date} and later`)
+      console.log(`fetching from ${agg_collection} starting ${start_date} and ending ${end_date}`)
       await processResults(agg_collection, start_date, end_date)
       global.mongo_client.close()
     }
