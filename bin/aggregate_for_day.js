@@ -13,7 +13,7 @@ const aggregate_id = (usage, collection_name) => {
   }
 }
 
-const run = async (collection_name, day) => {
+const run = async (collection_name, day, force) => {
   let aggregate_collection = `${collection_name}_aggregate_woi`
   global.mongo_client = await MongoClient.connect(process.env.MLAB_URI)
   const usage_params = {
@@ -25,6 +25,9 @@ const run = async (collection_name, day) => {
     aggregated_at: {
       $exists: false
     }
+  }
+  if (force) {
+    delete usage_params.aggregated_at
   }
   let usages
   try {
@@ -94,6 +97,6 @@ const run = async (collection_name, day) => {
 }
 
 process.on('message', async (run_data) => {
-  await run(run_data.collection_name, run_data.date)
+  await run(run_data.collection_name, run_data.date, run_data.force)
   process.exit()
 })
