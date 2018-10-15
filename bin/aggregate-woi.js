@@ -176,7 +176,7 @@ const processResults = async (agg_collection, start_date, end_date) => {
   let summed_totals = 0
   for (let platform of relevant_platforms) {
     try {
-      await knex('dw.fc_retention_woi').where('platform', platform).andWhere(knex.raw(`woi >= '${cutoff}'::date `)).delete()
+      await knex('dw.fc_retention_woi').where('platform', platform).andWhere(knex.raw(`ymd >= '${start_date}'::date AND ymd <= '${end_date}'::date `)).delete()
     } catch (e) {
       console.log('Error cleansing')
       console.log(e.message)
