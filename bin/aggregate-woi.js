@@ -94,8 +94,8 @@ const run = async () => {
     for (let collection of collections) {
       global.mongo_client = await mongoc.setupConnection()
       const agg_collection = `${collection}_aggregate_woi`
-      console.log(`fetching from ${agg_collection} installed week of ${start_date} and later`)
-      await processResults(agg_collection, start_date)
+      console.log(`fetching from ${agg_collection} starting ${start_date} and ending ${end_date}`)
+      await processResults(agg_collection, start_date, end_date)
       global.mongo_client.close()
     }
     console.log(`Refreshing retention month view`)
@@ -111,7 +111,7 @@ const run = async () => {
   }
   process.exit(0)
 }
-aggregate_for_range = async (collection_name, start_date, end_date, force) => {
+aggregate_for_range = async (collection_name, start_date, end_date, force = false) => {
 
   const start_day = moment(start_date)
   let end_day = moment(end_date)
@@ -149,7 +149,7 @@ aggregate_for_range = async (collection_name, start_date, end_date, force) => {
   await Promise.all(dates.map(async (date) => {
     return new Promise((resolve, reject) => {
       const find = fork('./bin/aggregate_for_day.js')
-      find.send({date: date, collection_name: collection_name})
+      find.send({date: date, collection_name: collection_name, force: force})
       find.on('message', msg => {
         if (msg === 'success') {
           resolve()
@@ -163,8 +163,8 @@ aggregate_for_range = async (collection_name, start_date, end_date, force) => {
   }))
 }
 
-const processResults = async (agg_collection, cutoff) => {
-  const results = await mongo_client.collection(agg_collection).find({'_id.woi': {$gte: cutoff}})
+const processResults = async (agg_collection, start_date, end_date) => {
+  const results = await mongo_client.collection(agg_collection).find({'_id.ymd': {$gte: start_date, $lte: end_date}})
   results.maxTimeMS(3600000)
   const total_entries = await results.count()
   console.log(`total is ${total_entries}`)
@@ -176,7 +176,7 @@ const processResults = async (agg_collection, cutoff) => {
   let summed_totals = 0
   for (let platform of relevant_platforms) {
     try {
-      await knex('dw.fc_retention_woi').where('platform', platform).andWhere(knex.raw(`woi >= '${cutoff}'::date `)).delete()
+      await knex('dw.fc_retention_woi').where('platform', platform).andWhere(knex.raw(`ymd >= '${start_date}'::date AND ymd <= '${end_date}'::date `)).delete()
     } catch (e) {
       console.log('Error cleansing')
       console.log(e.message)
