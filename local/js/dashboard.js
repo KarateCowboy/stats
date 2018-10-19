@@ -71,6 +71,10 @@ var channels = {
   stable: {
     id: 'stable',
     label: 'Stable'
+  },
+  release: {
+    id: 'release',
+    label: 'release'
   }
 }
 
@@ -1324,7 +1328,8 @@ var pageState = {
   channelFilter: {
     dev: true,
     beta: false,
-    stable: true
+    stable: true,
+    release: true
   },
   showToday: false
 }
