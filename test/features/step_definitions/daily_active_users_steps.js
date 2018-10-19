@@ -23,7 +23,8 @@ Given(/^there are "([^"]*)" usages for the prior week$/, {timeout: 100000}, asyn
     for (let j of _.range(1, per_day + 1)) {
       let usage = await factory.attrs('core_winx64_usage', {
         year_month_day: days_ago.format('YYYY-MM-DD'),
-        ref: 'none'
+        ref: 'none',
+        channel: 'release'
       })
       usages.push(usage)
     }
