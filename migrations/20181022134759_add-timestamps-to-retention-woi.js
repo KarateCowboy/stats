@@ -17,5 +17,5 @@ exports.down = async function (knex, Promise) {
   await knex.schema.withSchema('dw').alterTable('fc_retention_woi', (table) => {
     table.dropTimestamps()
   })
-  // await knex.raw(` DROP TRIGGER updated_at_stamp ON dw.fc_retention_woi`)
+  await knex.raw(` DROP TRIGGER updated_at_stamp ON dw.fc_retention_woi`)
 }
