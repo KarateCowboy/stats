@@ -249,8 +249,10 @@ const main = async (ymd, match) => {
       try{
         await pg_client.query(QUERY, params)
       }catch(e){
-        console.log(`Error ${e.message}`)
-        console.log(`          ${params}`)
+        if(e.message.includes('violates check constraint "version_format"') === false){
+          console.log(`Error ${e.message}`)
+          console.log(`          ${params}`)
+        }
       }
       if (args.overwrite) {
         await pg_client.query(MOVE_FASTLY_SQL, [record])
@@ -271,8 +273,10 @@ const main = async (ymd, match) => {
       try{
         await pg_client.query(QUERY_MONTH, params)
       }catch(e){
-        console.log(`Error ${e.message}`)
-        console.log(`          ${params}`)
+        if(e.message.includes('violates check constraint "version_format"') === false){
+          console.log(`Error ${e.message}`)
+          console.log(`          ${params}`)
+        }
       }
       if (args.overwrite) {
         await pg_client.query(MOVE_FASTLY_MONTH_SQL, [record])
