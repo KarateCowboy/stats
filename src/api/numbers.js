@@ -25,7 +25,7 @@ exports.setup = async (server) => {
         path: request_url,
         port: numbers_port,
         headers: {
-          Authorization: `Bearer ${numbers_jwt}`,
+          Authorization: `Bearer ${process.env.NUMBERS_JWT}`,
           ContentType: 'application/json'
         }
       }

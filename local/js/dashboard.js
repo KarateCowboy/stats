@@ -630,6 +630,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   }
 }
 
+
 const weeklyRetentionHandler = function (rows, downloads) {
   console.log('executed the weeklyRetentionHandler')
   let i, row, cellColor, weekDelta
@@ -707,6 +708,54 @@ const weeklyRetentionHandler = function (rows, downloads) {
     $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
   })
   console.log('finished the weeklyRetentionHandler')
+}
+
+const downloadsHandler = async () => {
+  const downloads = await app.service('downloads').find({ query: { $limit: 0}})
+  const div = $("#downloadsContent")
+  //let buffer = '<h3>goodbye, depression. Hello, Lord</h3>'
+  div.empty()
+  div.append('<canvas id=\'downloadsChart\' height=\'350\' width=\'800\'></canvas>')
+  // Build a list of unique labels (ymd)
+  let labels = _.chain(rows)
+    .map(function (row) { return row[x] })
+    .uniq()
+    .sort()
+    .value()
+
+  let downloadsChart = document.getElementById('downloadsChart')
+  let data = {
+    labels: labels,
+    datasets: _.map(datasets, function (dataset, idx) {
+      return {
+        label: ys[idx] || 'All',
+        data: dataset,
+        borderColor: colourer(idx, 1),
+        pointColor: colourer(idx, 0.5),
+        backgroundColor: colourer(idx, 0.05)
+      }
+    })
+  }
+
+  var chartOptions = _.extend(_.clone(window.STATS.COMMON.standardYAxisOptions), {
+      onClick: function (evt, points) {
+        if (points.length) {
+          var ymd = points[0]._xScale.ticks[points[0]._index]
+          $.ajax('/api/1/ci/telemetry/' + ymd + '?' + standardTelemetryParams(), {
+            success: function (results) {
+              // detailed telemetry items
+              console.log(results)
+            }
+          })
+        }
+      }
+    })
+
+  new Chart.Line(downloadsChart.getContext('2d'), {data: data, options: chartOptions})
+
+  div.empty()
+  div.append(buffer)
+
 }
 
 const retentionMonthHandler = function (rows) {
@@ -941,6 +990,11 @@ var DAUPlatformRetriever = function () {
     success: usagePlatformHandler
   })
 }
+
+var downloadsRetriever = function () {
+  downloadsHandler()
+}
+
 
 var DAUReturningPlatformRetriever = function () {
   $.ajax('/api/1/dau_platform_minus_first?' + standardParams(), {
@@ -1330,6 +1384,13 @@ var menuItems = {
     title: 'Daily Publisher Status',
     subtitle: 'Publisher activations by day',
     retriever: window.STATS.PUB.publisherDailyRetriever
+  },
+  'mnDownloads': {
+    show: 'downloads',
+    title: 'Downloads',
+    subtitle: 'sample subtitle',
+    retriever: downloadsRetriever
+
   }
 }
 
@@ -2000,6 +2061,16 @@ let initialize_router = () => {
       }
     })
   })
+
+  router.get('downloads', function(req){
+    pageState.currentlySelected = 'mnDownloads'
+    viewState.showControls = false
+    viewState.showDaysSelector = false
+    viewState.showPromotions = false
+    viewState.showShowToday = false
+    updatePageUIState()
+    refreshData()
+  })
 }
 
 // build platform button handlers
@@ -2135,7 +2206,7 @@ function initializeGlobals () {
 function initialize_components () {
   Vue.component('v-select', VueSelect.VueSelect)
   VueApp = new Vue({
-    el: '#ref-filter',
+    el: '#app',
     components: {VueSelect},
     data: {
       showRefFilter: viewState.showRefFilter,
