@@ -5,15 +5,15 @@ const _ = require('underscore')
 const FS = require('fs-extra')
 
 let service
-describe('DailyActiveUsers Service', async function () {
-  beforeEach(async function () {
+describe('DailyActiveUsers Service', async function() {
+  beforeEach(async function() {
     service = new DailyActiveUsers()
   })
-  describe('#platform_minus_first', async function () {
-    it.skip('takes days, platforms, channels, ref as args', async function () {
+  describe('#platform_minus_first', async function() {
+    it.skip('takes days, platforms, channels, ref as args', async function() {
       const results = await service.platform_minus_first(days, platforms, channels, ref)
     })
-    it('returns items with ymd, platform, all_count, first_count, count', async function () {
+    it('returns items with ymd, platform, all_count, first_count, count', async function() {
       this.timeout(100000)
       await test_helper.truncate()
       const days_ago = moment().subtract(5, 'days')
@@ -48,15 +48,24 @@ describe('DailyActiveUsers Service', async function () {
       let channels = ['dev', 'stable', 'release']
       const results = await service.platform_minus_first(days, platforms, channels)
       const fc_usages = await knex('dw.fc_usage').select('*')
-      console.dir(fc_usages)
       expect(results).to.have.property('length', 1)
-      console.log(`length is ${results.length}`)
 
       expect(results[0]).to.have.property('ymd')
       expect(results[0]).to.have.property('platform')
       expect(results[0]).to.have.property('all_count')
       expect(results[0]).to.have.property('first_count')
       expect(results[0]).to.have.property('count')
+    })
+  })
+  describe('it accepts channel value of "release"', async function() {
+    it('it accepts channel value of "release"', async function() {
+      let first_time_usage = await factory.build('core_winx64_usage', {
+        ref: 'none',
+        first: true,
+        channel: 'release'
+      })
+      let usage = await first_time_usage.save()
+      expect(usage).to.have.property('channel','release')
     })
   })
 })
