@@ -394,6 +394,18 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
+  //missing retention days
+  server.route({
+    method: 'GET',
+    path: '/api/1/retention/missing',
+    handler: async function (request, reply) {
+      const RetentionService = require('../services/retention.service') 
+      const service = new RetentionService()
+      const results = await service.missing()
+      reply(results)
+    }
+  })
+  
   // Retention
   server.route({
     method: 'GET',
