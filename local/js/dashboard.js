@@ -656,7 +656,7 @@ const weeklyRetentionHandler = async function (rows) {
    buffer += `<table class="table" id="missingRetentionWarnings">`
   for(let platform in retention_warnings){
       if (retention_warnings[platform].length > 0) {
-          const message_string = `Missing ${ platform } data: ${retention_warnings[platform].sort().reverse().splice(0,5).join(', ')}`
+          const message_string = `Missing ${ platform } data: ${retention_warnings[platform].sort().reverse().splice(1,6).join(', ')}`
           buffer += `<tr><td style="color: red">${message_string}</td>`
       }
   }
