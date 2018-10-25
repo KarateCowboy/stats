@@ -19,7 +19,7 @@ const UsageAggregateWOI = require('../src/models/usage_aggregate_woi').UsageAggr
 const Util = require('../src/models/util').Util
 const _ = require('underscore')
 commander.option('-d --days [num]', 'Days to go back in reporting', 90)
-  .option('-e, --end [num]', 'days to cutoff', 1)
+  .option('-e, --end [num]', 'days to cutoff', 0)
   .option('-s, --skip-aggregation')
   .option('-a, --android')
   .option('-c, --core')

@@ -4,6 +4,9 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+const moment = require('moment')
+const _ = require('underscore')
+
 class Util {
   static fix_date_string (date_string) {
     if (date_string.match(/[\d]{4,4}-[\d]{1,1}-/)) {
@@ -18,11 +21,21 @@ class Util {
     }
     return date_string
   }
-  static is_valid_date_string(date_string){
+
+  static is_valid_date_string (date_string) {
     return !!date_string.match(/^[\d]{4,4}-[\d]{2,2}-[\d]{2,2}$/)
   }
-  static random_int(max) {
-    return Math.floor(Math.random() * Math.floor(max));
+
+  static random_int (max) {
+    return Math.floor(Math.random() * Math.floor(max))
+  }
+
+  static last_ninety_days () {
+    return _.range(1, 91).map((n) => { return moment().subtract(n, 'days')})
+  }
+
+  static ninety_days_ago () {
+    return moment().subtract(90, 'days')
   }
 }
 

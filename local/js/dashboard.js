@@ -634,8 +634,11 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   }
 }
 
-
 const weeklyRetentionHandler = function (rows, downloads) {
+  const missingData = await
+  $.ajax('/api/1/retention/missing')
+  const retention_warnings = missingData || []
+
   console.log('executed the weeklyRetentionHandler')
   let i, row, cellColor, weekDelta
   let rowHeadings = []
@@ -650,7 +653,20 @@ const weeklyRetentionHandler = function (rows, downloads) {
     lineColor: '#999999'
   }
 
+  //prepend any warnings about incomplete data
+  buffer += `<table class="table" id="missingRetentionWarnings">`
+  const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD')
+  for (let platform in retention_warnings) {
+    retention_warnings[platform] = retention_warnings[platform].filter((p) => { return p !== yesterday})
+    if (retention_warnings[platform].length > 0) {
+      const message_string = `Missing ${ platform } data: ${retention_warnings[platform].sort().reverse().splice(0, 5).join(', ')}`
+      buffer += `<tr><td style="color: red">${message_string}</td>`
+    }
+  }
+  buffer += `</table>`
+
   // headings
+
   buffer += '<table class=\'table\'>'
   buffer += '<tr class=\'active\'><th colspan=\'2\'>Weeks since installation</th>'
   buffer += `<th></th>`
@@ -715,8 +731,8 @@ const weeklyRetentionHandler = function (rows, downloads) {
 }
 
 const downloadsHandler = async () => {
-  const downloads = await app.service('downloads').find({ query: { $limit: 0}})
-  const div = $("#downloadsContent")
+  const downloads = await app.service('downloads').find({query: {$limit: 0}})
+  const div = $('#downloadsContent')
   //let buffer = '<h3>goodbye, depression. Hello, Lord</h3>'
   div.empty()
   div.append('<canvas id=\'downloadsChart\' height=\'350\' width=\'800\'></canvas>')
@@ -742,18 +758,18 @@ const downloadsHandler = async () => {
   }
 
   var chartOptions = _.extend(_.clone(window.STATS.COMMON.standardYAxisOptions), {
-      onClick: function (evt, points) {
-        if (points.length) {
-          var ymd = points[0]._xScale.ticks[points[0]._index]
-          $.ajax('/api/1/ci/telemetry/' + ymd + '?' + standardTelemetryParams(), {
-            success: function (results) {
-              // detailed telemetry items
-              console.log(results)
-            }
-          })
-        }
+    onClick: function (evt, points) {
+      if (points.length) {
+        var ymd = points[0]._xScale.ticks[points[0]._index]
+        $.ajax('/api/1/ci/telemetry/' + ymd + '?' + standardTelemetryParams(), {
+          success: function (results) {
+            // detailed telemetry items
+            console.log(results)
+          }
+        })
       }
-    })
+    }
+  })
 
   new Chart.Line(downloadsChart.getContext('2d'), {data: data, options: chartOptions})
 
@@ -998,7 +1014,6 @@ var DAUPlatformRetriever = function () {
 var downloadsRetriever = function () {
   downloadsHandler()
 }
-
 
 var DAUReturningPlatformRetriever = function () {
   $.ajax('/api/1/dau_platform_minus_first?' + standardParams(), {
@@ -2067,7 +2082,7 @@ let initialize_router = () => {
     })
   })
 
-  router.get('downloads', function(req){
+  router.get('downloads', function (req) {
     pageState.currentlySelected = 'mnDownloads'
     viewState.showControls = false
     viewState.showDaysSelector = false
@@ -2171,9 +2186,9 @@ $(document).ajaxStart(function () {
 
 $('[data-toggle="tooltip"]').tooltip()
 
-var publisherPlatforms
-var publisherPlatformsByPlatform
-var referral_codes = []
+let publisherPlatforms
+let publisherPlatformsByPlatform
+let referral_codes = []
 
 async function loadInitialData () {
   publisherPlatforms = await $.ajax('/api/1/publishers/platforms')
@@ -2186,6 +2201,7 @@ async function loadInitialData () {
   $('#clearRef').hide()
 
   await window.REFERRAL.referralSummaryStatsRetriever()
+
 }
 
 function initializeGlobals () {

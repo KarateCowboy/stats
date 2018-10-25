@@ -110,3 +110,29 @@ Then(/^I should see a column indicating downloads for each week$/, async functio
 
   expect(download_cells).to.have.property('length', 12)
 })
+
+Given(/there is a complete retention run in the retention table/, async function () {
+  //create retention data for each platform
+  const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc']
+  const today = moment()
+  for (let platform of platforms) {
+    const rets = await factory.createMany('fc_retention_woi', _.range(1, 91).map((i) => {
+      return {
+        platform: platform,
+        ymd: today.clone().subtract(i, 'days').format('YYYY-MM-DD')
+      }
+    }))
+    await Promise.all(rets.map(async (r) => { await r.save() }))
+  }
+})
+
+Given(/"([^"]*)" retention data is missing$/, async function (platform) {
+  await knex('dw.fc_retention_woi').where('platform', platform).delete()
+})
+
+Then(/^I should see a warning about the missing "([^"]*)" platform data$/, async function (platform) {
+  await browser.pause(500)
+  const page_html = await browser.getHTML('body')
+  expect(page_html).to.include(`Missing ${platform} data`)
+})
+
