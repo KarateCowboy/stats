@@ -37,6 +37,10 @@ class Util {
   static ninety_days_ago () {
     return moment().subtract(90, 'days')
   }
+
+  static days_going_back (count) {
+    return _.range(0, count + 1).map((i) => moment().subtract(i, 'days'))
+  }
 }
 
 module.exports.Util = Util

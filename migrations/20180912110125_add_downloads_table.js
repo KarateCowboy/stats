@@ -5,15 +5,20 @@ exports.up = async function (knex, Promise) {
     table.string('sha', 66)
     table.string('type').defaultTo('brave-download')
     table.datetime('timestamp')
-    table.string('idCode', 16)
+    table.string('code', 16)
     table.string('requestPath')
     table.integer('requestResponseCode')
     table.string('domain')
     table.string('platform')
+    table.text('rawString', 'longtext')
     table.timestamps(true, true)
+    table.unique('rawString')
   })
 }
 
 exports.down = async function (knex, Promise) {
-  await knex.schema.withSchema('dw').dropTable('downloads')
+  const exists = await knex.schema.withSchema('dw').hasTable('downloads')
+  if (exists) {
+    await knex.schema.withSchema('dw').dropTable('downloads')
+  }
 }

@@ -503,6 +503,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   }
 
   return function (rows) {
+    console.log('executing a handler')
     var table = $('#usageDataTable tbody')
 
     $('#x_label').html(x_label)
@@ -634,9 +635,8 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   }
 }
 
-const weeklyRetentionHandler = function (rows, downloads) {
-  const missingData = await
-  $.ajax('/api/1/retention/missing')
+const weeklyRetentionHandler = async function (rows, downloads) {
+  const missingData = await $.ajax('/api/1/retention/missing')
   const retention_warnings = missingData || []
 
   console.log('executed the weeklyRetentionHandler')
@@ -730,54 +730,6 @@ const weeklyRetentionHandler = function (rows, downloads) {
   console.log('finished the weeklyRetentionHandler')
 }
 
-const downloadsHandler = async () => {
-  const downloads = await app.service('downloads').find({query: {$limit: 0}})
-  const div = $('#downloadsContent')
-  //let buffer = '<h3>goodbye, depression. Hello, Lord</h3>'
-  div.empty()
-  div.append('<canvas id=\'downloadsChart\' height=\'350\' width=\'800\'></canvas>')
-  // Build a list of unique labels (ymd)
-  let labels = _.chain(rows)
-    .map(function (row) { return row[x] })
-    .uniq()
-    .sort()
-    .value()
-
-  let downloadsChart = document.getElementById('downloadsChart')
-  let data = {
-    labels: labels,
-    datasets: _.map(datasets, function (dataset, idx) {
-      return {
-        label: ys[idx] || 'All',
-        data: dataset,
-        borderColor: colourer(idx, 1),
-        pointColor: colourer(idx, 0.5),
-        backgroundColor: colourer(idx, 0.05)
-      }
-    })
-  }
-
-  var chartOptions = _.extend(_.clone(window.STATS.COMMON.standardYAxisOptions), {
-    onClick: function (evt, points) {
-      if (points.length) {
-        var ymd = points[0]._xScale.ticks[points[0]._index]
-        $.ajax('/api/1/ci/telemetry/' + ymd + '?' + standardTelemetryParams(), {
-          success: function (results) {
-            // detailed telemetry items
-            console.log(results)
-          }
-        })
-      }
-    }
-  })
-
-  new Chart.Line(downloadsChart.getContext('2d'), {data: data, options: chartOptions})
-
-  div.empty()
-  div.append(buffer)
-
-}
-
 const retentionMonthHandler = function (rows) {
   console.log('executed the retentionMonthHandler')
   let i, row, cellColor, monthDelta
@@ -854,6 +806,7 @@ const retentionMonthHandler = function (rows) {
   })
 }
 
+const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 // Data type success handlers
 var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
@@ -1011,8 +964,28 @@ var DAUPlatformRetriever = function () {
   })
 }
 
-var downloadsRetriever = function () {
-  downloadsHandler()
+var downloadsRetriever = async function () {
+  console.log('executing the downloads retriever')
+  let days = _.range(0, pageState.days + 1).map((i) => moment().subtract(i, 'days'))
+
+  let filteredPlatforms = serializePlatformParams().split(',')
+  let data = []
+  for (let platform of filteredPlatforms) {
+    let results = await Promise.all(days.map(async (day) => {
+      let res = await app.service('downloads').find({
+        query: {
+          $limit: 0,
+          timestamp: {
+            $gt: day.clone().subtract(1, 'days').format('YYYY-MM-DD'),
+            $lt: day.clone().add(1, 'days').format('YYYY-MM-DD')
+          }
+        }
+      })
+      return {count: res.total, platform: platform, ymd: day.format('YYYY-MM-DD')}
+    }))
+    data = data.concat(results)
+  }
+  downloadsHandler(data)
 }
 
 var DAUReturningPlatformRetriever = function () {
@@ -1174,7 +1147,7 @@ var overviewRetriever = async function () {
 
   var btc = await $.ajax('/api/1/ledger_overview')
   var bat = await $.ajax('/api/1/bat/ledger_overview')
-  window.OVERVIEW.ledger(btc, bat, builders)
+  // window.OVERVIEW.ledger(btc, bat, builders)
 }
 
 var eyeshadeRetriever = function () {
@@ -1405,11 +1378,10 @@ var menuItems = {
     retriever: window.STATS.PUB.publisherDailyRetriever
   },
   'mnDownloads': {
-    show: 'downloads',
+    show: 'usageContent',
     title: 'Downloads',
     subtitle: 'sample subtitle',
     retriever: downloadsRetriever
-
   }
 }
 
@@ -2084,8 +2056,8 @@ let initialize_router = () => {
 
   router.get('downloads', function (req) {
     pageState.currentlySelected = 'mnDownloads'
-    viewState.showControls = false
-    viewState.showDaysSelector = false
+    viewState.showControls = true
+    viewState.showDaysSelector = true
     viewState.showPromotions = false
     viewState.showShowToday = false
     updatePageUIState()
@@ -2227,7 +2199,7 @@ function initializeGlobals () {
 function initialize_components () {
   Vue.component('v-select', VueSelect.VueSelect)
   VueApp = new Vue({
-    el: '#app',
+    el: '#ref-filter',
     components: {VueSelect},
     data: {
       showRefFilter: viewState.showRefFilter,
