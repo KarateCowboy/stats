@@ -10,9 +10,9 @@ exports.up = async function (knex, Promise) {
     table.integer('requestResponseCode')
     table.string('domain')
     table.string('platform')
-    table.text('rawString', 'longtext')
+    table.string('key' )
     table.timestamps(true, true)
-    table.unique('rawString')
+    table.unique('key')
   })
 }
 

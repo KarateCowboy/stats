@@ -1,12 +1,13 @@
 const AWS = require('aws-sdk')
 AWS.config.setPromisesDependency(null)
+const Knex = require('knex')
 const FS = require('fs-extra')
 const request = require('request')
 const feathers = require('@feathersjs/feathers')
 const auth = require('@feathersjs/authentication-client')
 const Rest = require('@feathersjs/rest-client')
 const _ = require('underscore')
-  let numbers_host, numbers_port, numbers_user, numbers_pwd, numbers_app
+let numbers_host, numbers_port, numbers_user, numbers_pwd, numbers_app
 
 const main = async () => {
   await validate_env()
@@ -30,25 +31,27 @@ const main = async () => {
   let toLoad = []
   console.log('getting data')
   let data = await S3.listObjects(params).promise() //, data, (err, data) => { if (err) return reject() resolve(data.Contents)
+  let count = 0
   while (data.Contents.length > 0 && objects.length < 50000000) {
-    console.log(objects.length)
     objects = objects.concat(data.Contents)
-    toLoad = objects.concat(data.Contents)
+    toLoad = toLoad.concat(data.Contents)
     params.Marker = _.last(data.Contents).Key
     data = await S3.listObjects(params).promise()
     if (toLoad.length > 1000) {
-      let count = 0
       await Promise.all(toLoad.map(async (file) => {
         let object
         try {
-          object = await  S3.getObject({Bucket: 'brave-download-logs', Key: file.Key}).promise()
-          let str = object.Body.toString()
-          // await FS.appendFile('./results2.txt', bodies.join('\n'), 'utf8')
-          await numbers_app.service('downloads').create({rawString: str})
-          console.log('.')
+          const exists = await knex('dw.downloads').where({ key: file.Key}).count()
+          if (Number(exists[0].count) === 0) {
+            object = await  S3.getObject({Bucket: 'brave-download-logs', Key: file.Key}).promise()
+            let str = object.Body.toString()
+            await numbers_app.service('downloads').create({rawString: str, key: file.Key})
+          }
         } catch (e) {
-          console.log(`error on ${object.Body.toString()}`)
-          console.log(e.message)
+          if (!!!e.message.match(/duplicate/)) {
+            // console.log(`error on ${object.Body.toString()}`)
+            console.log(`Problem: ${e.message}`)
+          }
         }
         count++
         if (count % 10000 === 0) {
@@ -56,13 +59,11 @@ const main = async () => {
         }
       }))
       toLoad = []
-      console.log(`${count} total records written`)
     }
   }
-  const bodies = []
 }
 
-const validate_env = async function(){
+const validate_env = async function () {
   if (!process.env.NUMBERS_HOST) {
     throw new Error('NUMBERS_HOST must be set in environment')
   } else {
@@ -91,7 +92,7 @@ const validate_env = async function(){
 
 }
 
-const connect = async function(){
+const connect = async function () {
   try {
     const res = await numbers_app.authenticate({
       strategy: 'local',
@@ -110,10 +111,12 @@ const connect = async function(){
     region: 'us-east-1',
     sslEnabled: true
   })
+  global.knex = await Knex({
+    client: 'pg',
+    connection: process.env.DATABASE_URL
+  })
   console.log('configured AWS')
 
 }
-
-
 
 main()
