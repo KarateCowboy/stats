@@ -12,6 +12,16 @@ const moment = require('moment')
 let numbers_host, numbers_port, numbers_user, numbers_pwd, numbers_app
 commander.option('-d --day [num]', 'Days to go back', 90)
 
+let latest_key_for_ymd = async function (ymd) {
+  const latest_key = knex('dw.downloads').whereRaw(`key LIKE '%${ymd}%' `).orderBy('created_at', 'desc').limit(1).toString()
+  const result = await knex.raw(latest_key)
+  if (result.rows.length === 1) {
+    return result.rows[0].key
+  } else {
+    return undefined
+  }
+}
+
 const main = async (day) => {
   const dayPrefix = moment().subtract(day, 'days').format('YYYY-MM-DD')
   await validate_env()
@@ -22,11 +32,15 @@ const main = async (day) => {
   await connect()
   const S3 = new AWS.S3({})
   const download_logs_bucket = 'brave-download-logs'
-
   const params = {
     Bucket: download_logs_bucket,
     MaxKeys: 2000000000,
-    Prefix: dayPrefix
+    Prefix: dayPrefix,
+  }
+
+  let latest_key = await latest_key_for_ymd(dayPrefix)
+  if (latest_key) {
+    params.Marker = latest_key
   }
 
   // Retrieve list of log files, parse them and return records as
@@ -45,7 +59,7 @@ const main = async (day) => {
       await Promise.all(toLoad.map(async (file) => {
         let object
         try {
-          const exists = await knex('dw.downloads').where({ key: file.Key}).count()
+          const exists = await knex('dw.downloads').where({key: file.Key}).count()
           if (Number(exists[0].count) === 0) {
             object = await  S3.getObject({Bucket: 'brave-download-logs', Key: file.Key}).promise()
             let str = object.Body.toString()
