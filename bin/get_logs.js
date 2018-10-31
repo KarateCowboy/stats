@@ -7,9 +7,13 @@ const feathers = require('@feathersjs/feathers')
 const auth = require('@feathersjs/authentication-client')
 const Rest = require('@feathersjs/rest-client')
 const _ = require('underscore')
+const commander = require('commander')
+const moment = require('moment')
 let numbers_host, numbers_port, numbers_user, numbers_pwd, numbers_app
+commander.option('-d --day [num]', 'Days to go back', 90)
 
-const main = async () => {
+const main = async (day) => {
+  const dayPrefix = moment().subtract(day, 'days').format('YYYY-MM-DD')
   await validate_env()
   numbers_app = feathers()
   const rest_client = Rest('http://' + numbers_host + ':' + numbers_port)
@@ -22,7 +26,7 @@ const main = async () => {
   const params = {
     Bucket: download_logs_bucket,
     MaxKeys: 2000000000,
-    Prefix: '2018'
+    Prefix: dayPrefix
   }
 
   // Retrieve list of log files, parse them and return records as
@@ -61,6 +65,7 @@ const main = async () => {
       toLoad = []
     }
   }
+  console.log(`done loading day ${dayPrefix}`)
 }
 
 const validate_env = async function () {
@@ -119,4 +124,4 @@ const connect = async function () {
 
 }
 
-main()
+main(commander.day)
