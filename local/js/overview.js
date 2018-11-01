@@ -27,7 +27,7 @@ var firstRun = function (rows, b) {
     buf = buf + b.td(`<img src="/local/img/platform-icons/${row.platform}.png" height="18">`)
     buf = buf + b.td(row.platform, 'left')
     buf = buf + b.td(st(row.count), 'right')
-    buf = buf + b.td(numeral(row.count / sumOfDesktop).format('0.0%'), 'right')
+    buf = buf + b.td(numeral(row.count / sumOfMobile).format('0.0%'), 'right')
     buf = buf + b.td(numeral(row.count / sumOfAll).format('0.0%'), 'right')
     buf = buf + "</tr>"
     table.append(buf)
