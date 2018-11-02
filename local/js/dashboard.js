@@ -510,6 +510,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
     $('#y_label').html(y_label)
 
     table.empty()
+    console.log(rows)
     var ctrl = rows[x]
     var ctrlClass = ''
     var grandTotalAccumulator = 0
@@ -964,28 +965,11 @@ var DAUPlatformRetriever = function () {
   })
 }
 
-var downloadsRetriever = async function () {
+var downloadsRetriever = function () {
   console.log('executing the downloads retriever')
-  let days = _.range(0, pageState.days + 1).map((i) => moment().subtract(i, 'days'))
-
-  let filteredPlatforms = serializePlatformParams().split(',')
-  let data = []
-  for (let platform of filteredPlatforms) {
-    let results = await Promise.all(days.map(async (day) => {
-      let res = await app.service('downloads').find({
-        query: {
-          $limit: 0,
-          timestamp: {
-            $gt: day.clone().subtract(1, 'days').format('YYYY-MM-DD'),
-            $lt: day.clone().add(1, 'days').format('YYYY-MM-DD')
-          }
-        }
-      })
-      return {count: res.total, platform: platform, ymd: day.format('YYYY-MM-DD')}
-    }))
-    data = data.concat(results)
-  }
-  downloadsHandler(data)
+  $.ajax('/api/1/daily_downloads?' + standardParams(), {
+    success: downloadsHandler
+  })
 }
 
 var DAUReturningPlatformRetriever = function () {
@@ -1380,7 +1364,7 @@ var menuItems = {
   'mnDownloads': {
     show: 'usageContent',
     title: 'Downloads',
-    subtitle: 'sample subtitle',
+    subtitle: 'By Day',
     retriever: downloadsRetriever
   }
 }

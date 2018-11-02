@@ -35,3 +35,21 @@ Then(/^I should see the "([^"]*)" MAU for the prior month on winx64\-bc$/, async
   const usage_data_table = await browser.getHTML('#usageDataTable')
   expect(usage_data_table).to.contain(number_of_users)
 })
+
+Given (/^there is complete monthly usage data in the tables$/, async function(){
+  const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc']
+  const today = moment()
+  for (let platform of platforms) {
+    const usages = await factory.createMany('fc_usage_month', _.range(1, 91).map((i) => {
+      return {
+        platform: platform,
+        ymd: today.clone().subtract(i, 'days').format('YYYY-MM-DD')
+      }
+    }))
+    await Promise.all(usages.map(async (u) => { await u.save() }))
+  }
+})
+
+Given (/^"([^"]*)" mau data is missing$/, async function(platform){
+  await knex('dw.fc_usage_month').where('platform',platform).delete()
+})
