@@ -10,6 +10,3 @@ app.configure(NumbersClient.jquery($))
 app.configure(auth())
 
 global.app = app
-
-//component requires
-global.DownloadsByWeek = require('./components/downloads')
