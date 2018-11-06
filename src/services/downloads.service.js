@@ -32,9 +32,13 @@ module.exports = class DownloadsService {
     for (let object of this.objectList) {
       const exists = await knex('dw.downloads').where({key: object.Key}).count()
       if (Number(exists[0].count) === 0) {
-        object = await  this.S3.getObject({Bucket: 'brave-download-logs', Key: object.Key}).promise()
-        let str = object.Body.toString()
-        await this.numbersApp.service('downloads').create({rawString: str, key: object.Key})
+        try{
+          object = await  this.S3.getObject({Bucket: 'brave-download-logs', Key: object.Key}).promise()
+          let str = object.Body.toString()
+          await this.numbersApp.service('downloads').create({rawString: str, key: object.Key})
+        }catch(e){
+          console.log(`Error: ${e.message}`)
+        }
       }
       bar.tick(1)
     }
