@@ -13,7 +13,7 @@ let DownloadsService = require('../src/services/downloads.service')
 commander.option('-d --day [string]', 'Days to go back', moment().subtract(1, 'days').format('YYYY-MM-DD')).parse(process.argv)
 
 const main = async (day) => {
-  const dayPrefix = day
+  const dayPrefix = moment().subtract(day,'days').format('YYYY-MM-DD')
   await validate_env()
   numbers_app = feathers()
   const rest_client = Rest('http://' + numbers_host + ':' + numbers_port)
