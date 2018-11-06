@@ -33,8 +33,8 @@ module.exports = class DownloadsService {
       const exists = await knex('dw.downloads').where({key: object.Key}).count()
       if (Number(exists[0].count) === 0) {
         try{
-          object = await  this.S3.getObject({Bucket: 'brave-download-logs', Key: object.Key}).promise()
-          let str = object.Body.toString()
+          const file = await  this.S3.getObject({Bucket: 'brave-download-logs', Key: object.Key}).promise()
+          let str = file.Body.toString()
           await this.numbersApp.service('downloads').create({rawString: str, key: object.Key})
         }catch(e){
           console.log(`Error: ${e.message}`)

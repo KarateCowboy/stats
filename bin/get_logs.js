@@ -26,6 +26,7 @@ const main = async (day) => {
   await downloadsService.getObjectListForDay()
   await downloadsService.loadObjectsFromList()
   console.log(`done loading day ${dayPrefix}`)
+  process.exit()
 }
 
 const validate_env = async function () {
