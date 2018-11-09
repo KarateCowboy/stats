@@ -1,22 +1,17 @@
-const $ = require('jquery')
+const common = require('../api/common')
+const moment = require('moment')
 
 module.exports = class WalletsService {
-  async updateFromLedger () {
+  async updateFromLedger (daysBack = undefined) {
     try {
-      const result = $.ajax({
-        method: 'GET',
-        url: `http://localhost:3001/v1/wallet/stats`
-      })
-      for (const r of result) {
+      const results = await this.getFromLedger(daysBack)
+      for (const r of results) {
         try {
           await knex('dw.fc_wallets').insert({
             created: r.created,
-            contributed: r.contributed,
             wallets: r.wallets,
-            walletProviderBalance: r.walletProviderBalance,
-            anyFunds: r.anyFunds,
-            activeGrant: r.activeGrant,
-            walletProviderFunded: r.walletProviderFunded
+            balance: r.walletProviderBalance,
+            funded: r.walletProviderFunded
           })
         } catch (e) {
           console.log('Error inserting wallet data from ledger:')
@@ -28,5 +23,21 @@ module.exports = class WalletsService {
       console.log(`Error getting ledger wallets: ${e.message}`)
       throw e
     }
+  }
+
+  async getFromLedger (daysBack = undefined) {
+    const options = {
+      method: 'GET',
+      url: `${process.env.LEDGER_HOST}/v1/wallet/stats`,
+      headers: {
+        Authorization: 'Bearer ' + process.env.LEDGER_TOKEN
+      }
+    }
+    let result = await common.prequest(options)
+    result = JSON.parse(result)
+    if (daysBack) {
+      result = result.filter((r) => { return r.created >= moment().subtract(daysBack, 'days').format('YYYY-MM-DD')})
+    }
+    return result
   }
 }

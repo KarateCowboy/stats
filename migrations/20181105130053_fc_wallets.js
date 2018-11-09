@@ -7,12 +7,9 @@ exports.up = async function (knex, Promise) {
   await knex.schema.withSchema('dw').createTable('fc_wallets', (table) => {
     table.increments('id')
     table.date('created')
-    table.integer('contributed')
-    table.string('wallets')
-    table.decimal('walletProviderBalance', 50,2)
-    table.integer('anyFunds')
-    table.integer('activeGrant')
-    table.integer('walletProviderFunded')
+    table.bigInteger('wallets')
+    table.decimal('balance', 50,2)
+    table.integer('funded')
     table.timestamps(true, true)
   })
   await knex.raw(`
@@ -23,7 +20,7 @@ exports.up = async function (knex, Promise) {
 }
 
 exports.down = async function (knex, Promise) {
-  await knex.raw('DROP TRIGGER updated_at_stamp ON dw.fc_wallets') 
+  await knex.raw('DROP TRIGGER updated_at_stamp ON dw.fc_wallets')
   await knex.schema.withSchema('dw').dropTableIfExists('fc_wallets')
   await knex.raw(`
  CREATE MATERIALIZED VIEW dw.fc_wallets_mv AS
