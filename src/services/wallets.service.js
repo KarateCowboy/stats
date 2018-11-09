@@ -33,6 +33,9 @@ module.exports = class WalletsService {
         Authorization: 'Bearer ' + process.env.LEDGER_TOKEN
       }
     }
+    if(!process.env.LOCAL){
+      options.proxy = process.env.FIXIE_URL
+    }
     let result = await common.prequest(options)
     result = JSON.parse(result)
     if (daysBack) {
