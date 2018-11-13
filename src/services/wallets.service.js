@@ -1,5 +1,7 @@
+const _ = require('underscore')
 const common = require('../api/common')
 const moment = require('moment')
+const ProxyAgent = require('proxy-agent')
 
 module.exports = class WalletsService {
   async updateFromLedger (daysBack = undefined) {
@@ -28,19 +30,26 @@ module.exports = class WalletsService {
   async getFromLedger (daysBack = undefined) {
     const options = {
       method: 'GET',
-      url: `${process.env.LEDGER_HOST}/v1/wallet/stats`,
+      uri: `${process.env.LEDGER_HOST}/v1/wallet/stats`,
       headers: {
         Authorization: 'Bearer ' + process.env.LEDGER_TOKEN
       }
     }
-    if(!process.env.LOCAL){
-      options.proxy = process.env.FIXIE_URL
+    if(process.env.hasOwnProperty('LOCAL') === false){
+      options.agent = new ProxyAgent(process.env.FIXIE_URL)
     }
     let result = await common.prequest(options)
     result = JSON.parse(result)
+    if(_.isArray(result) === false){
+      let errorMessage = ""
+      if(result.statusCode === 406) {
+        errorMessage +=  'Error: could not access ledger server. 406 response received'
+      }
+      throw Error(errorMessage, result.toString())
+    }
     if (daysBack) {
       result = result.filter((r) => { return r.created >= moment().subtract(daysBack, 'days').format('YYYY-MM-DD')})
     }
-    return result
+    return result || []
   }
 }

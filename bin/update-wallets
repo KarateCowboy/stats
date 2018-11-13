@@ -13,9 +13,8 @@ const WalletsService = require('../src/services/wallets.service')
 const jobName = 'update-wallets'
 
 const main = async () => {
-  global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
-  global.pg_client = await pg.connect(process.env.DATABASE_URL)
   let runInfo = reporter.startup(jobName)
+  await setup()
   const walletService = new WalletsService()
   try {
     await knex('dw.fc_wallets').truncate()
@@ -27,6 +26,20 @@ const main = async () => {
   }
   await reporter.complete(runInfo, pg_client)
   process.exit(0)
+}
+
+setup = async () => {
+  if(!!!process.env.LEDGER_HOST){
+    console.log(`LEDGER_HOST must be set. Exiting`)
+    process.exit(1)
+  }
+  if(!!!process.env.LEDGER_TOKEN){
+    console.log(`LEDGER_TOKEN must be set. Exiting`)
+    process.exit(1)
+  }
+  global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
+  global.pg_client = await pg.connect(process.env.DATABASE_URL)
+
 }
 
 commander.option('-d --daysback [num]', 'Days to go back in fetching').parse(process.argv)
