@@ -28,6 +28,9 @@ Given(/^I view the Retention Week \/ Week report$/, async function () {
 Given(/^I view the Monthly Active Users by Platform report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage_month')
 })
+Given(/^I view the Monthly Active Users report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#usage_month_agg')
+})
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref-filter`)
   expect(result).to.equal(false)
