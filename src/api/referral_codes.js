@@ -1,4 +1,4 @@
-const {ReferralCode} = require('../models/mongoose/referral_code')
+const {ReferralCode} = require('../models/referral_code')
 
 exports.setup = (server, client, mongo) => {
   server.route({

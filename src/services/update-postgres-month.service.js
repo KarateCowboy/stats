@@ -1,5 +1,7 @@
+const _ = require('underscore')
 const retriever = require('../retriever')
 const model = require('../model')
+const { ReferralCode } = require('../models/referral_code')
 
 module.exports = class UpdateMonth {
   async main (collection, start, end) {
@@ -45,11 +47,15 @@ module.exports = class UpdateMonth {
       }
     }
     await this.importExceptions()
+    const usage_refs = (await knex('dw.fc_usage_month').distinct('ref','platform'))
+    const grouped_refs = _.groupBy(usage_refs, 'platform')
+    for(let platform in grouped_refs){
+      await ReferralCode.add_missing(grouped_refs[platform].map(i => i.ref), platform)
+    }
   }
 
   async importExceptions(){
     const exceptionsSQL = 'INSERT INTO dw.fc_usage_month ( ymd, platform, version, channel, ref, total ) SELECT ymd, platform, version, channel, ref, total from dw.fc_usage_month_exceptions ON CONFLICT (ymd, platform, version, channel , ref) DO UPDATE SET total = EXCLUDED.total'
     await knex.raw(exceptionsSQL)
-
   }
 }

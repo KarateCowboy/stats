@@ -1,11 +1,12 @@
+const _ = require('underscore')
 const moment = require('moment')
 require('../test_helper')
 const MonthUpdate = require('../../src/services/update-postgres-month.service')
-const _ = require('underscore')
 const { Util } = require('../../src/models/util')
+const { ReferralCode } = require('../../src/models/referral_code')
 
 describe('update-postres-month', async function () {
-  describe('exec', async function () {
+  describe('main', async function () {
     it('works on the brave core usages', async function () {
       // setup
       const service = new MonthUpdate()
@@ -16,6 +17,19 @@ describe('update-postres-month', async function () {
       expect(usage_months).to.have.property('length', 1)
       expect(usage_months[0]).to.have.property('platform', 'winx64-bc')
       expect(moment(usage_months[0].ymd).format('YYYY-MM-DD')).to.equal(core_usage.year_month_day)
+    })
+    it('updates the ReferralCodes', async function(){ 
+      const service = new MonthUpdate()
+      const core_usage = await factory.build('core_winx64_usage')
+      await core_usage.save()
+      await service.main('brave_core_usage', moment().subtract(3, 'months').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD'))
+      const refs = (await ReferralCode.find({})).map(r => r.code_text)
+      const usage_refs = (await knex('dw.fc_usage_month').select('*')).map(r => r.ref )
+      expect(usage_refs.length).to.be.greaterThan(0)
+      for(let ref of usage_refs){
+        expect(refs).to.include(ref)
+      }
+      expect(_.difference(refs, usage_refs)).to.have.property('length', 0)
     })
   })
   describe('#importExceptions', async function(){
