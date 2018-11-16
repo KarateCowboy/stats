@@ -6,3 +6,4 @@ Feature: Filter by referral code
     And I view the Monthly Active Users report
     Then the ref select should be visible and have the 'none' ref entered
     And I enter an existing referral code in the text box
+    Then the report should limit to the existing referrals statistics
