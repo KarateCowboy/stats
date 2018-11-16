@@ -21,8 +21,8 @@ module.exports = class DownloadsService {
       params.Marker = _.last(data.Contents).Key
       data = await this.S3.listObjects(params).promise()
     }
+    console.log('done getting objects for day')
   }
-
   async loadObjectsFromList () {
     const bar = ProgressBar({
       tmpl: `Loading ${this.objectList.length} ... :bar :percent :eta`,
@@ -30,14 +30,17 @@ module.exports = class DownloadsService {
       total: this.objectList.length
     })
     for (let object of this.objectList) {
-      const exists = await knex('dw.downloads').where({key: object.Key}).count()
-      if (Number(exists[0].count) === 0) {
-        try{
-          const file = await  this.S3.getObject({Bucket: 'brave-download-logs', Key: object.Key}).promise()
-          let str = file.Body.toString()
-          await this.numbersApp.service('downloads').create({rawString: str, key: object.Key})
-        }catch(e){
+      try{
+        const file = await  this.S3.getObject({Bucket: 'brave-download-logs', Key: object.Key}).promise()
+        let contents = file.Body.toString()
+        let data = this.prepData(contents)
+        for(let line of data){
+          await this.numbersApp.service('downloads').create({rawString: line, key: object.Key})
+        }
+      } catch (e) {
+        if(e.message.includes("downloads_key_code_unique") === false) {
           console.log(`Error: ${e.message}`)
+          console.log(`    objectKey: ${object.Key}`)
         }
       }
       bar.tick(1)
@@ -52,5 +55,8 @@ module.exports = class DownloadsService {
     } else {
       return undefined
     }
+  }
+  prepData(fileData){
+    return _.compact(fileData.split(/[\r\n]{1,1}/))
   }
 }
