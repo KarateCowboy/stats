@@ -25,20 +25,22 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false) => {
   const usages = []
   for (let i of _.range(1, 29)) {
     start_of_month.add(1, 'days')
-    const refs = []
+    let refs = []
     if (!mixed_ref) {
       refs.push('none')
     }else{
-      
+      refs = await Promise.all(_.range(1,8).map(async (i) => { return (await factory.attrs('core_winx64_usage')).ref}))
     }
-    for (let j of _.range(1, per_day + 1)) {
-      const build_args = {
-        year_month_day: start_of_month.format('YYYY-MM-DD'),
-        ref: 'none',
-        channel: 'release'
+    for(let ref of refs){
+      for (let j of _.range(1, (per_day + 1) / refs.length)) {
+        const build_args = {
+          year_month_day: start_of_month.format('YYYY-MM-DD'),
+          ref: ref,
+          channel: 'release'
+        }
+        let usage = await factory.attrs('core_winx64_usage', build_args)
+        usages.push(usage)
       }
-      let usage = await factory.attrs('core_winx64_usage', build_args)
-      usages.push(usage)
     }
   }
   await mongo_client.collection('brave_core_usage').insertMany(usages.slice(0, number_of_usages))
@@ -52,5 +54,16 @@ Then(/^I should see the "([^"]*)" MAU for the prior month on winx64\-bc$/, async
 })
 
 Given(/^I enter an existing referral code in the text box$/, async function () {
-  pending()
+  const sample = await mongo_client.collection('brave_core_usage').findOne({})
+  this.setTo('sample',sample)
+  await browser.click('button.close')
+  await browser.click('#ref-filter')
+  await browser.keys(sample.ref)
+})
+
+
+Then(/^the report should limit to the existing referrals statistics$/, async function(){
+    const total = await mongo_client.collection('brave_core_usage').count({ ref: sample.ref })
+    const usageData = await browser.getHTML('#usageContent .table-responsive')
+    console.dir(usageData, { colors: true })
 })
