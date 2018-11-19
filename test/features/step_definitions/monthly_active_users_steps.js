@@ -59,11 +59,11 @@ Given(/^I enter an existing referral code in the text box$/, async function () {
   await browser.click('button.close')
   await browser.click('#ref-filter')
   await browser.keys(sample.ref)
+  await browser.keys("\uE007")
 })
 
-
 Then(/^the report should limit to the existing referrals statistics$/, async function(){
-    const total = await mongo_client.collection('brave_core_usage').count({ ref: sample.ref })
+    const total = await mongo_client.collection('brave_core_usage').count({ ref: this.sample.ref })
     const usageData = await browser.getHTML('#usageContent .table-responsive')
-    console.dir(usageData, { colors: true })
+    expect(usageData).to.include(total.toLocaleString('en'))
 })
