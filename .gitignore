@@ -44,3 +44,4 @@ tmp/
 .idea
 scratch.js
 scratch.sql
+*swp
