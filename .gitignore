@@ -44,3 +44,6 @@ tmp/
 .idea
 scratch.js
 scratch.sql
+
+# vim swap files
+*swp

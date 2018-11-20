@@ -53,9 +53,6 @@ var buildEyeshadeWalletsUpserter = function (pg, record) {
   }
 }
 
-var updateMaterializedViews = function (pg, cb) {
-  pg.query('REFRESH MATERIALIZED VIEW dw.fc_wallets_mv', [], cb)
-}
 
 // This is triggered when all resources have valid connections
 var resourcesReady = function(asyncError, resources) {
@@ -79,10 +76,7 @@ var resourcesReady = function(asyncError, resources) {
       if (err) {
         throw new Error(err)
       }
-      updateMaterializedViews(resources.pg, function(err, results) {
-        // Report the results of the job run
-        reporter.shutdown(runInfo, resources.pg, cleanup)
-      })
+      reporter.shutdown(runInfo, resources.pg, cleanup)
     })
   })
 }

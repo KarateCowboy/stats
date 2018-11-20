@@ -23,6 +23,7 @@ require('./fixtures/muon-usage-day').define()
 require('./fixtures/fc_usage_month').define()
 require('./fixtures/fc_usage_month_exception').define()
 require('./fixtures/fc_usage').define()
+require('./fixtures/wallets').define()
 
 class TestHelper {
   constructor () {
@@ -54,7 +55,8 @@ class TestHelper {
         'fc_retention_woi',
         'fc_usage_month',
         'fc_usage_month_exceptions',
-        'fc_usage'
+        'fc_usage',
+        'fc_wallets'
       ]
     }
     this.materialized_views = {

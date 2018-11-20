@@ -1117,13 +1117,7 @@ var eyeshadeFundedBalanceRetriever = function () {
   })
 }
 
-var eyeshadeFundedBalanceAverageRetriever = function () {
-  $.ajax('/api/1/eyeshade_funded_balance_average_wallets?' + standardParams(), {
-    success: walletsBalanceAverageHandler
-  })
-}
-
-var eyeshadeFundedBalanceAverageRetriever = function () {
+const eyeshadeFundedBalanceAverageRetriever = function () {
   $.ajax('/api/1/eyeshade_funded_balance_average_wallets?' + standardParams(), {
     success: walletsBalanceAverageHandler
   })
