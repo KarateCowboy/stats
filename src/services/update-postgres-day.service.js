@@ -1,9 +1,9 @@
 const moment = require('moment')
 
 module.exports = class UpdatePostgresDay {
-  async main (collection_name) {
+  async main (collection_name, days=7) {
     // Retrieve the daily active user stats
-    let results = await this.dau_grouped(collection_name)
+    let results = await this.dau_grouped(collection_name, days)
 
     console.log('Retrieved results from Mongo')
     console.log('Updating ' + results.length + ' rows in Postgres')
@@ -24,9 +24,8 @@ module.exports = class UpdatePostgresDay {
 
   }
 
-  async dau_grouped (collection_name, ts, days) {
-    ts = ts || (new Date()).getTime()
-    days = days || 7
+  async dau_grouped (collection_name, days=7) {
+    let ts = (new Date()).getTime()
 
     var limit = moment().subtract(days, 'days').format('YYYY-MM-DD')
     console.log(`Retrieving records on and after ${limit}`)
