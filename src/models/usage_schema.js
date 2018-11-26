@@ -13,6 +13,11 @@ const instance_methods = {
 }
 
 const static_methods = {
+  monthly_active_users: async function (date) {
+    const month_start = date.clone().startOf('month').format('YYYY-MM-DD')
+    const month_end = date.clone().endOf('month').format('YYYY-MM-DD')
+    return (await this.count({year_month_day: {$gte: month_start, $lte: month_end}, monthly: true}))
+  },
   for_day: async function (year_month_day, beginning = undefined, end = undefined) {
     params = {
       daily: true,
