@@ -8,7 +8,7 @@ const mongooseClient = require('mongoose')
 const {AttachCommonMethods} = require('./usage_schema')
 module.exports = function () {
   const {Schema} = mongooseClient
-  let AndroidUsage = new Schema({
+  let Usage = new Schema({
     year_month_day: {
       type: Schema.Types.String,
       required: [true, 'year_month_day is required'],
@@ -27,7 +27,7 @@ module.exports = function () {
       type: Schema.Types.String,
       required: true,
       validate: {
-        validator: function (v) { return ['androidbrowser', 'android'].includes(v) }
+        validator: function (v) { return ['osx', 'linux', 'winia32', 'winx64'].includes(v) }
       }
     },
     version: {
@@ -81,16 +81,16 @@ module.exports = function () {
 
   }, {
     timestamps: true,
-    collection: 'android_usage'
+    collection: 'usage'
   })
-  AttachCommonMethods(AndroidUsage)
+  AttachCommonMethods(Usage)
 
   // put more instance and static methods after here
-  AndroidUsage.virtual('aggregate_collection').get(() => 'android_usage_aggregate_woi')
+  Usage.virtual('aggregate_collection').get(() => 'usage_aggregate_woi')
 
-  if (mongooseClient.models.AndroidUsage) {
-    return mongooseClient.models.AndroidUsage
+  if (mongooseClient.models.Usage) {
+    return mongooseClient.models.Usage
   } else {
-    return mongooseClient.model('AndroidUsage', AndroidUsage)
+    return mongooseClient.model('Usage', Usage)
   }
 }

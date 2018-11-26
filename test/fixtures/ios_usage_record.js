@@ -8,21 +8,12 @@ const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const moment = require('moment')
 const ObjectID = require('mongodb').ObjectID
+const IosUsage = require('../../src/models/ios-usage.model.js')()
 
 const define = () => {
-  factory.setAdapter(new FactoryGirl.ObjectAdapter())
+  factory.setAdapter(new FactoryGirl.MongooseAdapter())
 
-  class IosUsageRecord {
-    async save () {
-      await mongo_client.collection('ios_usage').insert(this)
-    }
-
-    async destroy () {
-      await mongo_client.collection('ios_usage').remove({_id: this._id})
-    }
-  }
-
-  factory.define('ios_usage', IosUsageRecord, {
+  factory.define('ios_usage', IosUsage, {
     '_id': () => (new ObjectID()),
     'daily': true,
     'weekly': true,
