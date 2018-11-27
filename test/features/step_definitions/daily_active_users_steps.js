@@ -39,6 +39,7 @@ Given(/^the brave core daily numbers have been crunched$/, async function () {
 })
 Then(/^I should see "([^"]*)" usages spread over each day for the prior month$/, async function (number_of_usages) {
   const per_day = Math.ceil(Number(number_of_usages) / 28)
+  await browser.pause(300)
   const usage_data_table = await browser.getHTML('#usageDataTable')
   expect(usage_data_table).to.contain(per_day.toLocaleString('en'))
 })
