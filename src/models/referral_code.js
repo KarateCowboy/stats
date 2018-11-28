@@ -4,6 +4,7 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+const _ = require('underscore')
 const mongoose = require('mongoose')
 const Types = mongoose.Schema.Types
 const ReferralCodeSchema = new mongoose.Schema({
@@ -15,7 +16,13 @@ const ReferralCodeSchema = new mongoose.Schema({
   collection: 'referral_codes'
 })
 
-ReferralCodeSchema.methods.sample_method = async function () {
+ReferralCodeSchema.statics.add_missing = async function (codes, platform) {
+  const already_existing = (await this.find({ code_text: { $in: codes }})).map(u => u.code_text)
+  const new_refs = _.difference(codes, already_existing)
+  for (let uref of new_refs) {
+    let newref = new ReferralCode({ code_text: uref, platform: platform })
+    await newref.save()
+  }
 }
 const ReferralCode = mongoose.model('ReferralCode', ReferralCodeSchema)
 module.exports.ReferralCodeSchema = ReferralCodeSchema
