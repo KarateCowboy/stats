@@ -9,6 +9,7 @@ const mongo = require('mongodb')
 const Knex = require('knex')
 const factory = require('factory-girl').factory
 const mongoose = require('mongoose')
+const Sequelize = require('sequelize')
 require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
@@ -31,6 +32,8 @@ class TestHelper {
       throw Error('Please set TEST_DATABASE_URL')
     }
     this.testDatabaseUrl = process.env.TEST_DATABASE_URL
+    global.SQL_ORM_URL = process.env.TEST_DATABASE_URL
+    global.sequelize = new Sequelize(SQL_ORM_URL, { logging: false })
     if (!process.env.TEST_MLAB_URI) {
       throw Error('Please set TEST_MLAB_URI')
     }
@@ -81,6 +84,10 @@ class TestHelper {
       this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
       global.knex = this.knex
     }
+    if(!global.sequelize){
+      global.sequelize = new Sequelize(this.testDatabaseUrl)
+    }
+
     global.factory = factory
   }
 
