@@ -2,6 +2,7 @@ const _ = require('underscore')
 const common = require('../api/common')
 const moment = require('moment')
 const ProxyAgent = require('proxy-agent')
+const Wallet = require('../models/wallet.model').define(global.sequelize)
 
 module.exports = class WalletsService {
   async updateFromLedger (daysBack = undefined) {
@@ -9,12 +10,13 @@ module.exports = class WalletsService {
       const results = await this.getFromLedger(daysBack)
       for (const r of results) {
         try {
-          await knex('dw.fc_wallets').insert({
+          let wallet = new Wallet({
             created: r.created,
             wallets: r.wallets,
-            balance: r.walletProviderBalance,
+            balance: Wallet.probiToBalance(r.walletProviderBalance),
             funded: r.walletProviderFunded
           })
+          await wallet.save()
         } catch (e) {
           console.log('Error inserting wallet data from ledger:')
           console.log(`   ${e.message}`)
@@ -35,15 +37,15 @@ module.exports = class WalletsService {
         Authorization: 'Bearer ' + process.env.LEDGER_TOKEN
       }
     }
-    if(process.env.hasOwnProperty('LOCAL') === false){
+    if (process.env.hasOwnProperty('LOCAL') === false) {
       options.agent = new ProxyAgent(process.env.FIXIE_URL)
     }
     let result = await common.prequest(options)
     result = JSON.parse(result)
-    if(_.isArray(result) === false){
-      let errorMessage = ""
-      if(result.statusCode === 406) {
-        errorMessage +=  'Error: could not access ledger server. 406 response received'
+    if (_.isArray(result) === false) {
+      let errorMessage = ''
+      if (result.statusCode === 406) {
+        errorMessage += 'Error: could not access ledger server. 406 response received'
       }
       throw Error(errorMessage, result.toString())
     }

@@ -8,13 +8,14 @@ const _ = require('underscore')
 const commander = require('commander')
 const reporter = require('../src/reporter')
 const Knex = require('knex')
+const Sequelize = require('sequelize')
 const pg = require('pg')
-const WalletsService = require('../src/services/wallets.service')
 const jobName = 'update-wallets'
 
 const main = async () => {
   let runInfo = reporter.startup(jobName)
   await setup()
+  const WalletsService = require('../src/services/wallets.service')
   const walletService = new WalletsService()
   try {
     await knex('dw.fc_wallets').truncate()
@@ -39,6 +40,7 @@ setup = async () => {
   }
   global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
   global.pg_client = await pg.connect(process.env.DATABASE_URL)
+  global.sequelize = new Sequelize(process.env.DATABASE_URL)
 
 }
 
