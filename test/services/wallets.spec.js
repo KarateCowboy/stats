@@ -1,11 +1,8 @@
+require('../test_helper')
 const _ = require('underscore')
 const moment = require('moment')
-require('../test_helper')
 let WalletService = require('../../src/services/wallets.service')
-const {ObjectID} = require('mongodb')
 const sinon = require('sinon')
-const nock = require('nock')
-
 let service
 const common = require('../../src/api/common')
 
@@ -128,5 +125,8 @@ describe('Wallets service', async function () {
       expect(response).to.include('noproxy')
       common.prequest.restore()
     })
-  })
+    it('converts walletProviderBalance from probi', async function(){
+
+    })
+ })
 })
