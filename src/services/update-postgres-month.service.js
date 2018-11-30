@@ -47,15 +47,9 @@ module.exports = class UpdateMonth {
       }
     }
     await this.importExceptions()
-<<<<<<< HEAD
     const usage_refs = (await knex('dw.fc_usage_month').distinct('ref', 'platform'))
     const grouped_refs = _.groupBy(usage_refs, 'platform')
     for (let platform in grouped_refs) {
-=======
-    const usage_refs = (await knex('dw.fc_usage_month').distinct('ref','platform'))
-    const grouped_refs = _.groupBy(usage_refs, 'platform')
-    for(let platform in grouped_refs){
->>>>>>> 9b20e8971afa6f4a8fa5fe628eaa6f4deeb863d5
       await ReferralCode.add_missing(grouped_refs[platform].map(i => i.ref), platform)
     }
   }

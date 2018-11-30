@@ -50,8 +50,6 @@ describe('update-postres-month', async function () {
       expect(updatedMonths[1].updated_at).to.not.equal(replace.updated_at)
       expect(updatedMonths[1]).to.have.property('total', exception.total)
       expect(updatedMonths[1]).to.have.property('platform', 'androidbrowser')
-
-
     })
   })
 })
