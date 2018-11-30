@@ -40,8 +40,13 @@ setup = async () => {
   }
   global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
   global.pg_client = await pg.connect(process.env.DATABASE_URL)
-  global.sequelize = new Sequelize(process.env.DATABASE_URL)
-
+  global.sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    dialectOptions: {
+      ssl: true
+    }
+  })
 }
 
 commander.option('-d --daysback [num]', 'Days to go back in fetching').parse(process.argv)
