@@ -19,7 +19,7 @@ describe('update-postres-month', async function () {
       expect(usage_months[0]).to.have.property('platform', 'winx64-bc')
       expect(moment(usage_months[0].ymd).format('YYYY-MM-DD')).to.equal(core_usage.year_month_day)
     })
-    it('updates the ReferralCodes', async function(){ 
+    it('updates the ReferralCodes', async function(){
       const service = new MonthUpdate()
       const core_usage = await factory.build('core_winx64_usage')
       await core_usage.save()
