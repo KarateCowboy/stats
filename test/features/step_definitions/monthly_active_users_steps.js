@@ -40,7 +40,7 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false) => {
         const build_args = {
           year_month_day: working_date.format('YYYY-MM-DD'),
           woi: working_date.clone().subtract(7, 'days').format('YYYY-MM-DD'),
-          ts: () => { return working_date.clone().subtract(7, 'days').toDate().getTime()},
+          ts: () => { return working_date.clone().toDate().getTime()},
           ref: ref,
           channel: 'release'
         }
@@ -82,8 +82,5 @@ Then(/^the report should limit to the existing referrals statistics$/, async fun
 Then(/^the report should show only the average dau for that referral code$/, async function () {
   const count_for_day = await CoreUsage.count({year_month_day: this.sample.year_month_day, ref: this.sample.ref})
   const usage_data_table = await browser.getHTML('#usageDataTable')
-  console.dir(usage_data_table, {colors: true})
-  process.exit()
-
-  expect(usage_data_table).to.contain(count_for_day / 28)
+  expect(usage_data_table).to.contain(count_for_day / 30)
 })
