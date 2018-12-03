@@ -8,33 +8,10 @@ const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const moment = require('moment')
 const ObjectID = require('mongodb').ObjectID
+const AndroidUsage = require('../../src/models/android-usage.model.js')()
 
 const define = () => {
-  factory.setAdapter(new FactoryGirl.ObjectAdapter())
-
-  class AndroidUsage {
-    async save () {
-      await mongo_client.collection('android_usage').insert({
-          '_id': this._id,
-          'daily': this.daily,
-          'weekly': this.weekly,
-          'monthly': this.monthly,
-          'platform': this.platform,
-          'version': this.version,
-          'first': this.first,
-          'channel': this.channel,
-          'woi': this.woi,
-          'ref': this.ref,
-          'ts': this.ts,
-          'year_month_day': this.year_month_day
-        }
-      )
-    }
-
-    async destroy () {
-      await mongo_client.collection('android_usage').destroy({'_id': this._id})
-    }
-  }
+  factory.setAdapter(new FactoryGirl.MongooseAdapter())
 
   factory.define('android_usage', AndroidUsage, {
     '_id': () => { return (new ObjectID()) },

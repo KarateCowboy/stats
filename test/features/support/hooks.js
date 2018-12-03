@@ -33,6 +33,12 @@ const bindHelpers = function () {
       await browser.setValue(selector, value)
     })
   }
+  if (browser.get_html_when_visible === void 0) {
+    browser.addCommand('get_html_when_visible', async function (selector) {
+      await browser.waitForVisible(selector, 3000)
+      return await browser.getHTML(selector)
+    })
+  }
 }
 Before(async function () {
   await test_helper.truncate()

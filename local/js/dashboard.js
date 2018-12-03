@@ -1167,13 +1167,7 @@ var eyeshadeFundedBalanceRetriever = function () {
   })
 }
 
-var eyeshadeFundedBalanceAverageRetriever = function () {
-  $.ajax('/api/1/eyeshade_funded_balance_average_wallets?' + standardParams(), {
-    success: walletsBalanceAverageHandler
-  })
-}
-
-var eyeshadeFundedBalanceAverageRetriever = function () {
+const eyeshadeFundedBalanceAverageRetriever = function () {
   $.ajax('/api/1/eyeshade_funded_balance_average_wallets?' + standardParams(), {
     success: walletsBalanceAverageHandler
   })
@@ -1667,8 +1661,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = false
-    viewState.showRefFilter = false
+    VueApp.$data.showRefFilter = true
+    viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1679,8 +1673,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = false
-    viewState.showRefFilter = false
+    VueApp.$data.showRefFilter = true
+    viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
   })

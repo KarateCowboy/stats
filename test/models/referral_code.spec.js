@@ -1,6 +1,6 @@
 require('../test_helper')
 const {expect} = require('chai')
-const {ReferralCode} = require('../../src/models/mongoose/referral_code')
+const {ReferralCode} = require('../../src/models/referral_code')
 
 describe('ReferralCode', async function () {
   describe('properties', async function () {
@@ -8,7 +8,12 @@ describe('ReferralCode', async function () {
       await test_helper.truncate()
       let sample_code = new ReferralCode({platform: 'winx64'})
       let thrown = false
-      try { await sample_code.save() } catch (e) { thrown = true }
+      try { 
+        await sample_code.save()
+      } catch (e) { 
+        thrown = true 
+        expect(e.message).to.include('Path `code_text`')
+      }
       expect(thrown).to.equal(true)
 
       sample_code = new ReferralCode({code_text: 123456, platform: 'winx64'})

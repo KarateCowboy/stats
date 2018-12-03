@@ -9,23 +9,23 @@ const mongo = require('mongodb')
 const Knex = require('knex')
 const factory = require('factory-girl').factory
 const mongoose = require('mongoose')
-const feathers = require('@feathersjs/feathers')
-const rest_client = require('@feathersjs/rest-client')
+const Sequelize = require('sequelize')
 require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
 require('./fixtures/android_usage_aggregate_week').define()
 require('./fixtures/usage_aggregate_woi').define()
 require('./fixtures/link_bubble_usage').define()
-require('./fixtures/desktop_usage').define()
 require('./fixtures/referral_code').define()
 require('./fixtures/core-usage').define()
+require('./fixtures/usage').define()
 require('./fixtures/core-usage-day').define()
 require('./fixtures/muon-usage-day').define()
 require('./fixtures/fc_usage_month').define()
 require('./fixtures/fc_usage_month_exception').define()
 require('./fixtures/fc_usage').define()
 require('./fixtures/download').define()
+require('./fixtures/wallets').define()
 
 class TestHelper {
   constructor () {
@@ -33,6 +33,8 @@ class TestHelper {
       throw Error('Please set TEST_DATABASE_URL')
     }
     this.testDatabaseUrl = process.env.TEST_DATABASE_URL
+    global.SQL_ORM_URL = process.env.TEST_DATABASE_URL
+    global.sequelize = new Sequelize(SQL_ORM_URL, { logging: false })
     if (!process.env.TEST_MLAB_URI) {
       throw Error('Please set TEST_MLAB_URI')
     }
@@ -57,9 +59,10 @@ class TestHelper {
       'dw': [
         'fc_retention_woi',
         'fc_usage_month',
-        'fc_usage',
         'downloads',
-        'fc_usage_month_exceptions'
+        'fc_usage_month_exceptions',
+        'fc_usage',
+        'fc_wallets'
       ]
     }
     this.materialized_views = {
@@ -84,12 +87,10 @@ class TestHelper {
       this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
       global.knex = this.knex
     }
-    if(!global.numbers_app){
-      let jquery = require('jquery')
-      let NumbersClient = rest_client('http://localhost:3030')
-      global.numbers_app = feathers()
-      numbers_app.configure(NumbersClient.jquery(jquery))
+    if(!global.sequelize){
+      global.sequelize = new Sequelize(this.testDatabaseUrl)
     }
+
     global.factory = factory
   }
 

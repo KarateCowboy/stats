@@ -15,7 +15,7 @@ Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
   }
 })
 Then(/^the ref select should be visible and have the 'none' ref entered$/, async function () {
-  const result = await browser.getHTML(`#ref-filter .selected-tag`)
+  const result = await browser.get_html_when_visible(`#ref-filter .selected-tag`)
   expect(result).to.contain('none')
 })
 Then(/^the this month button should "([^"]*)" be visible$/, async function (visible) {
@@ -27,6 +27,9 @@ Given(/^I view the Retention Week \/ Week report$/, async function () {
 })
 Given(/^I view the Monthly Active Users by Platform report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage_month')
+})
+Given(/^I view the Monthly Active Users report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#usage_month_agg')
 })
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref-filter`)
