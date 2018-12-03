@@ -12,7 +12,8 @@ exports.up = async function (knex, Promise) {
     table.string('platform')
     table.string('key' )
     table.timestamps(true, true)
-    table.unique('key')
+    table.unique(['key', 'code'])
+    table.index('platform')
   })
 }
 
