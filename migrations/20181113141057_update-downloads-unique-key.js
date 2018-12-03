@@ -6,7 +6,7 @@ exports.up = async function (knex, Promise) {
 }
 
 exports.down = async function (knex, Promise) {
-  await knex.schema.withSchema('dw').createTable('downloads', (table) => {
+  await knex.schema.withSchema('dw').alterTable('downloads', (table) => {
     table.dropUnique(['key', 'code'])
     table.unique('key')
   })
