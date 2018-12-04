@@ -21,9 +21,6 @@
   "author": "Brave Software",
   "license": "ISC",
   "dependencies": {
-    "@feathersjs/authentication-client": "1.0.6",
-    "@feathersjs/feathers": "3.2.3",
-    "@feathersjs/rest-client": "1.4.5",
     "amqplib": "0.4.1",
     "async": "1.5.2",
     "awis": "1.0.9",
