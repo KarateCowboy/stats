@@ -27,3 +27,9 @@ Feature: Filter by referral code
     And I enter an existing referral code in the text box
     Then the report should show only the average dau for that referral code
 
+  Scenario: Use with Monthly Average Daily New users
+    And I view the Monthly Average Daily New Users report
+    Then the ref select should be visible and have the 'none' ref entered
+    And I enter an existing referral code in the text box
+    Then the report should show only the average dau for that referral code
+

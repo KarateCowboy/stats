@@ -40,6 +40,10 @@ Given(/^I view the Monthly Average Daily Active Users by Platform report$/, asyn
   await browser.url('http://localhost:8193/dashboard#usage_month_average')
 })
 
+Given(/^I view the Monthly Average Daily New Users report$/, {timeout: 90000}, async function () {
+  await browser.url('https://localhost:8193/dashboard#usage_month_average_new_agg')
+})
+
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref-filter`)
   expect(result).to.equal(true)
