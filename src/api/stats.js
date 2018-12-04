@@ -399,13 +399,13 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/retention/missing',
     handler: async function (request, reply) {
-      const RetentionService = require('../services/retention.service') 
+      const RetentionService = require('../services/retention.service')
       const service = new RetentionService()
       const results = await service.missing()
       reply(results)
     }
   })
-  
+
   // Retention
   server.route({
     method: 'GET',
@@ -547,6 +547,19 @@ exports.setup = (server, client, mongo) => {
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
       reply(results.rows)
+    }
+  })
+
+  // daily downloads by plaftorm
+  server.route({
+    method: 'GET',
+    path: '/api/1/daily_downloads',
+    handler: async function (request, reply) {
+      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      let day = days.split(' ')
+      let cutoff = moment().subtract(Number(day[0]), 'days').format('YYYY-MM-DD')
+      var results = await knex('dw.daily_downloads').where('ymd', '>', cutoff ).whereIn('platform', platforms).orderBy('ymd','desc').select(['count','platform','ymd'])
+      reply(results)
     }
   })
 

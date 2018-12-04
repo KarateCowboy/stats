@@ -23,6 +23,7 @@ const mongoose = require('mongoose')
 let telemetry = require('./api/telemetry')
 let referral = require('./api/referral')
 let referral_codes = require('./api/referral_codes')
+let numbers = require('./api/numbers')
 
 let setGlobalHeader = require('hapi-set-header')
 
@@ -42,7 +43,6 @@ module.exports.setup = async (connections) => {
   })
   await mongoose.connect(process.env.MLAB_URI)
   server.register(Inert, function () {})
-  // server.register(require('blipp'), function () {})
 
   // Handle the boom response as well as all other requests (cache control for telemetry)
   setGlobalHeader(server, 'Cache-Control', 'no-cache, no-store, must-revalidate, private, max-age=0')
@@ -54,7 +54,7 @@ module.exports.setup = async (connections) => {
   })
 
   // Setup the APIs
-  _.each([stats, jobs, crashes, search, eyeshade, bat_eyeshade, publishers, meta, telemetry, referral, referral_codes], (api) => { api.setup(server, connections.pg, connections.mg) })
+  _.each([stats, jobs, crashes, search, eyeshade, bat_eyeshade, publishers, meta, numbers, telemetry, referral, referral_codes], (api) => { api.setup(server, connections.pg, connections.mg) })
 
   // Setup the UI for the dashboard
   ui.setup(server, connections.pg)

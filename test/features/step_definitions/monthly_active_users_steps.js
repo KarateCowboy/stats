@@ -31,9 +31,7 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false) => {
     if (!mixed_ref) {
       refs.push('none')
     } else {
-      refs = await Promise.all(_.range(1, 8).map(async (i) => {
-        return (await factory.attrs('core_winx64_usage')).ref
-      }))
+      refs = await Promise.all(_.range(1, 8).map(async (i) => { return (await factory.attrs('core_winx64_usage')).ref}))
     }
     for (let ref of refs) {
       for (let j of _.range(1, (per_day + 1) / refs.length)) {
@@ -62,6 +60,23 @@ Then(/^I should see the "([^"]*)" MAU for the prior month on winx64\-bc$/, async
   expect(usage_data_table).to.contain(number_of_users)
 })
 
+Given(/^there is complete monthly usage data in the tables$/, async function () {
+  const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc']
+  const today = moment()
+  for (let platform of platforms) {
+    const usages = await factory.createMany('fc_usage_month', _.range(1, 91).map((i) => {
+      return {
+        platform: platform,
+        ymd: today.clone().subtract(i, 'days').format('YYYY-MM-DD')
+      }
+    }))
+    await Promise.all(usages.map(async (u) => { await u.save() }))
+  }
+})
+
+Given(/^"([^"]*)" mau data is missing$/, async function (platform) {
+  await knex('dw.fc_usage_month').where('platform', platform).delete()
+})
 Given(/^I enter an existing referral code in the text box$/, async function () {
   const sample = await CoreUsage.findOne() //mongo_client.collection('brave_core_usage').findOne({})
   this.setTo('sample', sample)

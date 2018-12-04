@@ -38,5 +38,5 @@ Given(/^I view the Monthly Average Daily Active Users report$/, async function (
 
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref-filter`)
-  expect(result).to.equal(false)
+  expect(result).to.equal(true)
 })

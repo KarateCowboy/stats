@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const request = require('request')
+const feathers = require('@feathersjs/feathers')
+const auth = require('@feathersjs/authentication-client')
+const Rest = require('@feathersjs/rest-client')
+
+const main = async () => {
+  let numbers_host, numbers_port, numbers_user, numbers_pwd
+  if (!process.env.NUMBERS_HOST) {
+    throw new Error('NUMBERS_HOST must be set in environment')
+  } else {
+    numbers_host = process.env.NUMBERS_HOST || 'localhost'
+  }
+  if (!process.env.NUMBERS_PORT) {
+    throw new Error('NUMBERS_PORT must be set in environment')
+  } else {
+    numbers_port = process.env.NUMBERS_PORT
+  }
+  if (!process.env.NUMBERS_USER) {
+    throw new Error('NUMBERS_USER must be set in environment')
+  } else {
+    numbers_user = process.env.NUMBERS_USER
+  }
+  if (!process.env.NUMBERS_PWD) {
+    throw new Error('NUMBER_PWD must be set in environment')
+  } else {
+    numbers_pwd = process.env.NUMBERS_PWD
+  }
+  if (!process.env.NUMBERS_JWT && !process.env.LOCAL) {
+    throw new Error('NUMBERS_JWT must be set in environment')
+  } else {
+    numbers_jwt = process.env.NUMBERS_JWT
+  }
+  const numbers_app = feathers()
+  const rest_client = Rest('http://' + numbers_host + ':' + numbers_port)
+  numbers_app.configure(rest_client.request(request))
+  numbers_app.configure(auth())
+  const res = await numbers_app.authenticate({
+      strategy: 'local',
+      email: numbers_user,
+      password: numbers_pwd
+    })
+  const token = res.accessToken
+  console.log(`JWT is: ${token}`)
+
+}
+
+main()
