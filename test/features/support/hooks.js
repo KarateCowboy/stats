@@ -8,7 +8,6 @@ global.server = require(process.cwd() + '/src/index')
 const {After, AfterAll, Before, BeforeAll} = require('cucumber')
 require('../../../test/test_helper')
 
-
 const bindHelpers = function () {
   if (browser.click_when_visible === void 0) {
     browser.addCommand('click_when_visible', async function (selector) {
@@ -16,10 +15,16 @@ const bindHelpers = function () {
       await browser.click(selector)
     })
   }
-  if (browser.select_by_value_when_visible === void 0) {
-    browser.addCommand('select_by_value_when_visible', async function (selector, value) {
+  if (browser.get_html_when_visible === void 0) {
+    browser.addCommand('get_html_when_visible', async function (selector) {
       await browser.waitForVisible(selector, 3000)
-      await browser.selectByValue(selector, value)
+      return await browser.getHTML(selector)
+    })
+  }
+  if (browser.get_text_when_visible === void 0) {
+    browser.addCommand('get_text_when_visible', async function (selector) {
+      await browser.waitForVisible(selector, 3000)
+      return await browser.getText(selector)
     })
   }
   if (browser.select_by_value_when_visible === void 0) {
@@ -48,7 +53,7 @@ Before(async function () {
   bindHelpers()
   await browser.init()
 })
-BeforeAll(async function(){
+BeforeAll(async function () {
   process.env.SESSION_SECRET = this.sessionSecret
   process.env.ADMIN_PASSWORD = this.adminPassword
   await test_helper.setup()

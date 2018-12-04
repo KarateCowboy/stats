@@ -28,10 +28,10 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false) => {
     let refs = []
     if (!mixed_ref) {
       refs.push('none')
-    }else{
-      refs = await Promise.all(_.range(1,8).map(async (i) => { return (await factory.attrs('core_winx64_usage')).ref}))
+    } else {
+      refs = await Promise.all(_.range(1, 8).map(async (i) => { return (await factory.attrs('core_winx64_usage')).ref}))
     }
-    for(let ref of refs){
+    for (let ref of refs) {
       for (let j of _.range(1, (per_day + 1) / refs.length)) {
         const build_args = {
           year_month_day: start_of_month.format('YYYY-MM-DD'),
@@ -53,17 +53,34 @@ Then(/^I should see the "([^"]*)" MAU for the prior month on winx64\-bc$/, async
   expect(usage_data_table).to.contain(number_of_users)
 })
 
+Given(/^there is complete monthly usage data in the tables$/, async function () {
+  const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc']
+  const today = moment()
+  for (let platform of platforms) {
+    const usages = await factory.createMany('fc_usage_month', _.range(1, 91).map((i) => {
+      return {
+        platform: platform,
+        ymd: today.clone().subtract(i, 'days').format('YYYY-MM-DD')
+      }
+    }))
+    await Promise.all(usages.map(async (u) => { await u.save() }))
+  }
+})
+
+Given(/^"([^"]*)" mau data is missing$/, async function (platform) {
+  await knex('dw.fc_usage_month').where('platform', platform).delete()
+})
 Given(/^I enter an existing referral code in the text box$/, async function () {
   const sample = await mongo_client.collection('brave_core_usage').findOne({})
-  this.setTo('sample',sample)
+  this.setTo('sample', sample)
   await browser.click('button.close')
   await browser.click('#ref-filter')
   await browser.keys(sample.ref)
-  await browser.keys("\uE007")
+  await browser.keys('\uE007')
 })
 
-Then(/^the report should limit to the existing referrals statistics$/, async function(){
-    const total = await mongo_client.collection('brave_core_usage').count({ ref: this.sample.ref })
-    const usageData = await browser.getHTML('#usageContent .table-responsive')
-    expect(usageData).to.include(total.toLocaleString('en'))
+Then(/^the report should limit to the existing referrals statistics$/, async function () {
+  const total = await mongo_client.collection('brave_core_usage').count({ref: this.sample.ref})
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
 })

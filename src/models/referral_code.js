@@ -8,7 +8,7 @@ const _ = require('underscore')
 const mongoose = require('mongoose')
 const Types = mongoose.Schema.Types
 const ReferralCodeSchema = new mongoose.Schema({
-  code_text: {type: Types.String, required: true, minlength: 5, unique: true},
+  code_text: {type: Types.String, required: true, minlength: 4, unique: true},
   usages: {type: [], default: []},
   platform: {type: Types.String, required: true, minlength: 3}
 }, {

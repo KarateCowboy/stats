@@ -35,11 +35,10 @@ const build_months_back = async function (platform) {
   const ymd = moment().startOf('month').add(14, 'days')
   for (let i of _.range(1, 13)) {
     let calc_ymd = ymd.clone().subtract(i, 'months').format('YYYY-MM-DD')
-    let fc_usage = await
-      factory.build('fc_usage', {
-        platform: platform,
-        ymd: calc_ymd
-      })
+    let fc_usage = await factory.build('fc_usage', {
+      platform: platform,
+      ymd: calc_ymd
+    })
     await fc_usage.save()
     let fc_usage_month = await factory.build('fc_usage_month', {
       ymd: calc_ymd,

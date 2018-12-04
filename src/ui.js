@@ -163,7 +163,8 @@ exports.setup = (server, db) => {
     [ '/jquery/{param*}', './node_modules/jquery/dist' ],
     [ '/local/{param*}', './local' ],
     [ '/bower/{param*}', './bower_components' ],
-    [ '/ss/{param*}', './node_modules/simple-statistics/dist' ]
+    [ '/ss/{param*}', './node_modules/simple-statistics/dist' ],
+    [ '/dist/{param*}','./dist']
   ]
 
   statics.forEach((stat) => {
