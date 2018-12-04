@@ -1,0 +1,78 @@
+openapi: 3.0.0
+info:
+  description: "Brave Statistics service"
+  version: "0.0.1"
+  title: "Brave Stats"
+servers:
+- url: https://stats.brave.com/v1
+  description: Production server
+- url: https://brave-stats-staging.herokuapp.com/v1
+  description: staging server
+- url: http://localhost:8191/v1
+  description: local development
+paths:
+  /downloads:
+    get:
+      responses:
+        '200':
+          description: response success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Download'
+
+components:
+  schemas:
+    Download:
+      type: "object"
+      properties:
+        id:
+          type: string
+          example: "5c059b0c086f8f55fd6df153"
+        ipAddress:
+          type: string
+          example: 192.168.1.0
+        sha:
+          type: string
+          example: "08d9d664ad099538106571744f55ac449c1eb8dc08c08c114039011d43395954"
+        type:
+          type: string
+          example: "brave-download"
+        timestamp:
+          type: string
+          format: date-time
+        code:
+          type: string
+          example: "922A0961750A507F"
+        requestPath:
+          type: string
+          example: '/multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe'
+        requestResponseCode:
+          type: integer
+          example: 304
+        domain:
+          type: string
+          example: 'https://brave.com'
+        platform:
+          type: string
+          enum:
+          - osx
+          - osx-bc
+          - linux
+          - linux-bc
+          - winia32
+          - winia32-bc
+          - winx64
+          - winx64-bc
+        key:
+          type: string
+          description: Amazon S3 file key
+          example: "2018-01-01-08-22-45-99809B404363FAE0"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
