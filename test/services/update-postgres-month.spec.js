@@ -4,6 +4,7 @@ require('../test_helper')
 const MonthUpdate = require('../../src/services/update-postgres-month.service')
 const { Util } = require('../../src/models/util')
 const { ReferralCode } = require('../../src/models/referral_code')
+const CoreUsage = require('../../src/models/core-usage.model')()
 
 describe('update-postres-month', async function () {
   describe('main', async function () {
@@ -18,7 +19,7 @@ describe('update-postres-month', async function () {
       expect(usage_months[0]).to.have.property('platform', 'winx64-bc')
       expect(moment(usage_months[0].ymd).format('YYYY-MM-DD')).to.equal(core_usage.year_month_day)
     })
-    it('updates the ReferralCodes', async function(){ 
+    it('updates the ReferralCodes', async function(){
       const service = new MonthUpdate()
       const core_usage = await factory.build('core_winx64_usage')
       await core_usage.save()
@@ -49,8 +50,6 @@ describe('update-postres-month', async function () {
       expect(updatedMonths[1].updated_at).to.not.equal(replace.updated_at)
       expect(updatedMonths[1]).to.have.property('total', exception.total)
       expect(updatedMonths[1]).to.have.property('platform', 'androidbrowser')
-
-
     })
   })
 })

@@ -47,7 +47,6 @@ setup = async () => {
       ssl: true
     }
   })
-
 }
 
 commander.option('-d --daysback [num]', 'Days to go back in fetching').parse(process.argv)
