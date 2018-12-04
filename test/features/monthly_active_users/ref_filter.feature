@@ -20,3 +20,10 @@ Feature: Filter by referral code
     Then the ref select should be visible and have the 'none' ref entered
     And I enter an existing referral code in the text box
     Then the report should show only the average dau for that referral code
+
+  Scenario: Use with Monthly Average DAU by Platform
+    And I view the Monthly Average Daily Active Users by Platform report
+    Then the ref select should be visible and have the 'none' ref entered
+    And I enter an existing referral code in the text box
+    Then the report should show only the average dau for that referral code
+
