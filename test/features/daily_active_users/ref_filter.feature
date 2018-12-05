@@ -15,3 +15,9 @@ Feature: Filter by referral code
     And I enter an existing referral code in the text box
     Then the report should limit to the existing referrals statistics
 
+  Scenario: Use with DAU by Version
+    And I view the Daily Active Users by Version report
+    Then the ref select should be visible and have the 'none' ref entered
+    And I enter an existing referral code in the text box
+    Then the report should limit to the existing referrals statistics
+

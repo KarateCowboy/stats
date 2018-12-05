@@ -1592,7 +1592,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = false
+    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
