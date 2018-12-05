@@ -28,9 +28,9 @@ const bindHelpers = function () {
     })
   }
   if (browser.select_by_value_when_visible === void 0) {
-    browser.addCommand('set_value_when_visible', async function (selector, value) {
+    browser.addCommand('select_by_value_when_visible', async function (selector, value) {
       await browser.waitForVisible(selector, 3000)
-      await browser.setValue(selector, value)
+      await browser.selectByValue(selector, value)
     })
   }
   if (browser.get_html_when_visible === void 0) {

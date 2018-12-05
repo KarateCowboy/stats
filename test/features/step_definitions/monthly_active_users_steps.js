@@ -53,6 +53,7 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false) => {
   const day_service = new UpdatePostgresDayService()
   await day_service.main('brave_core_usage', 172)
   await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_average_monthly_usage_mv')
+  await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_usage_platform_mv')
 }
 
 Then(/^I should see the "([^"]*)" MAU for the prior month on winx64\-bc$/, async function (number_of_users) {
@@ -79,7 +80,7 @@ Given(/^"([^"]*)" mau data is missing$/, async function (platform) {
 })
 Given(/^I enter an existing referral code in the text box$/, async function () {
   const sample = await CoreUsage.findOne() //mongo_client.collection('brave_core_usage').findOne({})
-  await browser.selectByValue('#daysSelector', '120')
+  await browser.select_by_value_when_visible('#daysSelector', '120')
   this.setTo('sample', sample)
   await browser.click('button.close')
   await browser.click('#ref-filter')
