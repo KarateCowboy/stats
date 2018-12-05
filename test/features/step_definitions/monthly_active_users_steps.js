@@ -79,11 +79,13 @@ Given(/^"([^"]*)" mau data is missing$/, async function (platform) {
 })
 Given(/^I enter an existing referral code in the text box$/, async function () {
   const sample = await CoreUsage.findOne() //mongo_client.collection('brave_core_usage').findOne({})
+  await browser.selectByValue('#daysSelector', '120')
   this.setTo('sample', sample)
   await browser.click('button.close')
   await browser.click('#ref-filter')
   await browser.keys(sample.ref)
   await browser.keys('\uE007')
+  await  browser.pause(500)
 })
 
 Then(/^the report should limit to the existing referrals statistics$/, async function () {

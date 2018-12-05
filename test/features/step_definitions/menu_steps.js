@@ -32,12 +32,20 @@ Given(/^I view the Monthly Active Users report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage_month_agg')
 })
 
+Given(/^I view the Daily Active Users report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#usage_agg')
+})
+
 Given(/^I view the Monthly Average Daily Active Users report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage_month_average_agg')
 })
 
 Given(/^I view the Monthly Average Daily Active Users by Platform report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage_month_average')
+})
+
+Given(/^I view the Monthly Average Daily New Users report$/, {timeout: 90000}, async function () {
+  await browser.url('https://localhost:8193/dashboard#usage_month_average_new_agg')
 })
 
 Given(/^I view the Monthly Average Daily New Users report$/, {timeout: 90000}, async function () {
