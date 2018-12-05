@@ -636,7 +636,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   }
 }
 
-const weeklyRetentionHandler = async function (rows, downloads) {
+const weeklyRetentionHandler = async function (rows) {
   const missingData = await $.ajax('/api/1/retention/missing')
   const retention_warnings = missingData || []
 
@@ -682,7 +682,7 @@ const weeklyRetentionHandler = async function (rows, downloads) {
   }
 
   // averages
-  buffer += '</tr><tr><th>Average</th><th>Downloads</th><td></td>'
+  buffer += '</tr><tr><th>Average</th><td></td>'
   for (i = 0; i < 12; i++) {
     avg = STATS.STATS.avg(rows.filter((row) => { return row.week_delta === i }).map((row) => { return row.retained_percentage })) || 0
     cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
@@ -698,7 +698,6 @@ const weeklyRetentionHandler = async function (rows, downloads) {
       buffer += '</tr><tr>'
       buffer += '<th nowrap>' + moment(row.woi).format('MMM DD YYYY') + '</th>'
       let key = row.woi.substring(0, 10)
-      buffer += `<td class="download-count">${ downloads[key]}</td>`
       buffer += '<td><span id=\'sparklineActual' + row.woi + '\'></span><br>'
       rowHeadings.push(row.woi)
       ctrl = row.woi
@@ -916,32 +915,10 @@ var retentionMonthRetriever = function () {
 
 const weeklyRetentionRetriever = async function () {
   const standard_params = standardParams()
-  const platformFilter = serializePlatformParams().split(',')
-  const start_of_week = moment().subtract(12, 'weeks').startOf('week').add(1, 'days')
-
-  const week_starts = []
-  while (start_of_week.isBefore(moment())) {
-    week_starts.push(start_of_week.clone())
-    start_of_week.add(7, 'days')
-  }
-  const weeks = {}
-  await Promise.all(week_starts.map(async (week) => {
-    let params = {
-      $limit: 0,
-      query: {
-        timestamp: {
-          $gte: week.format('YYYY-MM-DD'),
-          $lt: week.clone().add(7, 'days').format('YYYY-MM-DD')
-        },
-        platform: {$in: platformFilter}
-      }
-    }
-    weeks[week.format('YYYY-MM-DD')] = (await app.service('downloads').find(params)).total
-  }))
   return new Promise((resolve, reject) => {
     $.ajax('/api/1/retention_week?' + standard_params, {
       success: (rows) => {
-        weeklyRetentionHandler(rows, weeks)
+        weeklyRetentionHandler(rows )
         resolve()
       },
       error: () => {
@@ -1592,7 +1569,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = false
+    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1637,8 +1615,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1757,8 +1735,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
