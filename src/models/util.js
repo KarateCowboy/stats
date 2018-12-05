@@ -27,7 +27,7 @@ class Util {
   }
 
   static random_int (max) {
-    return Math.floor(Math.random() * Math.floor(max))
+    return Math.floor(Math.random() * Math.floor(max - 1)) + 1
   }
 
   static last_ninety_days () {
