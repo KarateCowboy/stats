@@ -24,8 +24,10 @@ module.exports = class WalletsService {
         }
       }
     } catch (e) {
-      console.log(`Error getting ledger wallets: ${e.message}`)
-      throw e
+      if(!e.message.includes('Unexpected token < in JSON at position 0')){
+        console.log(`Error getting ledger wallets: ${e.message}`)
+        throw e
+      }
     }
   }
 
