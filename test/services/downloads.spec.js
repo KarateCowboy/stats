@@ -1,7 +1,6 @@
 require('../test_helper')
 const fs = require('fs-extra')
 const DownloadsService = require('../../src/services/downloads.service')
-const Downloads = require('../../src/models/downloads.model').define(global.sequelize)
 const FS = require('fs-extra')
 const moment = require('moment')
 
@@ -41,9 +40,8 @@ describe('DownloadsService', async function () {
     })
     it('reads the list of logs from amazon S3', async function () {
       const list_of_downloads = await service.getLogList()
-      //validation
+      // validation
       expect(list_of_downloads.Contents).to.have.property('length', 1000)
-
     })
     it('sets the current_list property', async function () {
       await service.getLogList()
@@ -72,7 +70,6 @@ describe('DownloadsService', async function () {
       expect(attributes).to.have.property('requestResponseCode', 304)
       expect(attributes).to.have.property('domain', 'https://brave.com')
       expect(attributes).to.have.property('platform', 'winx64')
-
     })
     it('converts the file timestamp to a format friendly to moment', async function () {
       const line = `608d9d664ad099538106571744f55ac449c1eb8dc08c08c114039011d43395954 brave-download [01/Jan/2018:02:02:03 +0000] 157.52.69.34 - 922A0961750A507F REST.GET.OBJECT multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe "GET /multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe HTTP/1.1" 304 - 236855360 - 136855360 9 9 - "https://brave.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299" -`
@@ -83,10 +80,10 @@ describe('DownloadsService', async function () {
     it('works from file read to db write to db read', async () => {
       const line = `608d9d664ad099538106571744f55ac449c1eb8dc08c08c114039011d43395954 brave-download [01/Jan/2018:02:02:03 +0000] 157.52.69.34 - 922A0961750A507F REST.GET.OBJECT multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe "GET /multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe HTTP/1.1" 304 - 236855360 - 136855360 9 9 - "https://brave.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299" -`
       const attributes = service.parse(line)
-      let download = await Downloads.create(attributes)
-      download = await Downloads.findOne({_id: download._id})
+      let download = await db.Download.create(attributes)
+      download = await db.Download.findOne({_id: download._id})
       expect(download.sha).to.equal('608d9d664ad099538106571744f55ac449c1eb8dc08c08c114039011d43395954')
-      expect(download.type).to.equal( 'brave-download')
+      expect(download.type).to.equal('brave-download')
       expect(download.ipAddress).to.equal('157.52.69.34')
       expect(download.code).to.equal('922A0961750A507F')
       expect(download.requestPath).to.equal('/multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe')

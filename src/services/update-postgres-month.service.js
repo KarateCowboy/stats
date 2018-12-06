@@ -1,7 +1,8 @@
 const _ = require('underscore')
 const retriever = require('../retriever')
 const model = require('../model')
-const { ReferralCode } = require('../models/referral_code')
+const ReferralCode = require('../models/referral-code.model')()
+const ProgressBar = require('smooth-progress')
 
 module.exports = class UpdateMonth {
   async main (collection, start, end) {
@@ -36,9 +37,15 @@ module.exports = class UpdateMonth {
 
     console.log('Updating ' + results.length + ' rows')
     // Insert rows
+    const bar = ProgressBar({
+      tmpl: `Aggregating ${results.length} ... :bar :percent :eta`,
+      width: 100,
+      total: results.length
+    })
     for (let row of results) {
       try {
         await upsertMaker(global.pg_client, row)
+        bar.tick(1)
       } catch (e) {
         console.log(e.message)
         if (!e.message.includes('invalid byte sequence')) {
@@ -46,12 +53,18 @@ module.exports = class UpdateMonth {
         }
       }
     }
+    console.log('importing exceptions')
     await this.importExceptions()
     const usage_refs = (await knex('dw.fc_usage_month').distinct('ref', 'platform'))
     const grouped_refs = _.groupBy(usage_refs, 'platform')
+    console.log('updating usage refs')
     for (let platform in grouped_refs) {
-      await ReferralCode.add_missing(grouped_refs[platform].map(i => i.ref), platform)
+      console.log(`... for platform ${platform}`)
+      const codes = grouped_refs[platform].map(i => i.ref)
+      console.log(`length of codes is ${codes.length}`)
+      await ReferralCode.add_missing(codes, platform)
     }
+    console.log('finished main service routine')
   }
 
   async importExceptions () {

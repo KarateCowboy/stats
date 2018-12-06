@@ -21,7 +21,7 @@ Given(/^there are "([^"]*)" mixed ref usages for the prior month$/, {timeout: 10
   await build_monthly_usages(number_of_usages, true)
 })
 
-build_monthly_usages = async (number_of_usages, mixed_ref = false) => {
+build_monthly_usages = async (number_of_usages, mixed_ref = false, other_attributes = null) => {
   const per_day = Math.ceil(Number(number_of_usages) / 28)
   const working_date = moment().startOf('month').subtract(2, 'weeks').startOf('month')
   const usages = []
@@ -41,6 +41,9 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false) => {
           ts: () => { return working_date.clone().toDate().getTime()},
           ref: ref,
           channel: 'release'
+        }
+        if (other_attributes) {
+          Object.assign(build_args, other_attributes)
         }
         let usage = await factory.attrs('core_winx64_usage', build_args)
         usages.push(usage)
@@ -79,7 +82,7 @@ Given(/^"([^"]*)" mau data is missing$/, async function (platform) {
   await knex('dw.fc_usage_month').where('platform', platform).delete()
 })
 Given(/^I enter an existing referral code in the text box$/, async function () {
-  const sample = await CoreUsage.findOne() //mongo_client.collection('brave_core_usage').findOne({})
+  const sample = await CoreUsage.findOne()
   await browser.select_by_value_when_visible('#daysSelector', '120')
   this.setTo('sample', sample)
   await browser.click('button.close')
@@ -101,4 +104,29 @@ Then(/^the report should show only the average dau for that referral code$/, asy
   const count_for_day = await CoreUsage.count({year_month_day: this.sample.year_month_day, ref: this.sample.ref})
   const usage_data_table = await browser.getHTML('#usageDataTable')
   expect(usage_data_table).to.contain(count_for_day / 30)
+})
+
+Given(/^there are "([^"]*)" returning mixed ref usages for the prior month$/, {timeout: 10000}, async function (number_of_usages) {
+  const firstTimeUsages = await CoreUsage.find({})
+  let refs = firstTimeUsages.map(u => u.ref)
+  refs = _.uniq(refs)
+  const usagesPerRef = parseInt(number_of_usages / refs.length)
+  await Promise.all(refs.map(async (ref) => {
+    const usages = await factory.buildMany('core_winx64_usage', usagesPerRef, {
+      ref: ref,
+      first: false,
+      year_month_day: moment().endOf('month').format('YYYY-MM-DD')
+    })
+    await CoreUsage.insertMany(usages)
+  }))
+  await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_average_monthly_usage_mv')
+  await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_usage_platform_mv')
+  const month_service = new MonthUpdate()
+  await month_service.main('brave_core_usage', moment().subtract(5, 'months').format('YYYY-MM-DD'), moment().format('YYYY-MM-DD'))
+  const day_service = new UpdatePostgresDayService()
+  await day_service.main('brave_core_usage', 172)
+  await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_average_monthly_usage_mv')
+  await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_usage_platform_mv')
+
+  // await CoreUsage.save(_.flatten(allUsages))
 })

@@ -1,7 +1,7 @@
 const _ = require('underscore')
 const moment = require('moment')
 const ProgressBar = require('smooth-progress')
-const Download = require('../models/downloads.model').define(global.sequelize)
+
 module.exports = class DownloadsService {
   constructor (downloads_bucket, S3, ymd) {
     this.download_logs_bucket = downloads_bucket
@@ -54,7 +54,7 @@ module.exports = class DownloadsService {
         for (let line of data) {
           const attributes = this.parse(line)
           attributes.key = object.Key
-          await Download.create(attributes)
+          await db.Download.create(attributes)
         }
       } catch (e) {
         if (e.message.includes('downloads_key_code_unique') === false) {
@@ -163,10 +163,10 @@ module.exports = class DownloadsService {
   }
 
   async create (attributes) {
-    return (await Download.create(attributes))
+    return (await db.Download.create(attributes))
   }
 
   async find (params = {}) {
-    return (await Download.findAll(params))
+    return (await db.Download.findAll(params))
   }
 }

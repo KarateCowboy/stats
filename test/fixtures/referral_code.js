@@ -8,7 +8,7 @@ const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const moment = require('moment')
 const ObjectID = require('mongodb').ObjectID
-const {ReferralCode} = require('../../src/models/referral_code')
+const ReferralCode = require('../../src/models/referral-code.model')()
 const _ = require('underscore')
 
 const define = () => {

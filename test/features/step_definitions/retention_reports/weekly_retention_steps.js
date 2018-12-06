@@ -8,7 +8,7 @@ const {Given, When, And, Then} = require('cucumber')
 const {expect} = require('chai')
 const _ = require('underscore')
 const moment = require('moment')
-const {ReferralCode} = require('../../../../src/models/referral_code')
+const ReferralCode = require('../../../../src/models/referral-code.model')()
 
 Given(/^I am logged in to the system$/, {timeout: 7000}, async function () {
   await browser.url('http://localhost:8193')

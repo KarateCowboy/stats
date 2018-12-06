@@ -145,6 +145,8 @@ describe('RetentionWeek', function () {
   describe('#refresh', function () {
     it('refreshes the materializied view', async function () {
       // setup
+      this.timeout(3000)
+      await knex.raw('refresh materialized view dw.fc_retention_week_mv')
       const rows = await knex('dw.fc_retention_week_mv').count('*')
       expect(rows[0].count).to.equal('0')
       const f = await factory.build('fc_retention_woi')
@@ -212,6 +214,8 @@ describe('RetentionMonth', function () {
   describe('#refresh', function () {
     it('refreshes the materialized view', async function () {
       // setup
+      this.timeout(3000)
+      await knex.raw('refresh materialized view dw.fc_retention_month_mv')
       const rows = await knex('dw.fc_retention_month_mv').count('*')
       expect(rows[0].count).to.equal('0')
       const f = await factory.build('fc_retention_woi')

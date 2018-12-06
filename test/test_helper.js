@@ -10,6 +10,7 @@ const Knex = require('knex')
 const factory = require('factory-girl').factory
 const mongoose = require('mongoose')
 const Sequelize = require('sequelize')
+const DbUtil = require('../src/models')
 require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
@@ -23,9 +24,11 @@ require('./fixtures/core-usage-day').define()
 require('./fixtures/muon-usage-day').define()
 require('./fixtures/fc_usage_month').define()
 require('./fixtures/fc_usage_month_exception').define()
-require('./fixtures/fc_usage').define()
-require('./fixtures/download').define()
 require('./fixtures/wallets').define()
+const fixtures = {
+  fc_usage: require('./fixtures/fc_usage'),
+  download: require('./fixtures/download')
+}
 
 class TestHelper {
   constructor () {
@@ -34,7 +37,7 @@ class TestHelper {
     }
     this.testDatabaseUrl = process.env.TEST_DATABASE_URL
     global.SQL_ORM_URL = process.env.TEST_DATABASE_URL
-    global.sequelize = new Sequelize(SQL_ORM_URL, { logging: false })
+    global.sequelize = new Sequelize(SQL_ORM_URL, {logging: false})
     if (!process.env.TEST_MLAB_URI) {
       throw Error('Please set TEST_MLAB_URI')
     }
@@ -87,10 +90,11 @@ class TestHelper {
       this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
       global.knex = this.knex
     }
-    if(!global.sequelize){
-      global.sequelize = new Sequelize(this.testDatabaseUrl)
+    if (global.db === undefined) {
+      global.db = new DbUtil(this.testDatabaseUrl)
+      global.db.loadModels()
+      Object.keys(fixtures).forEach(f => fixtures[f].define())
     }
-
     global.factory = factory
   }
 
@@ -140,8 +144,8 @@ module.exports = (function () {
         await global.test_helper.setup()
       })
       beforeEach(async function () {
+        this.timeout(10000)
         await global.test_helper.truncate()
-        await global.test_helper.refresh_views()
       })
       after(async function () {
         await global.test_helper.tear_down()
