@@ -23,10 +23,12 @@ module.exports = class UpdatePostgresDay {
     })
 
     // Insert / Update the exceptions
+
     // funcs.push(model.exceptionsUpserter(resources.pg))
     for (let row of results) {
       await pg_client.query('INSERT INTO dw.fc_usage (ymd, platform, version, first_time, channel, ref, total) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (ymd, platform, version, first_time, channel, ref) DO UPDATE SET total = $7', [row._id.ymd, row._id.platform, row._id.version, row._id.first_time, row._id.channel, row._id.ref, row.count])
     }
+    await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_usage_platform_mv ')
 
   }
 

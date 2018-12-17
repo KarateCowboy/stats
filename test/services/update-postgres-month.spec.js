@@ -3,7 +3,7 @@ const moment = require('moment')
 require('../test_helper')
 const MonthUpdate = require('../../src/services/update-postgres-month.service')
 const { Util } = require('../../src/models/util')
-const { ReferralCode } = require('../../src/models/referral_code')
+const  ReferralCode  = require('../../src/models/referral-code.model')()
 const CoreUsage = require('../../src/models/core-usage.model')()
 
 describe('update-postres-month', async function () {

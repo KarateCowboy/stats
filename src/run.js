@@ -7,14 +7,17 @@ const mgc = require('./mongoc')
 const Knex = require('knex')
 const Sequelize = require('sequelize')
 const server = require('./index')
+const DbUtil = require('./models')
 
 const run = async () => {
   const pgh = await pgc.setupConnection()
   global.pg_client = pgh
   const mgh = await mgc.setupConnection()
   global.mongo_client = mgh
-  global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
   global.sequelize = new Sequelize(process.env.DATABASE_URL)
+  global.db = new DbUtil(process.env.DATABASE_URL)
+  await db.loadModels()
+  global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
   await server.setup({pg: pgh, mg: mgh, knex: knex})
   await server.kickoff()
 }

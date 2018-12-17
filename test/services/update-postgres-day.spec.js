@@ -7,8 +7,9 @@ describe('update-postgres-day', async function () {
   describe('main', async function () {
     it('works on the brave core usages', async function () {
       // setup
-      await test_helper.truncate()
-      await test_helper.refresh_views()
+      this.timeout(30000)
+      // await test_helper.truncate()
+      // await test_helper.refresh_views()
       const service = new UpdatePostgresDay()
       const core_usage = await factory.build('core_winx64_usage', {year_month_day: moment().subtract(5, 'days').format('YYYY-MM-DD')})
       await core_usage.save()

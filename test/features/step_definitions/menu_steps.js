@@ -15,8 +15,8 @@ Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
   }
 })
 Then(/^the ref select should be visible and have the 'none' ref entered$/, async function () {
-  const result = await browser.get_html_when_visible(`#ref-filter .selected-tag`)
-  expect(result).to.contain('none')
+  const controlsHTML = await browser.get_html_when_visible('#controls')
+  expect(controlsHTML).to.contain('none')
 })
 Then(/^the this month button should "([^"]*)" be visible$/, async function (visible) {
   const is_visible = await browser.isVisible('#btn-show-today')
@@ -49,11 +49,11 @@ Given(/^I view the Monthly Average Daily Active Users by Platform report$/, asyn
 })
 
 Given(/^I view the Monthly Average Daily New Users report$/, {timeout: 90000}, async function () {
-  await browser.url('https://localhost:8193/dashboard#usage_month_average_new_agg')
+  await browser.url('http://localhost:8193/dashboard#usage_month_average_new_agg')
 })
 
-Given(/^I view the Monthly Average Daily New Users report$/, {timeout: 90000}, async function () {
-  await browser.url('https://localhost:8193/dashboard#usage_month_average_new_agg')
+Given(/^I view the Daily Active Returning Users by Platform report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#usage_returning')
 })
 
 Then(/^the ref select should not be visible$/, async function () {

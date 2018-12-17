@@ -20,7 +20,7 @@ Given(/I view the Downloads page/, async function () {
 
 Then(/I should see a column and count for each type and week/, async function () {
   await browser.pause(1000)
-  const page_html = await browser.getHTML('body')
-  const androidCount = await knex('dw.downloads').where('platform', 'androidbrowser').count()
-  expect(page_html).to.include(androidCount[0].count)
+  const page_html = await browser.getHTML('#usageDataTable')
+  const android_occurrences = page_html.match(/androidbrowser/g).length
+  expect(android_occurrences).to.equal(14)
 })

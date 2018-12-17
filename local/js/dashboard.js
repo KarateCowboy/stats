@@ -944,15 +944,6 @@ var DAUPlatformRetriever = function () {
 
 var downloadsRetriever = async function () {
   console.log('executing the downloads retriever')
-  // const ymd = moment().subtract(pageState.days, 'days').format('YYYY-MM-DD')
-  // const result = await app.service('daily-downloads').find({
-  //   query: {
-  //     ymd: { $gte: ymd}
-  //   },
-  //   $sort: { ymd: 1 },
-  //   $limit: 500
-  // })
-  // downloadsHandler(result.data)
   $.ajax('/api/1/daily_downloads?' + standardParams(), {
     success: downloadsHandler
   })
@@ -1627,8 +1618,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })

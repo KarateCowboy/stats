@@ -4,6 +4,7 @@ const Knex = require('knex')
 const mongoose = require('mongoose')
 const _ = require('underscore')
 const commander = require('commander')
+const Sequelize = require('sequelize')
 const moment = require('moment')
 let DownloadsService = require('../src/services/downloads.service')
 commander.option('-d --day [string]', 'Days to go back', moment().subtract(1, 'days').format('YYYY-MM-DD')).parse(process.argv)
@@ -21,6 +22,7 @@ const main = async (day) => {
 }
 
 const connect = async function () {
+  global.sequelize = new Sequelize(process.env.DATABASE_URL, { logging: false })
   AWS.config.update({
     accessKeyId: process.env.AWS_KEY,
     secretAccessKey: process.env.AWS_SECRET,

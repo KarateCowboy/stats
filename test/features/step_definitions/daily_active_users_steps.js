@@ -35,7 +35,6 @@ Given(/^there are "([^"]*)" usages for the prior week$/, {timeout: 100000}, asyn
 Given(/^the brave core daily numbers have been crunched$/, async function () {
   const dau_service = new UpdatePostgresDay()
   await dau_service.main('brave_core_usage')
-  await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_usage_platform_mv ')
 })
 Then(/^I should see "([^"]*)" usages spread over each day for the prior month$/, async function (number_of_usages) {
   const per_day = Math.ceil(Number(number_of_usages) / 28)
@@ -43,3 +42,4 @@ Then(/^I should see "([^"]*)" usages spread over each day for the prior month$/,
   const usage_data_table = await browser.getHTML('#usageDataTable')
   expect(usage_data_table).to.contain(per_day.toLocaleString('en'))
 })
+
