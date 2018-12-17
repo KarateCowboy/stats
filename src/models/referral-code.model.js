@@ -24,7 +24,9 @@ module.exports = function () {
     const new_refs = _.difference(codes, already_existing)
     await Promise.all(new_refs.map(async (uref) => {
       let new_ref = new mongooseClient.models.ReferralCode({code_text: uref, platform: platform})
-      await new_ref.save()
+      if(!new_ref.validateSync()){
+        await new_ref.save()
+      }
     }))
   }
   if (mongooseClient.models.ReferralCode ) {

@@ -53,5 +53,11 @@ describe('ReferralCode', async function () {
       expect(codes).to.have.property('length',2)
       expect(_.find(codes, {code_text: 'ABC123'}).updatedAt).to.equal(undefined)
     })
+    it('does not save codes which are invalid', async function(){
+      const new_codes = ['ABC123','123']
+      await ReferralCode.add_missing(new_codes, 'ios')
+      const codes = await ReferralCode.find()
+      expect(codes).to.have.property('length',1)
+    })
   })
 })
