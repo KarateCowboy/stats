@@ -44,6 +44,7 @@ describe('Wallets service', async function () {
       common.prequest.restore()
     })
     it('puts a bunch of data from the ledge API in the table', async function () {
+      this.timeout(10000)
       const apiResults = require('../fixtures/ledger_wallets')
       sinon.stub(common, 'prequest').returns(JSON.stringify(apiResults))
       service = new WalletService()
@@ -60,46 +61,63 @@ describe('Wallets service', async function () {
       expect(sample).to.have.property('funded')
       expect(sample).to.have.property('created')
     })
+    it('handles the JSON parse error', async function(){
+      const apiResults = require('../fixtures/ledger_wallets')
+      sinon.stub(common, 'prequest').returns(JSON.stringify(apiResults))
+      service = new WalletService()
+      sinon.stub(service,'getFromLedger').throws(new Error('Unexpected token < in JSON at position 0'))
+      await service.updateFromLedger()
+      common.prequest.restore()
+    })
+    afterEach(async function(){
+      if(common.prequest.restore){
+        common.prequest.restore()
+      }
+    })
   })
-  describe('getFromLedger', async function(){
-    it('throws an error when it receives a 406 result', async function(){
-      const apiResults = { statusCode: 406,
+  describe('getFromLedger', async function () {
+    it('throws an error when it receives a 406 result', async function () {
+      const apiResults = {
+        statusCode: 406,
         error: 'Not Acceptable',
-        message: 'Not Acceptable' }
+        message: 'Not Acceptable'
+      }
       sinon.stub(common, 'prequest').returns(JSON.stringify(apiResults))
       service = new WalletService()
       let thrown = false
-      try{
+      try {
         await service.getFromLedger()
-      }catch(e){
+      } catch (e) {
         thrown = true
         expect(e.message).to.equal('Error: could not access ledger server. 406 response received')
       }
       expect(thrown).to.equal(true)
       common.prequest.restore()
     })
-    it('throws other response errors, rather than swallowing them', async function(){
-      const apiResults = { statusCode: 101,
+    it('throws other response errors, rather than swallowing them', async function () {
+      const apiResults = {
+        statusCode: 101,
         error: 'Not Acceptable',
-        message: 'Not Acceptable' }
+        message: 'Not Acceptable'
+      }
       sinon.stub(common, 'prequest').returns(JSON.stringify(apiResults))
       service = new WalletService()
       let thrown = false
-      try{
+      try {
         await service.getFromLedger()
-      }catch(e){
+      } catch (e) {
         thrown = true
         expect(e.message).to.not.equal('Error: could not access ledger server. 406 response received')
       }
       expect(thrown).to.equal(true)
       common.prequest.restore()
     })
-    it('uses the fixie proxy when LOCAL is false', async function(){
+    it('uses the fixie proxy when LOCAL is false', async function () {
       delete process.env.LOCAL
       sinon.stub(common, 'prequest').callsFake((args) => {
-        if(args.agent){
+        if (args.agent) {
           return '["proxy"]'
-        }else{
+        } else {
           return '["noproxy"]'
         }
       })
@@ -110,11 +128,11 @@ describe('Wallets service', async function () {
       expect(response).to.include('proxy')
     })
 
-    it('does not use the fixie proxy when LOCAL is true', async function(){
+    it('does not use the fixie proxy when LOCAL is true', async function () {
       sinon.stub(common, 'prequest').callsFake((args) => {
-        if(args.agent){
+        if (args.agent) {
           return '["proxy"]'
-        }else{
+        } else {
           return '["noproxy"]'
         }
       })
@@ -125,8 +143,8 @@ describe('Wallets service', async function () {
       expect(response).to.include('noproxy')
       common.prequest.restore()
     })
-    it('converts walletProviderBalance from probi', async function(){
+    it('converts walletProviderBalance from probi', async function () {
 
     })
- })
+  })
 })

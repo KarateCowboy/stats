@@ -10,6 +10,7 @@ const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx',
 describe('retention service', async function () {
   describe('#missing', async function () {
     beforeEach(async function () {
+      this.timeout(10000)
       const today = moment()
       for (let platform of platforms) {
         const rets = await factory.createMany('fc_retention_woi', _.range(1, 91).map((i) => {

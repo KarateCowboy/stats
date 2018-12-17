@@ -1108,7 +1108,7 @@ var overviewRetriever = async function () {
 
   var btc = await $.ajax('/api/1/ledger_overview')
   var bat = await $.ajax('/api/1/bat/ledger_overview')
-  // window.OVERVIEW.ledger(btc, bat, builders)
+  window.OVERVIEW.ledger(btc, bat, builders)
 }
 
 var eyeshadeRetriever = function () {

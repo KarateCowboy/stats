@@ -177,6 +177,7 @@ describe('RetentionWeek', function () {
       expect(Number(results[0].starting)).to.equal(3)
     })
     it('does not return extraneous, current week data', async function () {
+      this.timeout(5000)
       for (let r = 13; r >= 0; r--) {
         const woi = moment().subtract(r, 'weeks').startOf('week').add(1, 'days')
         for (let c = 0; c < r + 4; c++) {
