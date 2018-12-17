@@ -37,6 +37,7 @@ const connect = async function () {
     })
     await mongoose.connect(process.env.MLAB_URI)
     global.db = new DbUtil(process.env.DATABASE_URL)
+    await global.db.loadModels()
     console.log('configured AWS')
   } catch (e) {
     console.log('Problem connecting to AWS or DB')
