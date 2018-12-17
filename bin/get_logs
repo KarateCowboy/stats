@@ -7,7 +7,6 @@
 const AWS = require('aws-sdk')
 AWS.config.setPromisesDependency(null)
 const mongoose = require('mongoose')
-const _ = require('underscore')
 const commander = require('commander')
 const Sequelize = require('sequelize')
 const DbUtil = require('../src/models')
@@ -28,16 +27,22 @@ const main = async (day) => {
 }
 
 const connect = async function () {
-  global.sequelize = new Sequelize(process.env.DATABASE_URL, {logging: false})
-  AWS.config.update({
-    accessKeyId: process.env.AWS_KEY,
-    secretAccessKey: process.env.AWS_SECRET,
-    region: 'us-east-1',
-    sslEnabled: true
-  })
-  await mongoose.connect(process.env.MLAB_URI)
-  global.db = new DbUtil(process.env.DATABASE_URL)
-  console.log('configured AWS')
+  try {
+    global.sequelize = new Sequelize(process.env.DATABASE_URL, {logging: false})
+    AWS.config.update({
+      accessKeyId: process.env.AWS_KEY,
+      secretAccessKey: process.env.AWS_SECRET,
+      region: 'us-east-1',
+      sslEnabled: true
+    })
+    await mongoose.connect(process.env.MLAB_URI)
+    global.db = new DbUtil(process.env.DATABASE_URL)
+    console.log('configured AWS')
+  } catch (e) {
+    console.log('Problem connecting to AWS or DB')
+    console.log(e.message)
+    process.exit(1)
+  }
 }
 
 main(commander.day)
