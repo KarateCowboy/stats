@@ -11,14 +11,20 @@ module.exports = class UpdatePostgresDay {
       result._id.woi = result._id.woi || '2016-01-04'
       result._id.ref = result._id.ref || 'none'
     })
+
     // filter out wrong version formats
     results = results.filter(function (result) {
       return result._id.version.match(new RegExp('^\\d+\\.\\d+\\.\\d+$')) && ['dev', 'stable', 'beta','release'].includes(result._id.channel)
     })
 
+    // filter out back ref codes
+    results = results.filter((row) => {
+      return row._id.ref.match(/[A-Za-z0-9_\-]+/)
+    })
+
     // Insert / Update the exceptions
     // funcs.push(model.exceptionsUpserter(resources.pg))
-    for(let row of results){
+    for (let row of results) {
       await pg_client.query('INSERT INTO dw.fc_usage (ymd, platform, version, first_time, channel, ref, total) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (ymd, platform, version, first_time, channel, ref) DO UPDATE SET total = $7', [row._id.ymd, row._id.platform, row._id.version, row._id.first_time, row._id.channel, row._id.ref, row.count])
     }
 
