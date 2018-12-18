@@ -14,7 +14,7 @@ class CustomWorld {
     this.sessionSecret = 'SUPER_SECRET_SESSION_SALT_THAT_IS_LONG'
     process.env.SESSION_SECRET = this.sessionSecret
     process.env.ADMIN_PASSWORD = this.adminPassword
-    const options = {desiredCapabilities: {browserName: 'chrome'}}
+    const options = {desiredCapabilities: {browserName: 'chrome', chromeOptions: {args: ['--headless']}}}
     global.browser = webdriver.remote(options)
   }
 

@@ -237,7 +237,7 @@ WHERE
   first_time AND
   FC.platform = ANY ($2) AND
   FC.channel = ANY ($3) AND
-  FC.ref = COALESCE($4, ref)
+  FC.ref = ANY ($4)
 GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform
 `
