@@ -119,20 +119,29 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
     return result
   }
 
-  UsageSummary.dailyActiveUsers = async function (args, by_platform = false) {
+  UsageSummary.dailyActiveUsers = async function (args, group = []) {
     const query = knex('dw.fc_usage').select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
       .where('ymd', '>=', moment().subtract(args.daysAgo, 'days').format('YYYY-MM-DD'))
       .whereIn('channel', args.channels)
       .whereIn('platform', args.platforms)
       .groupBy('ymd')
-      .orderBy('ymd', 'desc')
+      .orderBy('ymd', 'desc').as('fc')
     if (args.ref !== undefined && _.compact(args.ref).length > 0) {
       query.whereIn('ref', args.ref)
     }
-    if(by_platform){
+    if (group.includes('platform')) {
       query.select('platform').groupBy('platform')
     }
-    return await pg_client.query(query.toString())
+    if (group.includes('version')) {
+      const day_totals = await pg_client.query(query.toString())
+
+      query.select('version').groupBy('version')
+      const results =  await pg_client.query(query.toString())
+      results.rows.forEach(r => { r.daily_percentage = ( r.count / _.find(day_totals.rows, { 'ymd': r.ymd }).count ) * 100 })
+      return results
+    }else{
+      return await pg_client.query(query.toString())
+    }
   }
 
   return UsageSummary

@@ -5,7 +5,7 @@
  */
 require('../test_helper')
 const moment = require('moment')
-const _ = require('underscore')
+const _ = require('lodash')
 describe('UsageSummary model', async function () {
   describe('attributes', async function () {
     let usageSummary
@@ -112,8 +112,8 @@ describe('UsageSummary model', async function () {
   })
   describe('dailyActiveUsers', async function () {
     let ymds, platforms, channels, ref
-    before(async function(){
-      ymds = _.range(0, 40).map((i) => { return {ymd: (moment().subtract(i, 'days').format('YYYY-MM-DD'))}})
+    before(async function () {
+      ymds = _.range(0, 20).map((i) => { return {ymd: (moment().subtract(i, 'days').format('YYYY-MM-DD'))}})
       platforms = ['winx64']
       channels = ['dev']
       ref = ['none']
@@ -131,8 +131,8 @@ GROUP BY ymd
 ORDER BY ymd DESC
 `
       await factory.createMany('fc_usage', ymds)
-      const queryResults = await pg_client.query(DAU, ['40 days', platforms, channels, ref])
-      const ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels, ref})
+      const queryResults = await pg_client.query(DAU, ['20 days', platforms, channels, ref])
+      const ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 20, platforms: platforms, channels, ref})
       expect(queryResults.rows).to.have.property('length', ymds.length)
       expect(ormResults.rows).to.have.property('length', ymds.length)
       const querySample = queryResults.rows[0]
@@ -143,20 +143,46 @@ ORDER BY ymd DESC
     })
     it('appends the ref argument optionally', async function () {
       await factory.createMany('fc_usage', ymds)
-      let ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels})
+      let ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 20, platforms: platforms, channels})
       expect(ormResults.rows).to.have.property('length', ymds.length)
-       ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels, ref: []})
+      ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 20, platforms: platforms, channels, ref: []})
       expect(ormResults.rows).to.have.property('length', ymds.length)
     })
-    context('group by', async function(){
-      specify('platform', async function(){
+    context('group by', async function () {
+      specify('platform', async function () {
         await factory.createMany('fc_usage', ymds)
-        await factory.createMany('fc_usage', ymds.map(y => { y.platform = 'androidbrowser'; return y} ))
+        await factory.createMany('fc_usage', ymds.map(y => {
+          y.platform = 'androidbrowser'
+          return y
+        }))
 
         platforms.push('androidbrowser')
-        let ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels}, true)
-        expect(ormResults.rows).to.have.property('length', 80)
-        expect(_.uniq(ormResults.rows.map(r => r.platform))).to.have.members(['winx64','androidbrowser'])
+        let ormResults = await db.UsageSummary.dailyActiveUsers({
+          daysAgo: 20,
+          platforms: platforms,
+          channels
+        }, ['platform'])
+        expect(ormResults.rows).to.have.property('length', 40)
+        expect(_.uniq(ormResults.rows.map(r => r.platform))).to.have.members(['winx64', 'androidbrowser'])
+      })
+      specify('version', async function () {
+        const second_version = '9.9.9'
+        const ymd_dupe = _.cloneDeep(ymds).map(y => { y.version = second_version ; return y; })
+        ymds = ymds.concat(ymd_dupe)
+        const usage_summaries = await factory.createMany('fc_usage', ymds)
+        let ormResults = await db.UsageSummary.dailyActiveUsers({
+          daysAgo: 20,
+          platforms: platforms,
+          channels
+        }, ['version'])
+        const first_version = _.uniq(usage_summaries.map(u => u.version)).filter(u => u !== second_version).pop()
+        expect(ormResults.rows).to.have.property('length', 40)
+        expect(_.uniq(ormResults.rows.map(r => r.version))).to.have.members([first_version, second_version])
+        const ormSample = _.first(ormResults.rows)
+        const fc_total = (await knex('dw.fc_usage').sum('total')).shift()
+        const sample_total = await knex('dw.fc_usage').sum('total').where('ymd', ormSample.ymd)
+        const expected_daily_percentage = (fc_total.sum / sample_total[0].sum) * 100
+        expect(ormResults.rows[0]).to.have.property('daily_percentage',50)
       })
     })
   })

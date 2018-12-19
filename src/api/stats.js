@@ -237,22 +237,6 @@ SELECT 'ios' AS platform, FC.country_code, DM.name, '000' AS dma, FC.downloads
 FROM appannie.fc_inception_by_country FC JOIN appannie.dm_countries DM ON FC.country_code = DM.code
 `
 
-const DAU_VERSION = `
-SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  FC.version,
-  SUM(FC.total) AS count,
-  ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
-FROM dw.fc_usage FC
-WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND
-  FC.ref = ANY($4)
-GROUP BY FC.ymd, FC.version
-ORDER BY FC.ymd DESC, FC.version
-`
-
 // Data endpoints
 exports.setup = (server, client, mongo) => {
   assert(mongo, 'mongo configured')
@@ -271,7 +255,12 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/versions',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(DAU_VERSION, [days, platforms, channels, ref])
+      const results = await db.UsageSummary.dailyActiveUsers({
+        daysAgo: parseInt(days.replace(' days', '')),
+        platforms: platforms,
+        channels: channels,
+        ref: ref
+      }, ['version'])
       results.rows.forEach((row) => common.formatPGRow(row))
       // condense small version counts to an 'other' category
       results.rows = dataset.condense(results.rows, 'ymd', 'version')
@@ -485,7 +474,7 @@ exports.setup = (server, client, mongo) => {
         platforms: platforms,
         channels: channels,
         ref: ref
-      }, true)
+      }, ['platform'])
 
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
