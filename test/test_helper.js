@@ -32,6 +32,7 @@ const fixtures = {
 
 class TestHelper {
   constructor () {
+    process.env.TEST = 'true'
     if (!process.env.TEST_DATABASE_URL) {
       throw Error('Please set TEST_DATABASE_URL')
     }

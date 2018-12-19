@@ -5,6 +5,7 @@
  */
 require('../test_helper')
 const moment = require('moment')
+const _ = require('underscore')
 describe('UsageSummary model', async function () {
   describe('attributes', async function () {
     let usageSummary
@@ -107,6 +108,45 @@ describe('UsageSummary model', async function () {
         expect(result.rows.length).to.be.greaterThan(10)
         expect(total).to.equal(parseInt(linuxCount[0].sum))
       })
+    })
+  })
+  describe('dailyActiveUsers', async function () {
+    let ymds, platforms, channels, ref
+    before(async function(){
+      ymds = _.range(0, 40).map((i) => { return {ymd: (moment().subtract(i, 'days').format('YYYY-MM-DD'))}})
+      platforms = ['winx64']
+      channels = ['dev']
+      ref = ['none']
+    })
+    it('returns the same results as the original DAU query', async function () {
+      const DAU = `
+SELECT TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd, SUM(total) AS count
+FROM dw.fc_usage
+WHERE
+  ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+  platform = ANY ($2) AND
+  channel = ANY ($3) AND
+  ref = ANY($4)
+GROUP BY ymd
+ORDER BY ymd DESC
+`
+      await factory.createMany('fc_usage', ymds)
+      const queryResults = await pg_client.query(DAU, ['40 days', platforms, channels, ref])
+      const ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels, ref})
+      expect(queryResults.rows).to.have.property('length', ymds.length)
+      expect(ormResults.rows).to.have.property('length', ymds.length)
+      const querySample = queryResults.rows[0]
+      const ormSample = ormResults.rows[0]
+      expect(ormSample.ymd).to.be.a('string')
+      expect(querySample.ymd).to.equal(moment(ormSample.ymd).format('YYYY-MM-DD'))
+      expect(querySample.count).to.equal(ormSample.count)
+    })
+    it('appends the ref argument optionally', async function () {
+      await factory.createMany('fc_usage', ymds)
+      let ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels})
+      expect(ormResults.rows).to.have.property('length', ymds.length)
+       ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels, ref: []})
+      expect(ormResults.rows).to.have.property('length', ymds.length)
     })
   })
 })

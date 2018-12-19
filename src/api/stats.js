@@ -88,18 +88,6 @@ GROUP BY ymd, platform
 ORDER BY ymd DESC, platform
 `
 
-const DAU = `
-SELECT TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd, SUM(total) AS count
-FROM dw.fc_usage
-WHERE
-  ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
-  platform = ANY ($2) AND
-  channel = ANY ($3) AND
-  ref = ANY($4)
-GROUP BY ymd
-ORDER BY ymd DESC
-`
-
 const MAU_PLATFORM = `
 SELECT
   LEFT(ymd::text, 7) || '-01' AS ymd,
@@ -298,7 +286,12 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/dau',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(DAU, [days, platforms, channels, ref])
+      let results = await db.UsageSummary.dailyActiveUsers({
+        daysAgo: parseInt(days.replace(' days', '')),
+        platforms: platforms,
+        channels: channels,
+        ref: ref
+      })
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       reply(results.rows)
@@ -558,7 +551,7 @@ exports.setup = (server, client, mongo) => {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
       let day = days.split(' ')
       let cutoff = moment().subtract(Number(day[0]), 'days').format('YYYY-MM-DD')
-      var results = await knex('dw.daily_downloads').where('ymd', '>', cutoff ).whereIn('platform', platforms).orderBy('ymd','desc').select(['count','platform','ymd'])
+      var results = await knex('dw.daily_downloads').where('ymd', '>', cutoff).whereIn('platform', platforms).orderBy('ymd', 'desc').select(['count', 'platform', 'ymd'])
       reply(results)
     }
   })

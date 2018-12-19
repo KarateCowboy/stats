@@ -4,7 +4,7 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 const moment = require('moment')
-
+const _ = require('underscore')
 module.exports = (sequelize, Sequelize) => {
   const UsageSummary = sequelize.define('UsageSummary',
     {
@@ -117,6 +117,19 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
 `
     const result = await pg_client.query(query, [ymd_range, platforms, channels, ref])
     return result
+  }
+
+  UsageSummary.dailyActiveUsers = async function (args) {
+    const query = knex('dw.fc_usage').select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
+      .where('ymd', '>=', moment().subtract(args.daysAgo, 'days').format('YYYY-MM-DD'))
+      .whereIn('channel', args.channels)
+      .whereIn('platform', args.platforms)
+      .groupBy('ymd')
+      .orderBy('ymd', 'desc')
+    if (args.ref !== undefined && _.compact(args.ref).length > 0) {
+      query.whereIn('ref', args.ref)
+    }
+    return await pg_client.query(query.toString())
   }
 
   return UsageSummary
