@@ -236,8 +236,7 @@ WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
   first_time AND
   FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND
-  FC.ref = ANY ($4)
+  FC.channel = ANY ($3)
 GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform
 `
@@ -542,7 +541,7 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/dau_platform_first',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(DAU_PLATFORM_FIRST, [days, platforms, channels, ref])
+      var results = await client.query(DAU_PLATFORM_FIRST, [days, platforms, channels])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
