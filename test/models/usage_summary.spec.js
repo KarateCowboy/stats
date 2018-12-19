@@ -148,5 +148,16 @@ ORDER BY ymd DESC
        ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels, ref: []})
       expect(ormResults.rows).to.have.property('length', ymds.length)
     })
+    context('group by', async function(){
+      specify('platform', async function(){
+        await factory.createMany('fc_usage', ymds)
+        await factory.createMany('fc_usage', ymds.map(y => { y.platform = 'androidbrowser'; return y} ))
+
+        platforms.push('androidbrowser')
+        let ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 40, platforms: platforms, channels}, true)
+        expect(ormResults.rows).to.have.property('length', 80)
+        expect(_.uniq(ormResults.rows.map(r => r.platform))).to.have.members(['winx64','androidbrowser'])
+      })
+    })
   })
 })

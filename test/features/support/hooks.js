@@ -48,6 +48,7 @@ Before(async function () {
   await browser.init()
 })
 BeforeAll(async function () {
+  process.env.TEST = 'true'
   process.env.SESSION_SECRET = this.sessionSecret
   process.env.ADMIN_PASSWORD = this.adminPassword
   await test_helper.setup()

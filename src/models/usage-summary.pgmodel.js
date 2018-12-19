@@ -119,7 +119,7 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
     return result
   }
 
-  UsageSummary.dailyActiveUsers = async function (args) {
+  UsageSummary.dailyActiveUsers = async function (args, by_platform = false) {
     const query = knex('dw.fc_usage').select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
       .where('ymd', '>=', moment().subtract(args.daysAgo, 'days').format('YYYY-MM-DD'))
       .whereIn('channel', args.channels)
@@ -128,6 +128,9 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
       .orderBy('ymd', 'desc')
     if (args.ref !== undefined && _.compact(args.ref).length > 0) {
       query.whereIn('ref', args.ref)
+    }
+    if(by_platform){
+      query.select('platform').groupBy('platform')
     }
     return await pg_client.query(query.toString())
   }

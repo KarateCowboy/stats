@@ -480,7 +480,13 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/dau_platform',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(DAU_PLATFORM, [days, platforms, channels, ref])
+      let results = await db.UsageSummary.dailyActiveUsers({
+        daysAgo: parseInt(days.replace(' days', '')),
+        platforms: platforms,
+        channels: channels,
+        ref: ref
+      }, true)
+
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))

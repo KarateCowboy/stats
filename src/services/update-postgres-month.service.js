@@ -37,7 +37,9 @@ module.exports = class UpdateMonth {
       })
     }
 
-    console.log('Updating ' + results.length + ' rows')
+    if( !process.env.TEST ){
+      console.log('Updating ' + results.length + ' rows')
+    }
     // Insert rows
     const bar = ProgressBar({
       tmpl: `Aggregating ${results.length} ... :bar :percent :eta`,
@@ -47,7 +49,9 @@ module.exports = class UpdateMonth {
     for (let row of results) {
       try {
         await upsertMaker(global.pg_client, row)
-        bar.tick(1)
+        if( !process.env.TEST ){
+          bar.tick(1)
+        }
       } catch (e) {
         console.log(e.message)
         if (!e.message.includes('invalid byte sequence')) {
