@@ -94,8 +94,7 @@ FROM dw.fc_usage FC
 WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
   FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND
-  FC.ref = ANY($4)
+  FC.channel = ANY ($3) 
 GROUP BY FC.ymd, FC.platform
   ORDER BY FC.ymd DESC, FC.platform
 ) USAGE JOIN (
@@ -108,14 +107,13 @@ WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
   FC.platform = ANY ($2) AND
   FC.channel = ANY ($3) AND
-  FC.ref = ANY($4) AND
   FC.first_time
 GROUP BY FC.ymd, FC.platform
   ORDER BY FC.ymd DESC, FC.platform
 ) FIR ON USAGE.ymd = FIR.ymd AND USAGE.platform = FIR.platform
 ORDER BY USAGE.ymd DESC, USAGE.platform
 `
-    const result = await pg_client.query(query, [ymd_range, platforms, channels, ref])
+    const result = await pg_client.query(query, [ymd_range, platforms, channels])
     return result
   }
 
