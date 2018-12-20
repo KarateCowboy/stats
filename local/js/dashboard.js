@@ -1560,8 +1560,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
+    viewState.showRefFilter = false
+    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1606,8 +1606,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
+    viewState.showRefFilter = false
+    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1618,8 +1618,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
+    viewState.showRefFilter = false
+    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1630,8 +1630,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
-    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1642,8 +1642,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
-    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1654,8 +1654,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
-    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1666,8 +1666,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
-    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1678,8 +1678,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
-    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1690,8 +1690,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
-    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = false
+    viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1726,8 +1726,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
+    viewState.showRefFilter = false
+    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
