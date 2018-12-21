@@ -53,8 +53,7 @@ SELECT ymd, SUM(average_dau) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
-  channel = ANY ($2) AND
-  ref = ANY($3)
+  channel = ANY ($2) 
 GROUP BY ymd
 ORDER BY ymd DESC
 `
@@ -73,8 +72,7 @@ SELECT ymd, platform, SUM(average_dau) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
-  channel = ANY ($2) AND
-  ref = ANY($3)
+  channel = ANY ($2) 
 GROUP BY ymd, platform
 ORDER BY ymd DESC, platform
 `
@@ -93,8 +91,7 @@ SELECT ymd, SUM(average_first_time) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
-  channel = ANY ($2) AND
-  ref = ANY($3)
+  channel = ANY ($2) 
 GROUP BY ymd
 ORDER BY ymd DESC
 `
@@ -113,8 +110,7 @@ SELECT ymd, platform, SUM(average_first_time) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
-  channel = ANY ($2) AND
-  ref = ANY($3)
+  channel = ANY ($2) 
 GROUP BY ymd, platform
 ORDER BY ymd DESC, platform
 `
@@ -128,8 +124,8 @@ FROM dw.fc_usage_month
 WHERE
   platform = ANY ($1) AND
   channel = ANY ($2) AND
-  ref = ANY($3) AND
-  ymd > '2016-01-31'
+  ymd > '2016-01-31' AND
+  ref = ANY($3)
 GROUP BY
   left(ymd::text, 7),
   platform
@@ -163,7 +159,6 @@ FROM dw.fc_usage_month
 WHERE
   platform = ANY ($1) AND
   channel = ANY ($2) AND
-  ref = ANY($3) AND
   ymd > '2016-01-31'
 GROUP BY
   left(ymd::text, 7)
@@ -230,8 +225,7 @@ FROM dw.fc_usage_platform_mv FC
 WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
   FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND
-  FC.ref = ANY ($4)
+  FC.channel = ANY ($3) 
 GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform
 `
@@ -264,6 +258,7 @@ WHERE
   first_time AND
   FC.platform = ANY ($2) AND
   FC.channel = ANY ($3) 
+
 GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform`
 
@@ -298,6 +293,7 @@ exports.setup = (server, client, mongo) => {
         channels: channels,
         ref: ref
       }, ['version'])
+
       results.rows.forEach((row) => common.formatPGRow(row))
       // condense small version counts to an 'other' category
       results.rows = dataset.condense(results.rows, 'ymd', 'version')
@@ -318,6 +314,7 @@ exports.setup = (server, client, mongo) => {
         channels: channels,
         ref: ref
       })
+
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       reply(results.rows)
@@ -395,6 +392,7 @@ exports.setup = (server, client, mongo) => {
         args = [platforms, channels]
       }
       let results = await client.query(query, args)
+
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
@@ -417,6 +415,7 @@ exports.setup = (server, client, mongo) => {
         args = [platforms, channels]
       }
       let results = await client.query(query, args)
+
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       reply(results.rows)
@@ -429,7 +428,7 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/dau_first_monthly_average_platform',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(AVERAGE_MONTHLY_FIRST_DAU_PLATFORM, [platforms, channels, ref])
+      var results = await client.query(AVERAGE_MONTHLY_FIRST_DAU_PLATFORM, [platforms, channels])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
@@ -537,6 +536,7 @@ exports.setup = (server, client, mongo) => {
         ref: ref
       }, ['platform'])
 
+
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
@@ -573,6 +573,7 @@ exports.setup = (server, client, mongo) => {
         args = [platforms, channels]
       }
       let results = await client.query(query, args)
+
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
@@ -595,6 +596,7 @@ exports.setup = (server, client, mongo) => {
         args = [platforms, channels]
       }
       let results = await client.query(query, args)
+
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       reply(results.rows)
@@ -614,6 +616,7 @@ exports.setup = (server, client, mongo) => {
         results = await client.query(DAU_PLATFORM_FIRST_NO_REF, [days, platforms, channels])
 
       }
+
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
