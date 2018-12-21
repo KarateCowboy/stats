@@ -9,6 +9,8 @@ const {expect} = require('chai')
 const moment = require('moment')
 const _ = require('underscore')
 const UpdatePostgresDay = require('../../../src/services/update-postgres-day.service')
+const CoreUsage = require('../../../src/models/core-usage.model')()
+let sample_codes, testing_ymd
 
 Given(/^I view the Daily Active Users by Platform report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage')
@@ -41,5 +43,49 @@ Then(/^I should see "([^"]*)" usages spread over each day for the prior month$/,
   await browser.pause(300)
   const usage_data_table = await browser.getHTML('#usageDataTable')
   expect(usage_data_table).to.contain(per_day.toLocaleString('en'))
+})
+
+Then(/^I should see DAU numbers for all referral codes$/, async function () {
+  const total = await mongo_client.collection('brave_core_usage').count({
+    year_month_day: moment().subtract(1, 'days').format('YYYY-MM-DD')
+  })
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
+})
+
+When(/^I pick two referral codes$/, async function () {
+  testing_ymd = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
+  let usages = await CoreUsage.find({year_month_day: testing_ymd.format('YYYY-MM-DD')})
+  sample_codes = usages.slice(0, 2).map(u => u.ref)
+  await browser.select_by_value_when_visible('#daysSelector', '120')
+  await browser.click('#ref-filter')
+  await browser.keys(sample_codes[0])
+  await browser.keys('\uE007')
+  await browser.keys(sample_codes[1])
+  await browser.keys('\uE007')
+})
+
+When(/^I should see DAU numbers for those two referral codes$/, async function () {
+  const total = await CoreUsage.count({'ref': {$in: this.codes}})
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
+})
+
+Then(/^I should see DNU numbers for those two referral codes$/, async function () {
+  const total = await CoreUsage.count({
+    'ref': {$in: sample_codes},
+    year_month_day: testing_ymd.format('YYYY-MM-DD')
+  })
+  expect(total).to.be.greaterThan(0, 'total for testing should be greater than 0')
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
+})
+
+Then(/^I should see the DNU numbers for all referral codes$/, async function () {
+  const working_date = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
+  const total = await CoreUsage.count({year_month_day: working_date.format('YYYY-MM-DD')})
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
+  expect(usageData).to.include('357')
 })
 

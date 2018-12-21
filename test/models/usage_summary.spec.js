@@ -62,52 +62,23 @@ describe('UsageSummary model', async function () {
         working_day.add(1, 'days')
       }
     })
-    describe('firstCount', async function () {
-      it('returns a bunch of first counts', async function () {
-        const linuxCount = await knex('dw.fc_usage').sum('total').where('ymd', '>=', month_start.format('YYYY-MM-DD')).andWhere({
-          'platform': 'linux',
-          'channel': 'dev',
-          'first_time': true
-        }).whereIn('ref', ['BAR515', 'AIR449'])
-        let result = await db.UsageSummary.firstCount(month_start.format('YYYY-MM-DD'), ['linux'], ['dev'], ['BAR515', 'AIR449'])
-        const total = result.rows.reduce((total, current) => { return total += parseInt(current.first_count) }, 0)
-        expect(result.rows.length).to.be.greaterThan(10)
-        expect(total).to.equal(parseInt(linuxCount[0].sum))
-      })
-    })
-    describe('platformMinusFirstSQL', async function () {
-      it('returns overall usage', async function () {
-        const linuxCount = await knex('dw.fc_usage').sum('total').where('ymd', '>=', month_start.format('YYYY-MM-DD')).andWhere({
-          'platform': 'linux',
-          'channel': 'dev',
-          'first_time': true
-        }).whereIn('ref', ['BAR515', 'AIR449'])
-        let result = await db.UsageSummary.platformMinusFirstSQL(month_start.format('YYYY-MM-DD'), ['linux'], ['dev'], ['BAR515', 'AIR449'])
-        for (let row of result.rows) {
-          expect(row.all_count - row.first_count).to.equal(Number(row.count))
-        }
-        const total = result.rows.reduce((total, current) => { return total += parseInt(current.first_count) }, 0)
-        expect(result.rows.length).to.be.greaterThan(10)
-        expect(total).to.equal(parseInt(linuxCount[0].sum))
-      })
-      it('accepts a date string or a numeric "days back" string', async function () {
-        let ymd_range = Math.abs(month_start.diff(moment(), 'days'))
-        ymd_range = ymd_range.toString() + ' days'
+    it('accepts a date string or a numeric "days back" string', async function () {
+      let ymd_range = Math.abs(month_start.diff(moment(), 'days'))
+      ymd_range = ymd_range.toString() + ' days'
 
-        const linuxCount = await knex('dw.fc_usage').sum('total').where('ymd', '>=', month_start.format('YYYY-MM-DD')).andWhere({
-          'platform': 'linux',
-          'channel': 'dev',
-          'first_time': true
-        }).whereIn('ref', ['BAR515', 'AIR449'])
+      const linuxCount = await knex('dw.fc_usage').sum('total').where('ymd', '>=', month_start.format('YYYY-MM-DD')).andWhere({
+        'platform': 'linux',
+        'channel': 'dev',
+        'first_time': true
+      }).whereIn('ref', ['BAR515', 'AIR449'])
 
-        let result = await db.UsageSummary.platformMinusFirstSQL(ymd_range, ['linux'], ['dev'], ['BAR515', 'AIR449'])
-        for (let row of result.rows) {
-          expect(row.all_count - row.first_count).to.equal(Number(row.count))
-        }
-        const total = result.rows.reduce((total, current) => { return total += parseInt(current.first_count) }, 0)
-        expect(result.rows.length).to.be.greaterThan(10)
-        expect(total).to.equal(parseInt(linuxCount[0].sum))
-      })
+      let result = await db.UsageSummary.platformMinusFirst(ymd_range, ['linux'], ['dev'], ['BAR515', 'AIR449'])
+      for (let row of result.rows) {
+        expect(row.all_count - row.first_count).to.equal(Number(row.count))
+      }
+      const total = result.rows.reduce((total, current) => { return total += parseInt(current.first_count) }, 0)
+      expect(result.rows.length).to.be.greaterThan(10)
+      expect(total).to.equal(parseInt(linuxCount[0].sum))
     })
   })
   describe('dailyActiveUsers', async function () {
@@ -167,7 +138,10 @@ ORDER BY ymd DESC
       })
       specify('version', async function () {
         const second_version = '9.9.9'
-        const ymd_dupe = _.cloneDeep(ymds).map(y => { y.version = second_version ; return y; })
+        const ymd_dupe = _.cloneDeep(ymds).map(y => {
+          y.version = second_version
+          return y
+        })
         ymds = ymds.concat(ymd_dupe)
         const usage_summaries = await factory.createMany('fc_usage', ymds)
         let ormResults = await db.UsageSummary.dailyActiveUsers({
@@ -182,7 +156,7 @@ ORDER BY ymd DESC
         const fc_total = (await knex('dw.fc_usage').sum('total')).shift()
         const sample_total = await knex('dw.fc_usage').sum('total').where('ymd', ormSample.ymd)
         const expected_daily_percentage = (fc_total.sum / sample_total[0].sum) * 100
-        expect(ormResults.rows[0]).to.have.property('daily_percentage',50)
+        expect(ormResults.rows[0]).to.have.property('daily_percentage', 50)
       })
     })
   })

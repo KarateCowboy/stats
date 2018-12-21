@@ -40,6 +40,10 @@ Given(/^I view the Daily Active Users by Version report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#versions')
 })
 
+Given(/^I view the Daily New Users by Platform report$/, async function(){
+  await browser.url('http://localhost:8193/dashboard#daily_new')
+})
+
 Given(/^I view the Monthly Average Daily Active Users report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage_month_average_agg')
 })

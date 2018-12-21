@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var _ = require('underscore')
+const _ = require('underscore')
 var assert = require('assert')
 
 var dataset = require('./dataset')
 var common = require('./common')
 const RetentionWeek = require('../models/retention').RetentionWeek
 const moment = require('moment')
+
+const arrayIsTruthy = (a) => {
+  return a !== undefined && _.compact(a).length > 0
+}
 
 const DELTA = `
 SELECT
@@ -44,7 +48,7 @@ FROM
 ORDER BY USG.ymd DESC
 `
 
-const AVERAGE_MONTHLY_DAU = `
+const AVERAGE_MONTHLY_DAU_REF = `
 SELECT ymd, SUM(average_dau) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
@@ -54,8 +58,17 @@ WHERE
 GROUP BY ymd
 ORDER BY ymd DESC
 `
+const AVERAGE_MONTHLY_DAU_NO_REF = `
+SELECT ymd, SUM(average_dau) AS count
+FROM dw.fc_average_monthly_usage_mv
+WHERE
+  platform = ANY ($1) AND
+  channel = ANY ($2) 
+GROUP BY ymd
+ORDER BY ymd DESC
+`
 
-const AVERAGE_MONTHLY_DAU_PLATFORM = `
+const AVERAGE_MONTHLY_DAU_PLATFORM_REF = `
 SELECT ymd, platform, SUM(average_dau) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
@@ -65,14 +78,32 @@ WHERE
 GROUP BY ymd, platform
 ORDER BY ymd DESC, platform
 `
+const AVERAGE_MONTHLY_DAU_PLATFORM_NO_REF = `
+SELECT ymd, platform, SUM(average_dau) AS count
+FROM dw.fc_average_monthly_usage_mv
+WHERE
+  platform = ANY ($1) AND
+  channel = ANY ($2) 
+GROUP BY ymd, platform
+ORDER BY ymd DESC, platform
+`
 
-const AVERAGE_MONTHLY_FIRST_DAU = `
+const AVERAGE_MONTHLY_FIRST_DAU_REF = `
 SELECT ymd, SUM(average_first_time) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
   channel = ANY ($2) AND
   ref = ANY($3)
+GROUP BY ymd
+ORDER BY ymd DESC
+`
+const AVERAGE_MONTHLY_FIRST_DAU_NO_REF = `
+SELECT ymd, SUM(average_first_time) AS count
+FROM dw.fc_average_monthly_usage_mv
+WHERE
+  platform = ANY ($1) AND
+  channel = ANY ($2) 
 GROUP BY ymd
 ORDER BY ymd DESC
 `
@@ -88,7 +119,7 @@ GROUP BY ymd, platform
 ORDER BY ymd DESC, platform
 `
 
-const MAU_PLATFORM = `
+const MAU_PLATFORM_REF = `
 SELECT
   LEFT(ymd::text, 7) || '-01' AS ymd,
   platform,
@@ -106,8 +137,25 @@ ORDER BY
   left(ymd::text, 7),
  platform
 `
+const MAU_PLATFORM_NO_REF = `
+SELECT
+  LEFT(ymd::text, 7) || '-01' AS ymd,
+  platform,
+  sum(total) AS count
+FROM dw.fc_usage_month
+WHERE
+  platform = ANY ($1) AND
+  channel = ANY ($2) AND
+  ymd > '2016-01-31'
+GROUP BY
+  left(ymd::text, 7),
+  platform
+ORDER BY
+  left(ymd::text, 7),
+ platform
+`
 
-const MAU = `
+const MAU_REF = `
 SELECT
   LEFT(ymd::text, 7) || '-01' AS ymd,
   sum(total) AS count
@@ -116,6 +164,20 @@ WHERE
   platform = ANY ($1) AND
   channel = ANY ($2) AND
   ref = ANY($3) AND
+  ymd > '2016-01-31'
+GROUP BY
+  left(ymd::text, 7)
+ORDER BY
+  left(ymd::text, 7)
+`
+const MAU_NO_REF = `
+SELECT
+  LEFT(ymd::text, 7) || '-01' AS ymd,
+  sum(total) AS count
+FROM dw.fc_usage_month
+WHERE
+  platform = ANY ($1) AND
+  channel = ANY ($2) AND
   ymd > '2016-01-31'
 GROUP BY
   left(ymd::text, 7)
@@ -174,46 +236,7 @@ GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform
 `
 
-const DAU_PLATFORM_MINUS_FIRST = `
-SELECT
-  USAGE.ymd,
-  USAGE.platform,
-  USAGE.count AS all_count,
-  FIR.first_count,
-  USAGE.count - FIR.first_count AS count
-FROM
-(
-SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  FC.platform,
-  SUM(FC.total) AS count
-FROM dw.fc_usage FC
-WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND
-  FC.ref = COALESCE($4, ref)
-GROUP BY FC.ymd, FC.platform
-  ORDER BY FC.ymd DESC, FC.platform
-) USAGE JOIN (
-SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  FC.platform,
-  SUM(FC.total) AS first_count
-FROM dw.fc_usage FC
-WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND
-  FC.ref = COALESCE($4, ref) AND
-  FC.first_time
-GROUP BY FC.ymd, FC.platform
-  ORDER BY FC.ymd DESC, FC.platform
-) FIR ON USAGE.ymd = FIR.ymd AND USAGE.platform = FIR.platform
-ORDER BY USAGE.ymd DESC, USAGE.platform
-`
-
-const DAU_PLATFORM_FIRST = `
+const DAU_PLATFORM_FIRST_REF = `
 SELECT
   TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
   FC.platform,
@@ -229,6 +252,20 @@ WHERE
 GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform
 `
+const DAU_PLATFORM_FIRST_NO_REF = `
+SELECT
+  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
+  FC.platform,
+  SUM(FC.total) AS count,
+ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND first_time AND platform = ANY ($2) AND channel = ANY ($3)), 3) * 100 AS daily_percentage
+FROM dw.fc_usage FC
+WHERE
+  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+  first_time AND
+  FC.platform = ANY ($2) AND
+  FC.channel = ANY ($3) 
+GROUP BY FC.ymd, FC.platform
+ORDER BY FC.ymd DESC, FC.platform`
 
 const DAU_PLATFORM_FIRST_SUMMARY = `SELECT * FROM dw.fc_platform_downloads_summary_mv ORDER BY mobile, vendor`
 
@@ -327,8 +364,16 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/dau_monthly_average',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(AVERAGE_MONTHLY_DAU, [platforms, channels, ref])
+      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      let query, args
+      if (arrayIsTruthy(ref)) {
+        query = AVERAGE_MONTHLY_DAU_REF
+        args = [platforms, channels, ref]
+      } else {
+        query = AVERAGE_MONTHLY_DAU_NO_REF
+        args = [platforms, channels]
+      }
+      let results = await client.query(query, args)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       reply(results.rows)
@@ -340,8 +385,16 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/dau_monthly_average_platform',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(AVERAGE_MONTHLY_DAU_PLATFORM, [platforms, channels, ref])
+      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      let query, args
+      if (arrayIsTruthy(ref)) {
+        query = AVERAGE_MONTHLY_DAU_PLATFORM_REF
+        args = [platforms, channels, ref]
+      } else {
+        query = AVERAGE_MONTHLY_DAU_PLATFORM_NO_REF
+        args = [platforms, channels]
+      }
+      let results = await client.query(query, args)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
@@ -354,8 +407,16 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/dau_first_monthly_average',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(AVERAGE_MONTHLY_FIRST_DAU, [platforms, channels, ref])
+      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      let query, args
+      if (arrayIsTruthy(ref)) {
+        query = AVERAGE_MONTHLY_FIRST_DAU_REF
+        args = [platforms, channels, ref]
+      } else {
+        query = AVERAGE_MONTHLY_FIRST_DAU_NO_REF
+        args = [platforms, channels]
+      }
+      let results = await client.query(query, args)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       reply(results.rows)
@@ -489,7 +550,7 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/dau_platform_minus_first',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      const results = await db.UsageSummary.platformMinusFirstSQL(days, platforms, channels, ref)
+      const results = await db.UsageSummary.platformMinusFirst(days, platforms, channels, ref)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
@@ -502,8 +563,16 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/mau_platform',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(MAU_PLATFORM, [platforms, channels, ref])
+      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      let query, args
+      if (arrayIsTruthy(ref)) {
+        query = MAU_PLATFORM_REF
+        args = [platforms, channels, ref]
+      } else {
+        query = MAU_PLATFORM_NO_REF
+        args = [platforms, channels]
+      }
+      let results = await client.query(query, args)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
@@ -516,8 +585,16 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/mau',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(MAU, [platforms, channels, ref])
+      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      let query, args
+      if (arrayIsTruthy(ref)) {
+        query = MAU_REF
+        args = [platforms, channels, ref]
+      } else {
+        query = MAU_NO_REF
+        args = [platforms, channels]
+      }
+      let results = await client.query(query, args)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       reply(results.rows)
@@ -530,7 +607,13 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/dau_platform_first',
     handler: async function (request, reply) {
       var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(DAU_PLATFORM_FIRST, [days, platforms, channels, ref])
+      let results
+      if (ref !== undefined && _.compact(ref).length > 0) {
+        results = await client.query(DAU_PLATFORM_FIRST_REF, [days, platforms, channels, ref])
+      } else {
+        results = await client.query(DAU_PLATFORM_FIRST_NO_REF, [days, platforms, channels])
+
+      }
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
