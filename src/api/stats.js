@@ -53,7 +53,8 @@ SELECT ymd, SUM(average_dau) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
-  channel = ANY ($2) 
+  channel = ANY ($2) AND
+  ref = ANY($3)
 GROUP BY ymd
 ORDER BY ymd DESC
 `
@@ -72,7 +73,8 @@ SELECT ymd, platform, SUM(average_dau) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
-  channel = ANY ($2) 
+  channel = ANY ($2) AND
+  ref = ANY ($3)
 GROUP BY ymd, platform
 ORDER BY ymd DESC, platform
 `
@@ -91,7 +93,8 @@ SELECT ymd, SUM(average_first_time) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
-  channel = ANY ($2) 
+  channel = ANY ($2) AND
+  ref = ANY($3)
 GROUP BY ymd
 ORDER BY ymd DESC
 `
@@ -159,7 +162,8 @@ FROM dw.fc_usage_month
 WHERE
   platform = ANY ($1) AND
   channel = ANY ($2) AND
-  ymd > '2016-01-31'
+  ymd > '2016-01-31' AND
+  ref = ANY($3)
 GROUP BY
   left(ymd::text, 7)
 ORDER BY
