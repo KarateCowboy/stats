@@ -2159,7 +2159,7 @@ function initialize_components () {
     components: {VueSelect},
     data: {
       showRefFilter: viewState.showRefFilter,
-      selected_refs: ['none'],
+      selected_refs: [],
       refcodes: referral_codes
     },
     methods: {

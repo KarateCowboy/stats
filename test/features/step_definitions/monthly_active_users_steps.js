@@ -88,7 +88,6 @@ Given(/^I enter an existing referral code in the text box$/, async function () {
   const sample = await CoreUsage.findOne()
   await browser.select_by_value_when_visible('#daysSelector', '120')
   this.setTo('sample', sample)
-  await browser.click('button.close')
   await browser.click('#ref-filter')
   await browser.keys(sample.ref)
   await browser.keys('\uE007')

@@ -57,7 +57,6 @@ describe('UsageSummary model', async function () {
         try {
           await summary.save()
         } catch (e) {
-          console.dir(summary, {colors: true})
         }
         working_day.add(1, 'days')
       }
