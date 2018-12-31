@@ -108,12 +108,23 @@ GROUP BY ymd
 ORDER BY ymd DESC
 `
 
-const AVERAGE_MONTHLY_FIRST_DAU_PLATFORM = `
+const AVERAGE_MONTHLY_FIRST_DAU_PLATFORM_NO_REF = `
 SELECT ymd, platform, SUM(average_first_time) AS count
 FROM dw.fc_average_monthly_usage_mv
 WHERE
   platform = ANY ($1) AND
   channel = ANY ($2) 
+GROUP BY ymd, platform
+ORDER BY ymd DESC, platform
+`
+
+const AVERAGE_MONTHLY_FIRST_DAU_PLATFORM_REF = `
+SELECT ymd, platform, SUM(average_first_time) AS count
+FROM dw.fc_average_monthly_usage_mv
+WHERE
+  platform = ANY ($1) AND
+  channel = ANY ($2) AND
+  ref = ANY ($3) 
 GROUP BY ymd, platform
 ORDER BY ymd DESC, platform
 `
@@ -431,8 +442,13 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/dau_first_monthly_average_platform',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      var results = await client.query(AVERAGE_MONTHLY_FIRST_DAU_PLATFORM, [platforms, channels])
+      let results
+      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      if(arrayIsTruthy(ref)){
+        results = await client.query(AVERAGE_MONTHLY_FIRST_DAU_PLATFORM_REF, [platforms, channels, ref])
+      } else {
+        results = await client.query(AVERAGE_MONTHLY_FIRST_DAU_PLATFORM_NO_REF, [platforms, channels])
+      }
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
