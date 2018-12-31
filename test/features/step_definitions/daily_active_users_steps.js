@@ -10,6 +10,8 @@ const moment = require('moment')
 const _ = require('underscore')
 const UpdatePostgresDay = require('../../../src/services/update-postgres-day.service')
 const CoreUsage = require('../../../src/models/core-usage.model')()
+const Platform = require('../../../src/models/platform.model')()
+const Util = require('../../../src/models/util').Util
 let sample_codes, testing_ymd
 
 Given(/^I view the Daily Active Users by Platform report$/, async function () {
@@ -89,3 +91,28 @@ Then(/^I should see the DNU numbers for all referral codes$/, async function () 
   expect(usageData).to.include('357')
 })
 
+Given(/^there are usages for all platforms and multiple versions for the last week$/, async function () {
+  const platforms = await Platform.find()
+  const working_day = moment()
+  const dates = _.range(1, 11).map(d => { return {ymd: working_day.clone().subtract(d, 'days').format('YYYY-MM-DD')} })
+  let version = 1
+  for (let platform of platforms) {
+    const attributes = dates.map(o => {
+      o.platform = platform.name
+      o.total = Util.random_int(400) + 1
+      o.version = version.toString() + '.0.0'
+      return o
+    })
+    await factory.createMany('fc_usage', attributes)
+    version++
+  }
+})
+
+Then(/^I should see DAU data for all the platforms, broken down by version$/, async function () {
+  let versions = await knex('dw.fc_usage').whereNot('platform', 'android').distinct('version')
+  versions = versions.map(u => u.version)
+  const rows = await browser.getHTML('#usageDataTable  tr.active')
+  const first_eleven = _.take(rows, 11)
+  expect(first_eleven).to.have.property('length', 11)
+  expect(_.every(versions, (v) => { return _.flatten(first_eleven).toString().includes(v.toString())})).to.equal(true, 'Every version should exist in the first eleven rows of the table')
+})
