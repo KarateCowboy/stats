@@ -119,7 +119,7 @@ ORDER BY ymd DESC
       expect(ormResults.rows).to.have.property('length', ymds.length)
     })
     context('group by', async function () {
-      specify.only('platform', async function () {
+      specify('platform', async function () {
         await factory.createMany('fc_usage', ymds)
         await factory.createMany('fc_usage', ymds.map(y => {
           y.platform = 'androidbrowser'
