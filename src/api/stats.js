@@ -444,7 +444,7 @@ exports.setup = (server, client, mongo) => {
     handler: async function (request, reply) {
       let results
       let [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      if(arrayIsTruthy(ref)){
+      if (arrayIsTruthy(ref)) {
         results = await client.query(AVERAGE_MONTHLY_FIRST_DAU_PLATFORM_REF, [platforms, channels, ref])
       } else {
         results = await client.query(AVERAGE_MONTHLY_FIRST_DAU_PLATFORM_NO_REF, [platforms, channels])
@@ -555,7 +555,6 @@ exports.setup = (server, client, mongo) => {
         channels: channels,
         ref: ref
       }, ['platform'])
-
 
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')

@@ -168,13 +168,14 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
     if (args.ref !== undefined && _.compact(args.ref).length > 0) {
       query.whereIn('ref', args.ref)
     }
-    if (group.includes('platform')) {
-      query.select('platform').groupBy('platform')
-    }
-    if (group.includes('version')) {
-      const day_totals = await pg_client.query(query.toString())
-
-      query.select('version').groupBy('version')
+    if (group.includes('platform') || group.includes('version')) {
+      var day_totals = await pg_client.query(query.toString())
+      if (group.includes('platform')) {
+        query.select('platform').groupBy('platform')
+      }
+      if (group.includes('version')) {
+        query.select('version').groupBy('version')
+      }
       const results = await pg_client.query(query.toString())
       results.rows.forEach(r => { r.daily_percentage = (r.count / _.find(day_totals.rows, {'ymd': r.ymd}).count) * 100 })
       return results

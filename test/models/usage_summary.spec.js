@@ -119,7 +119,7 @@ ORDER BY ymd DESC
       expect(ormResults.rows).to.have.property('length', ymds.length)
     })
     context('group by', async function () {
-      specify('platform', async function () {
+      specify.only('platform', async function () {
         await factory.createMany('fc_usage', ymds)
         await factory.createMany('fc_usage', ymds.map(y => {
           y.platform = 'androidbrowser'
@@ -134,6 +134,7 @@ ORDER BY ymd DESC
         }, ['platform'])
         expect(ormResults.rows).to.have.property('length', 40)
         expect(_.uniq(ormResults.rows.map(r => r.platform))).to.have.members(['winx64', 'androidbrowser'])
+        expect(_.first(ormResults.rows)).to.have.property('daily_percentage')
       })
       specify('version', async function () {
         const second_version = '9.9.9'
