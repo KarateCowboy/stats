@@ -52,10 +52,19 @@ describe('UsageSummary model', async function () {
         let summary = await factory.build('fc_usage', {
           platform: 'linux',
           ymd: working_day.format('YYYY-MM-DD'),
-          ref: 'BAR515'
+          ref: 'BAR515',
+          first_time: true
+        })
+        let returning_summary = await factory.build('fc_usage', {
+          platform: 'linux',
+          ymd: working_day.format('YYYY-MM-DD'),
+          ref: 'BAR515',
+          first_time: false,
+          total: 400
         })
         try {
           await summary.save()
+          await returning_summary.save()
         } catch (e) {
         }
         working_day.add(1, 'days')
@@ -73,11 +82,32 @@ describe('UsageSummary model', async function () {
 
       let result = await db.UsageSummary.platformMinusFirst(ymd_range, ['linux'], ['dev'], ['BAR515', 'AIR449'])
       for (let row of result.rows) {
+        expect(row.all_count > row.first_count).to.equal(true, 'all_count should be greater than first_count')
         expect(row.all_count - row.first_count).to.equal(Number(row.count))
       }
       const total = result.rows.reduce((total, current) => { return total += parseInt(current.first_count) }, 0)
       expect(result.rows.length).to.be.greaterThan(10)
       expect(total).to.equal(parseInt(linuxCount[0].sum))
+    })
+    it('works when searching with no ref code', async function () {
+      let ymd_range = Math.abs(month_start.diff(moment(), 'days'))
+      ymd_range = ymd_range.toString() + ' days'
+
+      const linuxCount = await knex('dw.fc_usage').sum('total').where('ymd', '>=', month_start.format('YYYY-MM-DD')).andWhere({
+        'platform': 'linux',
+        'channel': 'dev',
+        'first_time': true
+      })
+
+      let result = await db.UsageSummary.platformMinusFirst(ymd_range, ['linux'], ['dev'])
+      for (let row of result.rows) {
+        expect(row.all_count > row.first_count).to.equal(true, 'all_count should be greater than first_count')
+        expect(row.all_count - row.first_count).to.equal(Number(row.count))
+      }
+      const total = result.rows.reduce((total, current) => { return total += parseInt(current.first_count) }, 0)
+      expect(result.rows.length).to.be.greaterThan(10)
+      expect(total).to.equal(parseInt(linuxCount[0].sum))
+
     })
   })
   describe('dailyActiveUsers', async function () {
