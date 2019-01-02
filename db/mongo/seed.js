@@ -1,4 +1,5 @@
 const Platform = require('../../src/models/platform.model')()
+const Channel = require('../../src/models/channel.model')()
 module.exports.exec = async () => {
 
   const platform_names = [
@@ -20,4 +21,20 @@ module.exports.exec = async () => {
       await platform.save()
     }))
   }
+
+  const channel_names = [
+    'beta',
+    'developer',
+    'stable',
+    'nightly',
+    'dev',
+    'release'
+  ]
+  if( (await Channel.count()) === 0){
+    await Promise.all( channel_names.map( async name => {
+      const channel = new Channel({ name: name })
+      await channel.save()
+    }))
+  }
+
 }

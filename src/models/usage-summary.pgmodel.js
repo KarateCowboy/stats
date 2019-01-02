@@ -4,7 +4,7 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 const moment = require('moment')
-const _ = require('underscore')
+const _ = require('lodash')
 module.exports = (sequelize, Sequelize) => {
   const UsageSummary = sequelize.define('UsageSummary',
     {
@@ -126,7 +126,7 @@ FROM dw.fc_usage FC
 WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
   FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) 
+  FC.channel = ANY ($3)
 GROUP BY FC.ymd, FC.platform
   ORDER BY FC.ymd DESC, FC.platform
 ) USAGE JOIN (
@@ -138,13 +138,13 @@ FROM dw.fc_usage FC
 WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
   FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND 
+  FC.channel = ANY ($3) AND
   FC.first_time
 GROUP BY FC.ymd, FC.platform
   ORDER BY FC.ymd DESC, FC.platform
 ) FIR ON USAGE.ymd = FIR.ymd AND USAGE.platform = FIR.platform
 ORDER BY USAGE.ymd DESC, USAGE.platform
-    
+
 `
     let args
     if (ref !== undefined && _.compact(ref.filter(r => {return r.length > 0})).length > 0) {
@@ -178,12 +178,52 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
       if (group.includes('version')) {
         query.select('version').groupBy('version')
       }
+      //ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
       const results = await pg_client.query(query.toString())
-      results.rows.forEach(r => { r.daily_percentage = (r.count / _.find(day_totals.rows, {'ymd': r.ymd}).count) * 100 })
+      results.rows.forEach(r => { r.daily_percentage = (_.toNumber(r.count) / _.toNumber(_.find(day_totals.rows, {'ymd': r.ymd}).count)) * 100 })
       return results
     } else {
       return await pg_client.query(query.toString())
     }
+  }
+
+  UsageSummary.dauVersion = async function (args) {
+    const DAU_VERSION_NO_REF = `
+SELECT
+  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
+  FC.version,
+  SUM(FC.total) AS count,
+  ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
+FROM dw.fc_usage FC
+WHERE
+  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+  FC.platform = ANY ($2) AND
+  FC.channel = ANY ($3)
+GROUP BY FC.ymd, FC.version
+ORDER BY FC.ymd DESC, FC.version`
+    const DAU_VERSION_REF = `
+SELECT
+  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
+  FC.version,
+  SUM(FC.total) AS count,
+  ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
+FROM dw.fc_usage FC
+WHERE
+  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+  FC.platform = ANY ($2) AND
+  FC.channel = ANY ($3) AND
+  FC.ref = ANY ($4)
+GROUP BY FC.ymd, FC.version
+ORDER BY FC.ymd DESC, FC.version`
+
+    let results
+    if (args.ref) {
+      results = await pg_client.query(DAU_VERSION_REF, [`${args.daysAgo} days`, args.platform, args.channel, args.ref])
+    } else {
+      results = await pg_client.query(DAU_VERSION_NO_REF, [`${args.daysAgo} days`, args.platform, args.channel])
+    }
+    return results.rows
+
   }
 
   return UsageSummary

@@ -301,19 +301,22 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/versions',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      const results = await db.UsageSummary.dailyActiveUsers({
-        daysAgo: parseInt(days.replace(' days', '')),
-        platforms: platforms,
-        channels: channels,
-        ref: ref
-      }, ['version'])
-
-      results.rows.forEach((row) => common.formatPGRow(row))
+      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      let query, args
+      args = {
+          daysAgo: days,
+          platform: platforms,
+          channel: channels
+      }
+      if (arrayIsTruthy(ref)) {
+          args.ref = ref
+      }      
+      let results = await db.UsageSummary.dauVersion(args)
+      results.forEach((row) => common.formatPGRow(row))
       // condense small version counts to an 'other' category
-      results.rows = dataset.condense(results.rows, 'ymd', 'version')
-      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      reply(results.rows)
+      results = dataset.condense(results, 'ymd', 'version')
+      results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
+      reply(results)
     }
   })
 

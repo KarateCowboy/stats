@@ -6,6 +6,9 @@
 require('../test_helper')
 const moment = require('moment')
 const _ = require('lodash')
+const Platform = require('../../src/models/platform.model')()
+const Channel = require('../../src/models/channel.model')()
+
 describe('UsageSummary model', async function () {
   describe('attributes', async function () {
     let usageSummary
@@ -40,6 +43,55 @@ describe('UsageSummary model', async function () {
     })
     specify('ref', async function () {
       expect(usageSummary).to.have.property('ref')
+    })
+  })
+  describe('dauVersion', async function () {
+    it('returns the same results as the old query when given no ref', async function () {
+      let fixture_params = []
+      _.range(1, 6).forEach((version_counter) => {
+        const version = `${version_counter}.0.0`
+        let ymd = moment().subtract(10, 'days').format('YYYY-MM-DD')
+        let refs = _.range(1, 101).map((u) => {
+          return _.random(100000, 999999).toString()
+        })
+        fixture_params = fixture_params.concat(_.uniq(refs).map((u) => { return {ymd: ymd, ref: u, version: version } }))
+      })
+      const usage_summaries = await factory.createMany('fc_usage', fixture_params)
+      const DAU_VERSION = `SELECT
+  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
+  FC.version,
+  SUM(FC.total) AS count,
+  ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
+FROM dw.fc_usage FC
+WHERE
+  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+  FC.platform = ANY ($2) AND
+  FC.channel = ANY ($3) AND
+  FC.ref = COALESCE($4, ref)
+GROUP BY FC.ymd, FC.version
+ORDER BY FC.ymd DESC, FC.version`
+      const args = {
+        daysAgo: 20,
+        channel: (await Channel.find()).map(c => c.name),
+        platform: (await Platform.find()).map(p => p.name)
+      }
+      const oldResults = (await pg_client.query(DAU_VERSION, [`${args.daysAgo} days`, args.platform, args.channel, null])).rows
+      expect(_.gt(oldResults.length, 0)).to.equal(true, 'should return some results')
+      const newResults = await db.UsageSummary.dauVersion(args)
+      expect(newResults.length).to.be.above(0)
+      expect(oldResults.length).to.equal(newResults.length, 'old and new results should return the same number of rows')
+
+      oldResults.forEach(old => {
+        const newer = _.find(newResults, {ymd: old.ymd, version: old.version})
+        expect(newer).to.not.equal(null)
+        expect(newer.count).to.equal(old.count, 'the counts should be equal')
+        expect(newer.daily_percentage).to.equal(old.daily_percentage, 'daily_percentage should be equal')
+      })
+      // produces the same result when 'condensed'
+      const dataset = require('../../src/api/dataset')
+      const condensed_old_results = dataset.condense(oldResults, 'ymd', 'version')
+      const condensed_new_results = dataset.condense(newResults, 'ymd', 'version')
+      expect(condensed_new_results.toString()).to.equal(condensed_old_results.toString())
     })
   })
   describe('platformMinusFirst', async function () {
@@ -107,13 +159,12 @@ describe('UsageSummary model', async function () {
       const total = result.rows.reduce((total, current) => { return total += parseInt(current.first_count) }, 0)
       expect(result.rows.length).to.be.greaterThan(10)
       expect(total).to.equal(parseInt(linuxCount[0].sum))
-
     })
   })
   describe('dailyActiveUsers', async function () {
     let ymds, platforms, channels, ref
     before(async function () {
-      ymds = _.range(0, 20).map((i) => { return {ymd: (moment().subtract(i, 'days').format('YYYY-MM-DD'))}})
+      ymds = _.range(0, 20).map((i) => { return {ymd: (moment().subtract(i, 'days').format('YYYY-MM-DD'))} })
       platforms = ['winx64']
       channels = ['dev']
       ref = ['none']
@@ -165,28 +216,6 @@ ORDER BY ymd DESC
         expect(ormResults.rows).to.have.property('length', 40)
         expect(_.uniq(ormResults.rows.map(r => r.platform))).to.have.members(['winx64', 'androidbrowser'])
         expect(_.first(ormResults.rows)).to.have.property('daily_percentage')
-      })
-      specify('version', async function () {
-        const second_version = '9.9.9'
-        const ymd_dupe = _.cloneDeep(ymds).map(y => {
-          y.version = second_version
-          return y
-        })
-        ymds = ymds.concat(ymd_dupe)
-        const usage_summaries = await factory.createMany('fc_usage', ymds)
-        let ormResults = await db.UsageSummary.dailyActiveUsers({
-          daysAgo: 20,
-          platforms: platforms,
-          channels
-        }, ['version'])
-        const first_version = _.uniq(usage_summaries.map(u => u.version)).filter(u => u !== second_version).pop()
-        expect(ormResults.rows).to.have.property('length', 40)
-        expect(_.uniq(ormResults.rows.map(r => r.version))).to.have.members([first_version, second_version])
-        const ormSample = _.first(ormResults.rows)
-        const fc_total = (await knex('dw.fc_usage').sum('total')).shift()
-        const sample_total = await knex('dw.fc_usage').sum('total').where('ymd', ormSample.ymd)
-        const expected_daily_percentage = (fc_total.sum / sample_total[0].sum) * 100
-        expect(ormResults.rows[0]).to.have.property('daily_percentage', 50)
       })
     })
   })
