@@ -337,19 +337,19 @@ exports.dailyActiveiOSUsersFullGrouped = async () => {
 exports.monthlyUsersByDay = async (db, collection, start = (moment().startOf('month').format('YYYY-MM-DD')), end = (moment().format('YYYY-MM-DD'))) => {
   collection = collection || 'usage'
 
-  // var limit = moment().subtract(1, 'month').startOf('month').format('YYYY-MM-DD')
+  let matcher = { $match: { monthly: true } }
+  if (collection === 'ios_usage') {
+    if (process.env.DEBUG) console.log('Adding daily: true matching criteria for ios')
+    matcher = { $match: { monthly: true, daily: true } }
+  }
 
   let query = await db.collection(collection).aggregate([
-    {
-      $match: {
-        monthly: true
-      }
-    },
     {
       $match: {
         year_month_day: {$gte: start, $lte: end}
       }
     },
+    matcher,
     {
       $project: {
         date: {

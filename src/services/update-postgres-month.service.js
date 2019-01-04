@@ -44,6 +44,7 @@ module.exports = class UpdateMonth {
     })
     for (let row of results) {
       try {
+        if (process.env.DEBUG) console.log(row)
         await upsertMaker(global.pg_client, row)
         bar.tick(1)
       } catch (e) {
