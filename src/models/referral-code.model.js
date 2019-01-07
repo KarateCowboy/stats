@@ -10,7 +10,13 @@ const Types = mongooseClient.Schema.Types
 
 module.exports = function () {
   const ReferralCode = new mongooseClient.Schema({
-    code_text: {type: Types.String, required: true, minlength: 4, unique: true},
+    code_text: {type: Types.String, required: true,
+      validate: {
+        validator: function(v) {
+          return /^[A-Z0-9]{4,7}$/.test(v)
+        }
+      },
+      unique: true},
     usages: {type: [], default: []},
     platform: {type: Types.String, required: true, minlength: 3}
   }, {
@@ -21,11 +27,16 @@ module.exports = function () {
   ReferralCode.statics.add_missing = async function (codes, platform) {
     const all_codes = await mongo_client.collection('referral_codes').find({}).toArray()
     const already_existing = all_codes.map(u => u.code_text)
-    const new_refs = _.difference(codes, already_existing)
+    const new_refs = _.compact(_.difference(codes, already_existing))
     await Promise.all(new_refs.map(async (uref) => {
       let new_ref = new mongooseClient.models.ReferralCode({code_text: uref, platform: platform})
-      if(new_ref.code_text.length >= 4) {
-        await new_ref.save()
+      const errors = new_ref.validateSync()
+      try{
+        if(errors === undefined) {
+          await new_ref.save()
+        }
+      } catch(e){
+
       }
     }))
   }
