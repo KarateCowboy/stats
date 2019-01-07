@@ -34,7 +34,7 @@ class DbUtil {
 
   connect () {
     const options = {
-      ssl: (process.env.LOCAL === undefined),
+      ssl: true,
       logging: false
     }
     this.sequelize = new Sequelize(this.pgConnectionString, options)
