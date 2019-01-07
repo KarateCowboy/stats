@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const mongoc = require('../src/mongoc')
+const mongoose = require('mongoose')
 const pgc = require('../src/pgc')
 const reporter = require('../src/reporter')
 const moment = require('moment')
@@ -30,6 +31,7 @@ const main = async () => {
   global.mongo_client = await mongoc.setupConnection()
   global.pg_client = await pgc.setupConnection()
   global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
+  await mongoose.connect(process.env.MLAB_URI)
   const month_service = new UpdateMonth()
   await month_service.main(args.collection, args.start, args.end)
 
@@ -44,6 +46,7 @@ const main = async () => {
   await global.pg_client.end()
   await global.mongo_client.close()
   await global.knex.destroy()
+  process.exit()
 }
 
 main()
