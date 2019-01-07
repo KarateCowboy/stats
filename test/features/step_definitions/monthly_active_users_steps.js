@@ -13,6 +13,8 @@ const MonthUpdate = require('../../../src/services/update-postgres-month.service
 const UpdatePostgresDayService = require('../../../src/services/update-postgres-day.service')
 const CoreUsage = require('../../../src/models/core-usage.model')()
 
+let testing_ymd
+
 Given(/^there are "([^"]*)" usages for the prior month$/, {timeout: 100000}, async function (number_of_usages) {
   await build_monthly_usages(number_of_usages)
 })
@@ -24,6 +26,7 @@ Given(/^there are "([^"]*)" mixed ref usages for the prior month$/, {timeout: 10
 build_monthly_usages = async (number_of_usages, mixed_ref = false, other_attributes = null) => {
   const per_day = Math.ceil(Number(number_of_usages) / 28)
   const working_date = moment().startOf('month').subtract(2, 'weeks').startOf('month')
+  testing_ymd = working_date.clone()
   const usages = []
   for (let i of _.range(1, 29)) {
     working_date.add(1, 'days')
@@ -85,7 +88,6 @@ Given(/^I enter an existing referral code in the text box$/, async function () {
   const sample = await CoreUsage.findOne()
   await browser.select_by_value_when_visible('#daysSelector', '120')
   this.setTo('sample', sample)
-  await browser.click('button.close')
   await browser.click('#ref-filter')
   await browser.keys(sample.ref)
   await browser.keys('\uE007')
@@ -103,7 +105,15 @@ Then(/^the report should limit to the existing referrals statistics$/, async fun
 Then(/^the report should show only the average dau for that referral code$/, async function () {
   const count_for_day = await CoreUsage.count({year_month_day: this.sample.year_month_day, ref: this.sample.ref})
   const usage_data_table = await browser.getHTML('#usageDataTable')
+  expect(count_for_day).to.be.greaterThan(0,'count to check for should be greater than 0')
   expect(usage_data_table).to.contain(count_for_day / 30)
+})
+
+Then(/^I should see monthly average for all referral codes$/, async function () {
+  const count_for_day = await CoreUsage.count({})
+  const usage_data_table = await browser.getHTML('#usageDataTable')
+  expect(usage_data_table).to.contain((count_for_day / 30).toLocaleString('en'))
+
 })
 
 Given(/^there are "([^"]*)" returning mixed ref usages for the prior month$/, {timeout: 10000}, async function (number_of_usages) {
@@ -129,4 +139,13 @@ Given(/^there are "([^"]*)" returning mixed ref usages for the prior month$/, {t
   await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_usage_platform_mv')
 
   // await CoreUsage.save(_.flatten(allUsages))
+})
+
+Then(/^I should see MAU for all referral codes$/, async function () {
+  const total = await CoreUsage.count({
+    monthly: true
+  })
+  expect(total).to.be.greaterThan(0, 'Total should be more than 0')
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
 })

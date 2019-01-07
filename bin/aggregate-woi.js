@@ -133,11 +133,14 @@ aggregate_for_range = async (collection_name, start_date, end_date, force = fals
     console.log(e.message)
     process.exit()
   }
-  const bar = ProgressBar({
-    tmpl: `Aggregating ${count} ... :bar :percent :eta`,
-    width: 100,
-    total: count
-  })
+  let bar
+  if(!process.env.TEST){
+    bar = ProgressBar({
+      tmpl: `Aggregating ${count} ... :bar :percent :eta`,
+      width: 100,
+      total: count
+    })
+  }
   await mongo_client.close()
   let current_day = start_day.clone()
   const {fork} = require('child_process')
@@ -153,7 +156,7 @@ aggregate_for_range = async (collection_name, start_date, end_date, force = fals
       find.on('message', msg => {
         if (msg === 'success') {
           resolve()
-        } else if (msg === 'tick') {
+        } else if (msg === 'tick' && !process.env.TEST) {
           bar.tick(1)
         } else if (msg === 'error') {
           reject()

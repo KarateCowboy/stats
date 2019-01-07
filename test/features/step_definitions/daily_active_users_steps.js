@@ -9,6 +9,10 @@ const {expect} = require('chai')
 const moment = require('moment')
 const _ = require('underscore')
 const UpdatePostgresDay = require('../../../src/services/update-postgres-day.service')
+const CoreUsage = require('../../../src/models/core-usage.model')()
+const Platform = require('../../../src/models/platform.model')()
+const Util = require('../../../src/models/util').Util
+let sample_codes, testing_ymd
 
 Given(/^I view the Daily Active Users by Platform report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage')
@@ -43,3 +47,72 @@ Then(/^I should see "([^"]*)" usages spread over each day for the prior month$/,
   expect(usage_data_table).to.contain(per_day.toLocaleString('en'))
 })
 
+Then(/^I should see DAU numbers for all referral codes$/, async function () {
+  const total = await mongo_client.collection('brave_core_usage').count({
+    year_month_day: moment().subtract(1, 'days').format('YYYY-MM-DD')
+  })
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
+})
+
+When(/^I pick two referral codes$/, async function () {
+  testing_ymd = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
+  let usages = await CoreUsage.find({year_month_day: testing_ymd.format('YYYY-MM-DD')})
+  sample_codes = usages.slice(0, 2).map(u => u.ref)
+  await browser.select_by_value_when_visible('#daysSelector', '120')
+  await browser.click('#ref-filter')
+  await browser.keys(sample_codes[0])
+  await browser.keys('\uE007')
+  await browser.keys(sample_codes[1])
+  await browser.keys('\uE007')
+})
+
+When(/^I should see DAU numbers for those two referral codes$/, async function () {
+  const total = await CoreUsage.count({'ref': {$in: this.codes}})
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
+})
+
+Then(/^I should see DNU numbers for those two referral codes$/, async function () {
+  const total = await CoreUsage.count({
+    'ref': {$in: sample_codes},
+    year_month_day: testing_ymd.format('YYYY-MM-DD')
+  })
+  expect(total).to.be.greaterThan(0, 'total for testing should be greater than 0')
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
+})
+
+Then(/^I should see the DNU numbers for all referral codes$/, async function () {
+  const working_date = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
+  const total = await CoreUsage.count({year_month_day: working_date.format('YYYY-MM-DD')})
+  const usageData = await browser.getHTML('#usageContent .table-responsive')
+  expect(usageData).to.include(total.toLocaleString('en'))
+  expect(usageData).to.include('357')
+})
+
+Given(/^there are usages for all platforms and multiple versions for the last week$/, async function () {
+  const platforms = await Platform.find()
+  const working_day = moment()
+  const dates = _.range(1, 11).map(d => { return {ymd: working_day.clone().subtract(d, 'days').format('YYYY-MM-DD')} })
+  let version = 1
+  for (let platform of platforms) {
+    const attributes = dates.map(o => {
+      o.platform = platform.name
+      o.total = Util.random_int(400) + 1
+      o.version = version.toString() + '.0.0'
+      return o
+    })
+    await factory.createMany('fc_usage', attributes)
+    version++
+  }
+})
+
+Then(/^I should see DAU data for all the platforms, broken down by version$/, async function () {
+  let versions = await knex('dw.fc_usage').whereNot('platform', 'android').distinct('version')
+  versions = versions.map(u => u.version)
+  const rows = await browser.getHTML('#usageDataTable  tr.active')
+  const first_eleven = _.take(rows, 11)
+  expect(first_eleven).to.have.property('length', 11)
+  expect(_.every(versions, (v) => { return _.flatten(first_eleven).toString().includes(v.toString())})).to.equal(true, 'Every version should exist in the first eleven rows of the table')
+})

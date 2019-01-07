@@ -11,6 +11,7 @@ const factory = require('factory-girl').factory
 const mongoose = require('mongoose')
 const Sequelize = require('sequelize')
 const DbUtil = require('../src/models')
+const MongoSeed = require('../db/mongo/seed')
 require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
@@ -32,6 +33,7 @@ const fixtures = {
 
 class TestHelper {
   constructor () {
+    process.env.TEST = 'true'
     if (!process.env.TEST_DATABASE_URL) {
       throw Error('Please set TEST_DATABASE_URL')
     }
@@ -49,6 +51,7 @@ class TestHelper {
 
     this.mongo_collections = [
       'usage',
+      'platforms',
       'referral_codes',
       'usage_aggregate_woi',
       'android_usage',
@@ -106,6 +109,7 @@ class TestHelper {
         await mongo_client.createCollection(collection)
       }
     }))
+    await MongoSeed.exec()
     for (let schema in this.postgres_tables) {
       let self = this
       await Promise.all(self.postgres_tables[schema].map(async (relation) => {

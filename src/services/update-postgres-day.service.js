@@ -5,8 +5,9 @@ module.exports = class UpdatePostgresDay {
     // Retrieve the daily active user stats
     let results = await this.dau_grouped(collection_name, days)
 
-    console.log('Retrieved results from Mongo')
-    console.log('Updating ' + results.length + ' rows in Postgres')
+    if(!process.env.TEST){
+      console.log('Updating ' + results.length + ' rows in Postgres')
+    }
     results.forEach((result) => {
       result._id.woi = result._id.woi || '2016-01-04'
       result._id.ref = result._id.ref || 'none'
@@ -36,8 +37,9 @@ module.exports = class UpdatePostgresDay {
     let ts = (new Date()).getTime()
 
     var limit = moment().subtract(days, 'days').format('YYYY-MM-DD')
-    console.log(`Retrieving records on and after ${limit}`)
-
+    if(!process.env.TEST){
+      console.log(`Retrieving records on and after ${limit}`)
+    }
     const query = await mongo_client.collection(collection_name).aggregate([
       {
         $match: {

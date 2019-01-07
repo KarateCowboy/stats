@@ -14,9 +14,9 @@ Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
     expect(result, `button ${button} should be checked by default`).to.equal('true')
   }
 })
-Then(/^the ref select should be visible and have the 'none' ref entered$/, async function () {
-  const controlsHTML = await browser.get_html_when_visible('#controls')
-  expect(controlsHTML).to.contain('none')
+Then(/^the ref select should be visible and have no ref entered$/, async function () {
+  const ref_filter_html = await browser.get_html_when_visible('#ref-filter')
+  expect(ref_filter_html).to.not.contain('selected-tag')
 })
 Then(/^the this month button should "([^"]*)" be visible$/, async function (visible) {
   const is_visible = await browser.isVisible('#btn-show-today')
@@ -38,6 +38,10 @@ Given(/^I view the Daily Active Users report$/, async function () {
 
 Given(/^I view the Daily Active Users by Version report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#versions')
+})
+
+Given(/^I view the Daily New Users by Platform report$/, async function(){
+  await browser.url('http://localhost:8193/dashboard#daily_new')
 })
 
 Given(/^I view the Monthly Average Daily Active Users report$/, async function () {
