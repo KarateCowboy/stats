@@ -73,7 +73,7 @@
           </label>
         </div>
         <div class="btn-group" id="ref-filter" data-toggle="buttons">
-          <v-select v-if="showRefFilter" label="Referral Code" @input="refresh_data" id="ref" :options="refcodes"
+          <v-select v-if="showRefFilter" label="Referral Code" @input="refresh_data" id="ref" :options="refcodes" placeholder="Referral codes"
                     multiple v-model="selected_refs"></v-select>
         </div>
 
