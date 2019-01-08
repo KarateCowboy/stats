@@ -19,7 +19,7 @@ class DbUtil {
     this.dirFiles = this.pgModelsFilter(this.dirFiles)
   }
 
-  loadModels(){
+  loadModels () {
     for (let file of this.dirFiles) {
       let modelName = file.replace('.pgmodel.js', '')
       let firstLetter = modelName.slice(0, 1).toUpperCase()
@@ -34,8 +34,14 @@ class DbUtil {
 
   connect () {
     const options = {
-      ssl: true,
+      dialect: 'postgres',
+      protocol: 'postgres',
       logging: false
+    }
+    if (process.env.LOCAL === undefined) {
+      options.dialectOptions = {
+        ssl: true
+      }
     }
     this.sequelize = new Sequelize(this.pgConnectionString, options)
   }
