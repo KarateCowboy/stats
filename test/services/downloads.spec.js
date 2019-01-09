@@ -52,11 +52,6 @@ describe('DownloadsService', async function () {
       expect(service.current_list).to.have.property('length', 500)
     })
   })
-  describe.skip('#build_from_list', async function () {
-    it('builds multiple downloads from an S3 list', async function () {
-
-    })
-  })
   describe('#parse', async function () {
     it('returns a hash with correctly parsed values', async function () {
       const line = `608d9d664ad099538106571744f55ac449c1eb8dc08c08c114039011d43395954 brave-download [01/Jan/2018:02:02:03 +0000] 157.52.69.34 - 922A0961750A507F REST.GET.OBJECT multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe "GET /multi-channel/releases/dev/0.19.123/winx64/BraveSetup-x64.exe HTTP/1.1" 304 - 236855360 - 136855360 9 9 - "https://brave.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36 Edge/16.16299" -`

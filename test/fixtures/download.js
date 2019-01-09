@@ -41,7 +41,7 @@ const define = () => {
         return (id + id + id).substring(0, 64)
       },
       type: 'brave-download',
-      timestamp: () => moment().format('DD/MMMM/YY:HH:mm:ss ZZ'),
+    timestamp: () => moment().toDate(), 
       code: () => { return new ObjectID().toString().toUpperCase().substring(0, 16)},
       requestPath: 'multi-channel/releases/dev/0.19.123/osx/Brave-0.19.123.zip',
       requestResponseCode: 200,
