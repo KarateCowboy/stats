@@ -16,6 +16,10 @@ module.exports = function (sequelize, Sequelize) {
       notNull: true,
       defaultValue: 'brave-download'
     },
+    timestamp: {
+      type: Sequelize.DATE,
+      notNull: true
+    },
     ipAddress: {
       type: Sequelize.STRING,
       notNull: false
