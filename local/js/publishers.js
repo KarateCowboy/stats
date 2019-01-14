@@ -71,7 +71,7 @@
           <thead>
           </thead>
           <tbody>
-            <tr><th>Verified</th><td>${publisher_totals.email_verified.toLocaleString()}</td></tr>
+            <tr><th>E-mail Verified</th><td>${publisher_totals.email_verified.toLocaleString()}</td></tr>
             <tr><th>With a channel</th><td>${publisher_totals.email_verified_with_a_channel.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_channel')}%</span></td></tr>
             <tr><th>With a verified channel</th><td>${publisher_totals.email_verified_with_a_verified_channel.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel')}%</span></td></tr>
             <tr><th>With Uphold</th><td>${publisher_totals.email_verified_with_a_verified_channel_and_uphold_verified.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel_and_uphold_verified')}%</span></td></tr>
