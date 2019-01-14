@@ -60,6 +60,8 @@
 
   const overviewPublisherHandler = function (channel_totals, publisher_totals) {
     let publishersOverview = $('#publishers_overview')
+    const ratio_of_pubs = (n) => { return parseInt(publisher_totals[n] / publisher_totals.email_verified * 100)}
+    const ratio_of_channels = (n) => { return parseInt(channel_totals[n] / channel_totals.all_channels * 100)}
     let template = `
       <div class="panel-heading">
         <h3 class="panel-title"><a href="/dashboard#daily_publishers">Publishers</a></h3>
@@ -69,12 +71,15 @@
           <thead>
           </thead>
           <tbody>
-            <tr><th>Verified</th><td>${publisher_totals.email_verified}</td></tr>
-            <tr><th>With a channel</th><td>${publisher_totals.email_verified_with_a_channel}</td></tr>
-            <tr><th>With a verified channel</th><td>${publisher_totals.email_verified_with_a_verified_channel}</td></tr>
-            <tr><th>With Uphold</th><td>${publisher_totals.email_verified_with_a_verified_channel_and_uphold_verified}</td></tr>
+            <tr><th>Verified</th><td>${publisher_totals.email_verified.toLocaleString()}</td></tr>
+            <tr><th>With a channel</th><td>${publisher_totals.email_verified_with_a_channel.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_channel')}%</span></td></tr>
+            <tr><th>With a verified channel</th><td>${publisher_totals.email_verified_with_a_verified_channel.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel')}%</span></td></tr>
+            <tr><th>With Uphold</th><td>${publisher_totals.email_verified_with_a_verified_channel_and_uphold_verified.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel_and_uphold_verified')}%</span></td></tr>
           </tbody>
         </table>
+      </div>
+      <div class="panel-heading">
+        <h3 class="panel-title">Channels</h3>
       </div>
       <div class="panel-body">
         <table class="table table-striped" id="channels_table">
@@ -87,10 +92,10 @@
           </thead>
           <tbody>
           <tr>
-          <td>${ channel_totals.all_channels}</td>
-          <td>${ channel_totals.youtube}</td>
-          <td>${ channel_totals.site}</td>
-          <td>${ channel_totals.twitch}</td>
+          <td>${ channel_totals.all_channels.toLocaleString()}</td>
+          <td>${ channel_totals.youtube.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('youtube')}%</span></td>
+          <td>${ channel_totals.site.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('site')}%</span></td>
+          <td>${ channel_totals.twitch.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('twitch')}%</span></td>
           </tr>
           </tbody>
         </table>

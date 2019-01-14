@@ -61,7 +61,7 @@ Given(/^I view the Daily Active Returning Users by Platform report$/, async func
 })
 
 Given(/^I view the Overview page$/, async function () {
-
+  await browser.pause(20)
   await browser.url('http://localhost:8193/dashboard#overview')
 })
 

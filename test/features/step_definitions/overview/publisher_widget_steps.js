@@ -17,11 +17,17 @@ Then(/^I should see the publishers table with row headings and data$/, async fun
   }
   expect(exists).to.equal(true, 'publishers_overview widget should contain a table for the publisher information')
   //check actual data in rows
-  const publisher_total = _.first(await PublisherTotal.find().sort({ createdAt: -1 }).limit(1))
-  expect(publisher_table_rows[0]).to.contain(publisher_total.email_verified)
-  expect(publisher_table_rows[1]).to.contain(publisher_total.email_verified_with_a_channel)
-  expect(publisher_table_rows[2]).to.contain(publisher_total.email_verified_with_a_verified_channel)
-  expect(publisher_table_rows[3]).to.contain(publisher_total.email_verified_with_a_verified_channel_and_uphold_verified)
+  const publisher_total = _.first(await PublisherTotal.find().sort({createdAt: -1}).limit(1))
+  const total = publisher_total.email_verified
+  expect(publisher_table_rows[0]).to.contain(publisher_total.email_verified.toLocaleString())
+  expect(publisher_table_rows[1]).to.contain(publisher_total.email_verified_with_a_channel.toLocaleString())
+  expect(publisher_table_rows[1]).to.contain(_.toInteger(publisher_total.email_verified_with_a_channel / total * 100))
+
+  expect(publisher_table_rows[2]).to.contain(publisher_total.email_verified_with_a_verified_channel.toLocaleString())
+  expect(publisher_table_rows[2]).to.contain(_.toInteger(publisher_total.email_verified_with_a_verified_channel / total * 100))
+
+  expect(publisher_table_rows[3]).to.contain(publisher_total.email_verified_with_a_verified_channel_and_uphold_verified.toLocaleString())
+  expect(publisher_table_rows[3]).to.contain(_.toInteger(publisher_total.email_verified_with_a_verified_channel_and_uphold_verified / total * 100))
 
 })
 Then(/^I should see the channels table with column headings and data$/, async function () {
@@ -43,10 +49,14 @@ Then(/^I should see the channels table with column headings and data$/, async fu
   for (let heading of channels_headings) {
     expect(channels_heading).to.contain(heading)
   }
-  expect(channel_tds[0]).to.contain(latest_totals.all_channels)
-  expect(channel_tds[1]).to.contain(latest_totals.youtube)
-  expect(channel_tds[2]).to.contain(latest_totals.site)
-  expect(channel_tds[3]).to.contain(latest_totals.twitch)
+  const ratio_of_channels = (n) => { return _.toInteger((latest_totals[n] / latest_totals.all_channels) * 100)}
+  expect(channel_tds[0]).to.contain(latest_totals.all_channels.toLocaleString(), 'channels table should contain data for all_channels')
+  expect(channel_tds[1]).to.contain(latest_totals.youtube.toLocaleString(), 'channels table should contain data for youtube')
+  expect(channel_tds[1]).to.contain(ratio_of_channels('youtube'))
+  expect(channel_tds[2]).to.contain(latest_totals.site.toLocaleString(), 'channels table should contain data for sites')
+  expect(channel_tds[2]).to.contain(ratio_of_channels('site'))
+  expect(channel_tds[3]).to.contain(latest_totals.twitch.toLocaleString(), 'channels table should contain data for twitch')
+  expect(channel_tds[3]).to.contain(ratio_of_channels('twitch'))
 })
 
 Given(/^there is recent data for publisher totals$/, async function () {
