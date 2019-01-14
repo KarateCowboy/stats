@@ -1,0 +1,52 @@
+#!/usr/bin/env node
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const Script = require('./script')
+const _ = require('lodash')
+const ChannelTotal = require('../src/models/channel_total.model')()
+const PublisherTotal = require('../src/models/publisher_total.model')()
+const common = require('../src/api/common')
+const path = require('path')
+
+class FetchPublishers extends Script {
+
+  async run () {
+    await this.setup()
+    const channel_options = {
+      method: 'GET',
+      url: 'https://publishers.basicattentiontoken.org/api/v1/public/channels/totals',
+    }
+    let api_result = await common.prequest(channel_options)
+    const channel_total = new ChannelTotal(JSON.parse(api_result))
+
+    await channel_total.save()
+
+    const publisher_options = {
+      method: 'GET',
+      url: 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/totals',
+      headers: {
+        Authorization: `Token token=${process.env.PUBLISHERS_TOKEN}`
+      }
+    }
+    if (!process.env.LOCAL) {
+      const ProxyAgent = require('proxy-agent')
+      console.log('configuring proxy agent')
+      publisher_options.agent = new ProxyAgent(process.env.FIXIE_URL)
+    }
+    api_result = await common.prequest(publisher_options)
+    const publisher_total = new PublisherTotal(JSON.parse(api_result))
+    await publisher_total.save()
+
+    await this.shutdown()
+  }
+}
+
+const fetch_publishers = new FetchPublishers(path.basename(__filename))
+
+fetch_publishers.run()
+
+
+
+

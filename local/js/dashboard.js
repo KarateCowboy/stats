@@ -918,7 +918,7 @@ const weeklyRetentionRetriever = async function () {
   return new Promise((resolve, reject) => {
     $.ajax('/api/1/retention_week?' + standard_params, {
       success: (rows) => {
-        weeklyRetentionHandler(rows )
+        weeklyRetentionHandler(rows)
         resolve()
       },
       error: () => {
@@ -1099,12 +1099,16 @@ var overviewRetriever = async function () {
 
   var platformStats = await $.ajax('/api/1/monthly_average_stats_platform')
   window.OVERVIEW.monthAveragesHandler(platformStats, builders)
+  let channel_totals, publisher_totals
+  try {
+    channel_totals = await $.ajax('/api/1/publishers/channel_totals')
+    publisher_totals = await $.ajax('/api/1/publishers/publisher_totals')
+    window.STATS.PUB.overviewPublisherHandler(channel_totals, publisher_totals)
+  } catch (e) {
+    console.log('problem getting publisher information')
+    console.log(e)
+  }
 
-  var publishersOverview = await $.ajax('/api/1/publishers/overview')
-  var publishersBucketed = await $.ajax('/api/1/publishers/overview/bucketed')
-  var publishers = await $.ajax('/api/1/publishers/details')
-
-  window.STATS.PUB.overviewPublisherHandler(publishersOverview, publishersBucketed, publishers, publisherPlatforms)
 
   var btc = await $.ajax('/api/1/ledger_overview')
   var bat = await $.ajax('/api/1/bat/ledger_overview')

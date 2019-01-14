@@ -4,7 +4,8 @@
 
 var common = require('./common')
 var _ = require('underscore')
-
+const ChannelTotal = require('../models/channel_total.model')()
+const PublisherTotal = require('../models/publisher_total.model')()
 const PUBLISHERS_OVERVIEW = `
 SELECT
   (select count(1) from dtl.publishers) as total, 
@@ -60,7 +61,7 @@ exports.setup = (server, client, mongo) => {
   // Publishers overview
   server.route({
     method: 'GET',
-    path: '/api/1/publishers/overview',
+    path: '/api/1/publisher/overview',
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_OVERVIEW,
@@ -139,6 +140,26 @@ exports.setup = (server, client, mongo) => {
       },
       emptyParamsBuilder
     )
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/api/1/publishers/channel_totals',
+    handler: async function (request, reply) {
+      const result = await ChannelTotal.find({}).sort({createdAt: -1}).limit(1)
+      const channel_total = result !== undefined && result.length > 0 ? _.first(result) : (new ChannelTotal())
+      reply(channel_total.toObject())
+    }
+  })
+  server.route({
+    method: 'GET',
+    path: '/api/1/publishers/publisher_totals',
+    handler: async function (request, reply) {
+      const result = await PublisherTotal.find({}).sort({createdAt: -1}).limit(1)
+      const publisher_total = result !== null && result.length > 0 ? _.first(result) : (new PublisherTotal())
+      reply(publisher_total.toObject())
+
+    }
   })
 
 }

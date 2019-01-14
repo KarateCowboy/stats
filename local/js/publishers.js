@@ -1,5 +1,5 @@
 (function () {
-  var currentlySelectedPlatform = "publisher"
+  var currentlySelectedPlatform = 'publisher'
 
   var providerLogo = (provider) => {
     if (!provider) return ''
@@ -20,134 +20,88 @@
   var overviewPublisherHandlerDetails = function (publishers, platform) {
     if (!publishers.length) return
     var i, publisher, createdWhen, details, grouped, selectedPublishers
-    var buf = ""
-    $("#details-publishers-table").fadeOut(250, () => {
-      details = $("#details-publishers-table tbody")
+    var buf = ''
+    $('#details-publishers-table').fadeOut(250, () => {
+      details = $('#details-publishers-table tbody')
       details.empty()
       grouped = _.groupBy(publishers, (publisher) => { return publisher.platform })
       selectedPublishers = grouped[platform]
       if (!selectedPublishers || !selectedPublishers.length) {
-        $("#details-publishers-table").fadeIn(500)
+        $('#details-publishers-table').fadeIn(500)
         return
       }
       for (i = details.children().length; i < selectedPublishers.length; i++) {
         publisher = selectedPublishers[i]
         createdWhen = moment(publisher.created_at)
-         buf += tr([
+        buf += tr([
           td(`<img height=24 src="${providerLogo(publisher.provider)}"/>`, 'right'),
-          td("<a href='" + publisher.url +"'>" + ellipsify(publisherLabel(publisher), 30) + "</a><br><span class='subvalue'>" + createdWhen.format("MMM DD, YYYY") + " " + createdWhen.fromNow() + "</span>"),
-          td(st(publisher.alexa_rank || publisher.audience || 0), "right"),
-          td(publisher.verified ? '<i class="fa fa-check"></i>' : '', "center"),
-          td(publisher.authorized ? '<i class="fa fa-check"></i>' : '', "center")
+          td('<a href=\'' + publisher.url + '\'>' + ellipsify(publisherLabel(publisher), 30) + '</a><br><span class=\'subvalue\'>' + createdWhen.format('MMM DD, YYYY') + ' ' + createdWhen.fromNow() + '</span>'),
+          td(st(publisher.alexa_rank || publisher.audience || 0), 'right'),
+          td(publisher.verified ? '<i class="fa fa-check"></i>' : '', 'center'),
+          td(publisher.authorized ? '<i class="fa fa-check"></i>' : '', 'center')
         ])
       }
       details.append(buf)
       setTimeout(() => {
-        $("#details-publishers-table").fadeIn(400)
+        $('#details-publishers-table').fadeIn(400)
       })
     })
   }
 
   var overviewPublisherHandlerPlatforms = function (categories) {
     var i, cls
-    var nav = $("#publisher-platforms-nav-container")
+    var nav = $('#publisher-platforms-nav-container')
     nav.empty()
     for (i = 0; i < categories.length; i++) {
       cls = categories[i].platform === 'publisher' ? 'active' : ''
-      nav.append(`<li role="presentation" data-platform="${categories[i].platform}" class="${cls}"><a class="publisher-platform-nav-item" href="#" data-platform="${categories[i].platform}" id="publisher-platform-nav-item-${categories[i].platform}"><img src='/local/img/publisher-icons/${categories[i].icon_url}' height="24"/> ${categories[i].label}</a></li>`) 
+      nav.append(`<li role="presentation" data-platform="${categories[i].platform}" class="${cls}"><a class="publisher-platform-nav-item" href="#" data-platform="${categories[i].platform}" id="publisher-platform-nav-item-${categories[i].platform}"><img src='/local/img/publisher-icons/${categories[i].icon_url}' height="24"/> ${categories[i].label}</a></li>`)
     }
   }
 
-  var overviewPublisherHandler = function (overview, buckets, publishers, publisherCategories) {
-    var val, per, buf
+  const overviewPublisherHandler = function (channel_totals, publisher_totals) {
+    let publishersOverview = $('#publishers_overview')
+    const ratio_of_pubs = (n) => { return parseInt(publisher_totals[n] / publisher_totals.email_verified * 100)}
+    const ratio_of_channels = (n) => { return parseInt(channel_totals[n] / channel_totals.all_channels * 100)}
+    let template = `
+      <div class="panel-heading">
+        <h3 class="panel-title"><a href="/dashboard#daily_publishers">Publishers</a></h3>
+      </div>
+      <div class="panel-body">
+        <table class="table table-striped" id="publishers_table">
+          <thead>
+          </thead>
+          <tbody>
+            <tr><th>E-mail Verified</th><td>${publisher_totals.email_verified.toLocaleString()}</td></tr>
+            <tr><th>With a channel</th><td>${publisher_totals.email_verified_with_a_channel.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_channel')}%</span></td></tr>
+            <tr><th>With a verified channel</th><td>${publisher_totals.email_verified_with_a_verified_channel.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel')}%</span></td></tr>
+            <tr><th>With Uphold</th><td>${publisher_totals.email_verified_with_a_verified_channel_and_uphold_verified.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel_and_uphold_verified')}%</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-heading">
+        <h3 class="panel-title">Channels</h3>
+      </div>
+      <div class="panel-body">
+        <table class="table table-striped" id="channels_table">
+          <thead>
+            <tr><th>All</th>
+            <th><img src="/local/img/publisher-icons/youtube.svg" height="24" /></th>
+            <th><img src="/local/img/publisher-icons/internet.svg" height="24" /></th>
+            <th><img src="/local/img/publisher-icons/twitch.svg" height="24" /></th>
+            </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td>${ channel_totals.all_channels.toLocaleString()}</td>
+          <td>${ channel_totals.youtube.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('youtube')}%</span></td>
+          <td>${ channel_totals.site.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('site')}%</span></td>
+          <td>${ channel_totals.twitch.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('twitch')}%</span></td>
+          </tr>
+          </tbody>
+        </table>
+        </div>`
+    publishersOverview.html(template)
 
-    var overviewTable = $("#overview-publishers-table tbody")
-    overviewTable.empty()
-
-    var grouped = _.groupBy(publishers, (publisher) => { return publisher.platform })
-    var platformIds = _.keys(grouped)
-    console.log(publisherCategories)
-
-    buf = ""
-    buf += "<tr>"
-    buf += "<td></td>"
-    buf += "<td></td>"
-    buf += "<td></td>"
-    publisherCategories.forEach((platform) => {
-      buf += `<th colspan="2" style="text-align: center;"><img src="/local/img/publisher-icons/${platform.icon_url}" height="16"/></th>`
-    })
-    buf += "</tr>"
-    overviewTable.append(buf)
-
-    buf = "<tr>"
-    buf += td("Publishers"),
-    buf += td(st(publishers.length), "right") + td()
-    publisherCategories.forEach((platform) => {
-      if (grouped[platform.platform]) {
-        buf += td(st(grouped[platform.platform].length), 'right') + td()
-      } else {
-        buf += td("-") + td("")
-      }
-    })
-    buf += "</tr>"
-    overviewTable.append(buf)
-
-    buf = "<tr>"
-    buf += td("Verified")
-    buf += tdsv(st(overview.verified), overview.verified / overview.total)
-    publisherCategories.forEach((platform) => {
-      if (grouped[platform.platform]) {
-        val = grouped[platform.platform].filter((publisher) => { return publisher.verified }).length
-        per = val / grouped[platform.platform].length
-        buf += tdsv(st(val), per)
-      } else {
-        buf += td("-") + td("")
-      }
-    })
-    overviewTable.append(buf)
-
-    buf = "<tr>"
-    buf += td("Authorized")
-    buf += tdsv(st(overview.authorized), overview.authorized / overview.total)
-    publisherCategories.forEach((platform) => {
-      if (grouped[platform.platform]) {
-        val = grouped[platform.platform].filter((publisher) => { return publisher.authorized }).length
-        per = val / grouped[platform.platform].length
-        buf += tdsv(st(val), per)
-      } else {
-        buf += td("-") + td("")
-      }
-    })
-    overviewTable.append(buf)
-
-    // insert an initial set of top publishers
-    overviewPublisherHandlerPlatforms(publisherCategories)
-    overviewPublisherHandlerDetails(publishers, currentlySelectedPlatform)
-
-    // setup platfrom nav click handlers
-    $("#publisher-platforms-nav-container").on('click', "a.publisher-platform-nav-item", (evt, tg) => {
-      var li = $(evt.target).closest("li")
-      evt.preventDefault()
-      evt.stopPropagation()
-      var savedPlatform = currentlySelectedPlatform
-      var platform = li.data("platform")
-
-      if (savedPlatform === platform) return
-
-      currentlySelectedPlatform = platform
-      li.parent().children().each((idx) => {
-        var sli  = $(li.parent().children()[idx])
-        if (sli.data("platform") === currentlySelectedPlatform) {
-          sli.addClass("active")
-        } else {
-          sli.removeClass("active")
-        }
-      })
-
-      if (currentlySelectedPlatform) {
-        overviewPublisherHandlerDetails(publishers, currentlySelectedPlatform)
-      }
-    })
   }
 
   var publisherDailyRetriever = function () {
@@ -160,7 +114,7 @@
 
     var table = $('#publisherDataTable tbody')
     table.empty()
-    rows.forEach(function(row) {
+    rows.forEach(function (row) {
       var buf = '<tr>'
       buf = buf + '<td>' + row.ymd + '</td>'
       buf = buf + '<td>' + row.total + '</td>'
@@ -172,17 +126,17 @@
 
     // Build a list of unique labels (ymd)
     var ymds = _.chain(rows)
-        .map(function(row) { return row.ymd })
-        .uniq()
-        .sort()
-        .value()
+      .map(function (row) { return row.ymd })
+      .uniq()
+      .sort()
+      .value()
 
     // Associate the data
-    var product = _.object(_.map(ymds, function(ymd) {
+    var product = _.object(_.map(ymds, function (ymd) {
       return [ymd, {}]
     }))
 
-    rows.forEach(function(row) {
+    rows.forEach(function (row) {
       product[row.ymd].total = row.total
       product[row.ymd].verified = row.verified
       product[row.ymd].authorized = row.authorized
@@ -195,7 +149,7 @@
     var datasets = []
     _.each(ys, function (fld) {
       var dataset = []
-      ymds.forEach(function(ymd) {
+      ymds.forEach(function (ymd) {
         dataset.push(product[ymd][fld] || 0)
       })
       datasets.push(dataset)
@@ -205,7 +159,7 @@
 
     var data = {
       labels: ymds,
-      datasets: _.map(datasets, function(dataset, idx) {
+      datasets: _.map(datasets, function (dataset, idx) {
         return {
           label: ys[idx] || 'All',
           data: dataset,
@@ -216,13 +170,13 @@
       })
     }
 
-    var container = $("#publisherChartContainer")
+    var container = $('#publisherChartContainer')
     container.empty()
-    container.append("<canvas id='publisherChart' height='350' width='800'></canvas>")
+    container.append('<canvas id=\'publisherChart\' height=\'350\' width=\'800\'></canvas>')
 
-    var usageChart = document.getElementById("publisherChart")
+    var usageChart = document.getElementById('publisherChart')
     new Chart.Line(
-      usageChart.getContext("2d"),
+      usageChart.getContext('2d'),
       {
         data: data,
         options: window.STATS.COMMON.standardYAxisOptions
