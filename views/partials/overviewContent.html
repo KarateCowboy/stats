@@ -1,132 +1,103 @@
 <div class="row">
-  <div class="col-md-6">
+    <div class="col-md-6">
 
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">First Runs / Downloads</h3>
-      </div>
-      <div class="panel-body">
-        <table class="table table-striped" id="overview-first-run-table-desktop">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Desktop / Laptop Platforms</th>
-              <th class="text-right">First Runs</th>
-              <th class="text-right">Laptop %</th>
-              <th class="text-right">%</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-        <table class="table table-striped" id="overview-first-run-table-mobile">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Mobile Platforms</th>
-              <th class="text-right">Downloads</th>
-              <th class="text-right">Mobile %</th>
-              <th class="text-right">%</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">First Runs / Downloads</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped" id="overview-first-run-table-desktop">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Desktop / Laptop Platforms</th>
+                            <th class="text-right">First Runs</th>
+                            <th class="text-right">Laptop %</th>
+                            <th class="text-right">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <table class="table table-striped" id="overview-first-run-table-mobile">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Mobile Platforms</th>
+                            <th class="text-right">Downloads</th>
+                            <th class="text-right">Mobile %</th>
+                            <th class="text-right">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Publisher Referral Promo</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped" id="overview-referral-promo-summary">
+                    <tbody>
+                    </tbody>
+                </table>
+                <div class="text-center">
+                    <span id='overview-referral-promo-sparkline'></span>
+                </div>
+                <table class="table table-striped" id="overview-referral-promo-platform">
+                    <thead>
+                        <tr>
+                            <th colspan="2">Platform</th>
+                            <th class="text-right">Downloads</th>
+                            <th class="text-right">Finalized</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+                <table class="table table-striped" id="overview-referral-promo-top-channels">
+                    <thead>
+                        <tr>
+                            <td colspan="3"><input type="textbox" id="referral-search" placeholder="Search" class="form-control">
+                            </td>
+                            <td colspan="1">
+                                <button class="btn btn-default" id="referral-download">Download</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Channel</th>
+                            <th colspan="2">Platform</th>
+                            <th class="text-right">Downloads</th>
+                            <th class="text-right">Finalized</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
+    <div class="col-md-6">
 
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Publisher Referral Promo</h3>
-      </div>
-      <div class="panel-body">
-        <table class="table table-striped" id="overview-referral-promo-summary">
-          <tbody>
-          </tbody>
-        </table>
-	<div class="text-center">
-	  <span id='overview-referral-promo-sparkline'></span>
-	</div>
-        <table class="table table-striped" id="overview-referral-promo-platform">
-          <thead>
-            <tr>
-              <th colspan="2">Platform</th>
-              <th class="text-right">Downloads</th>
-              <th class="text-right">Finalized</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-        <table class="table table-striped" id="overview-referral-promo-top-channels">
-          <thead>
-            <tr>
-              <td colspan="3"><input type="textbox" id="referral-search" placeholder="Search" class="form-control">
-              </td>
-              <td colspan="1">
-		      <button class="btn btn-default" id="referral-download">Download</button>
-	      </td>
-            </tr>
-            <tr>
-              <th>Channel</th>
-	      <th colspan="2">Platform</th>
-              <th class="text-right">Downloads</th>
-              <th class="text-right">Finalized</th>
-            </tr>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-  </div>
-  <div class="col-md-6">
-
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Ledger</h3>
-      </div>
-      <div class="panel-body">
-        <table class="table table-striped" id="overview-ledger-table">
-          <thead>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title"><a href="/dashboard#daily_publishers">Publishers</a></h3>
-      </div>
-      <div class="panel-body">
-        <table class="table table-striped" id="overview-publishers-table">
-          <thead>
-          </thead>
-          <tbody>
-          </tbody>
-        </table>
-	<ul id="publisher-platforms-nav-container" class="nav nav-tabs">
-	</ul>
-	<div style="height: 400px; overflow: scroll; padding: 10px;">
-          <table class="table table-striped" id="details-publishers-table">
-            <thead>
-              <tr>
-		<th></th>
-                <th>Publisher</th>
-                <th>Rank/Subs</th>
-                <th>Verified</th>
-                <th>Authorized</th>
-	      </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
-	</div>
-      </div>
-    </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Ledger</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped" id="overview-ledger-table">
+                    <thead>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel panel-default" id="publishers_overview">
+        </div>
 
   </div>
 </div>

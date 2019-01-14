@@ -60,6 +60,11 @@ Given(/^I view the Daily Active Returning Users by Platform report$/, async func
   await browser.url('http://localhost:8193/dashboard#usage_returning')
 })
 
+Given(/^I view the Overview page$/, async function () {
+
+  await browser.url('http://localhost:8193/dashboard#overview')
+})
+
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref-filter`)
   expect(result).to.equal(true)
