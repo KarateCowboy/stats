@@ -24,7 +24,7 @@ module.exports = class WalletsService {
         }
       }
     } catch (e) {
-      if(!e.message.includes('Unexpected token < in JSON at position 0')){
+      if (!e.message.includes('Unexpected token < in JSON at position 0')) {
         console.log(`Error getting ledger wallets: ${e.message}`)
         throw e
       }
@@ -32,9 +32,10 @@ module.exports = class WalletsService {
   }
 
   async getFromLedger (daysBack = undefined) {
+
     const options = {
       method: 'GET',
-      uri: `${process.env.LEDGER_HOST}/v1/wallet/stats`,
+      uri: `${process.env.LEDGER_HOST}/v1/wallet/stats/${moment().subtract(2, 'days').format('YYYY-MM-DD')}/${moment().format('YYYY-MM-DD')}`,
       headers: {
         Authorization: 'Bearer ' + process.env.LEDGER_TOKEN
       }
