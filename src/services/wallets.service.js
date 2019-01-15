@@ -43,8 +43,15 @@ module.exports = class WalletsService {
     if (process.env.hasOwnProperty('LOCAL') === false) {
       options.agent = new ProxyAgent(process.env.FIXIE_URL)
     }
-    let result = await common.prequest(options)
-    result = JSON.parse(result)
+    let result
+    try {
+      result = await common.prequest(options)
+      result = JSON.parse(result)
+    } catch (e) {
+      console.log('Error fetching wallets data')
+      console.log(e.message)
+      console.dir(result)
+    }
     if (_.isArray(result) === false) {
       let errorMessage = ''
       if (result.statusCode === 406) {
