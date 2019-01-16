@@ -40,7 +40,7 @@ Given(/^I view the Daily Active Users by Version report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#versions')
 })
 
-Given(/^I view the Daily New Users by Platform report$/, async function(){
+Given(/^I view the Daily New Users by Platform report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#daily_new')
 })
 
@@ -63,6 +63,10 @@ Given(/^I view the Daily Active Returning Users by Platform report$/, async func
 Given(/^I view the Overview page$/, async function () {
   await browser.pause(20)
   await browser.url('http://localhost:8193/dashboard#overview')
+})
+
+Given(/^I view the Daily New Users report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#daily_new_users')
 })
 
 Then(/^the ref select should not be visible$/, async function () {

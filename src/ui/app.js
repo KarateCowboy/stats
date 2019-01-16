@@ -1,1 +1,1 @@
-//keeping this around for later
+require('./router')

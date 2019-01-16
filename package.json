@@ -44,6 +44,7 @@
     "joi": "7.0.1",
     "jquery": "3.0.0",
     "knex": "0.14.6",
+    "knex-migrate": "1.7.0",
     "lodash": "^4.17.11",
     "logfmt": "1.2.0",
     "minidump": "github:brave/node-minidump",
