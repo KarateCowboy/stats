@@ -1,7 +1,6 @@
-const Sequelize = require('sequelize')
 const {BigNumber} = require('bignumber.js')
 
-module.exports.define = function (sequelize) {
+module.exports = function (sequelize, Sequelize) {
   const Wallet = sequelize.define('Wallet', {
       created_at: {
         type: Sequelize.DATE,
@@ -13,7 +12,8 @@ module.exports.define = function (sequelize) {
       },
       created: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
+        defaultValue: Sequelize.NOW,
+        unique: true
       },
       wallets: {
         type: Sequelize.BIGINT,

@@ -2,39 +2,44 @@ const _ = require('underscore')
 const common = require('../api/common')
 const moment = require('moment')
 const ProxyAgent = require('proxy-agent')
-const Wallet = require('../models/wallet.model').define(global.sequelize)
 
 module.exports = class WalletsService {
   async updateFromLedger (daysBack = undefined) {
     try {
       const results = await this.getFromLedger(daysBack)
+      const created_dates = results.map(r => r.created)
+      await knex('dw.fc_wallets').whereIn('created', created_dates).delete()
       for (const r of results) {
+        let wallet
         try {
-          let wallet = new Wallet({
+          wallet = new db.Wallet({
             created: r.created,
             wallets: r.wallets,
-            balance: Wallet.probiToBalance(r.walletProviderBalance),
+            balance: db.Wallet.probiToBalance(r.walletProviderBalance),
             funded: r.walletProviderFunded
           })
           await wallet.save()
         } catch (e) {
           console.log('Error inserting wallet data from ledger:')
           console.log(`   ${e.message}`)
+          console.dir(e.errors)
           console.dir(r)
         }
       }
     } catch (e) {
-      if(!e.message.includes('Unexpected token < in JSON at position 0')){
+      if (!e.message.includes('Unexpected token < in JSON at position 0')) {
         console.log(`Error getting ledger wallets: ${e.message}`)
         throw e
       }
     }
   }
 
-  async getFromLedger (daysBack = undefined) {
+  async getFromLedger (daysBack) {
+    const start = moment().subtract(daysBack || 3, 'days').format('YYYY-MM-DD')
+    const tomorrow = moment().add(1, 'days').format('YYYY-MM-DD')
     const options = {
       method: 'GET',
-      uri: `${process.env.LEDGER_HOST}/v1/wallet/stats`,
+      uri: `${process.env.LEDGER_HOST}/v2/wallet/stats/${start}/${tomorrow}`,
       headers: {
         Authorization: 'Bearer ' + process.env.LEDGER_TOKEN
       }
@@ -42,9 +47,8 @@ module.exports = class WalletsService {
     if (process.env.hasOwnProperty('LOCAL') === false) {
       options.agent = new ProxyAgent(process.env.FIXIE_URL)
     }
-    let result
+    let result = await common.prequest(options)
     try {
-      result = await common.prequest(options)
       result = JSON.parse(result)
     } catch (e) {
       console.log('Error fetching wallets data')
