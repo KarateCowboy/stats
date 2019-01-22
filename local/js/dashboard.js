@@ -162,9 +162,9 @@ var b = function (text) { return '<strong>' + text + '</strong>' }
 
 var builders = {round, td, ptd, th, tr, st, td, st1, st3, stp, b, std}
 
-let clampZeroToOne = (v) => {
+let clampZeroToOneHundred = (v) => {
   if (v < 0) return 0
-  if (v > 1) return 1
+  if (v > 100) return 100
   return v
 }
 
@@ -499,6 +499,8 @@ let buildSingleValueChartHandler = (chartContainerId, x, y, xLabel, yLabel, opts
   opts.colorIdx = opts.colorIdx || 0
 
   return (rows) => {
+    if (opts.valueManipulator) rows = rows.map(opts.valueManipulator)
+
     // Build a list of unique x-axis labels (mostly ymd)
     var labels = _.chain(rows)
       .map((row) => { return row[x] })
@@ -893,9 +895,15 @@ const usageMeasureHandler = (rows) => {
   dnuHandler = buildSingleValueChartHandler('dnuChartContainer', 'ymd', 'dnu', 'Date', 'DNU', { colorIdx: 1 })
   dnuHandler(rows)
 
-  retainedHandler = buildSingleValueChartHandler('retainedChartContainer', 'ymd', 'retained', 'Date', 'Retained', {
+  retainedHandler = buildSingleValueChartHandler('retainedChartContainer', 'ymd', 'retained', 'Date', 'Retained %', {
     colorIdx: 2,
-    valueClamper: clampZeroToOne
+    valueClamper: clampZeroToOneHundred,
+    valueManipulator: (row) => {
+      let modifiedRow = _.clone(row)
+      modifiedRow.retained *= 100
+      modifiedRow.retained = Math.round(modifiedRow.retained * 10000) / 10000
+      return modifiedRow
+    }
   })
   retainedHandler(rows)
 
