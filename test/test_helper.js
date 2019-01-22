@@ -28,6 +28,7 @@ require('./fixtures/fc_usage_month_exception').define()
 require('./fixtures/wallets').define()
 require('./fixtures/channel_total').define()
 require('./fixtures/publisher_total').define()
+require('./fixtures/ledger/wallets').define()
 const fixtures = {
   fc_usage: require('./fixtures/fc_usage'),
   download: require('./fixtures/download')

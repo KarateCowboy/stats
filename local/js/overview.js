@@ -73,25 +73,25 @@ var ledger = function (btc, bat, b) {
   ]))
   overviewTable.append(tr([
     b.td("Total balance of funded wallets"),
-    b.td(b.st3(btc.balance / 100000000), "right"),
+    b.td(b.st3(btc.balance ), "right"),
     b.td(b.st3(bat.balance), "right"),
     b.td('tokens')
   ]))
   overviewTable.append(tr([
     b.td(),
-    b.td(b.std(btc.balance / 100000000 * btc.btc_usd), "right"),
+    b.td(b.std(btc.balance * btc.btc_usd), "right"),
     b.td(b.std(bat.balance * bat.bat_usd), "right"),
     b.td('$ USD')
   ]))
   overviewTable.append(tr([
     b.td("Average balance of funded wallets"),
-    b.td(b.round((btc.balance / btc.funded) / 100000000, 6), "right"),
+    b.td(b.round((btc.balance / btc.funded) , 6), "right"),
     b.td(b.round((bat.balance / bat.funded), 6), "right"),
     b.td('tokens')
   ]))
   overviewTable.append(tr([
     b.td(),
-    b.td(b.std((btc.balance / btc.funded) / 100000000 * btc.btc_usd), "right"),
+    b.td(b.std((btc.balance / btc.funded)  * btc.btc_usd), "right"),
     b.td(b.std((bat.balance / bat.funded) * bat.bat_usd), "right"),
     b.td('$ USD')
   ]))

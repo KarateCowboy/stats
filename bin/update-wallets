@@ -8,7 +8,7 @@ const _ = require('underscore')
 const commander = require('commander')
 const reporter = require('../src/reporter')
 const Knex = require('knex')
-const Sequelize = require('sequelize')
+const DbUtil = require('../src/models')
 const pg = require('pg')
 const jobName = 'update-wallets'
 
@@ -18,7 +18,6 @@ const main = async () => {
   const WalletsService = require('../src/services/wallets.service')
   const walletService = new WalletsService()
   try {
-    await knex('dw.fc_wallets').truncate()
     await walletService.updateFromLedger(commander.daysback)
   } catch (e) {
     console.log(`Error running ${jobName}:`)
@@ -40,13 +39,8 @@ setup = async () => {
   }
   global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
   global.pg_client = await pg.connect(process.env.DATABASE_URL)
-  global.sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'postgres',
-    protocol: 'postgres',
-    dialectOptions: {
-      ssl: true
-    }
-  })
+  global.db = new DbUtil(process.env.DATABASE_URL)
+  await global.db.loadModels()
 }
 
 commander.option('-d --daysback [num]', 'Days to go back in fetching').parse(process.argv)

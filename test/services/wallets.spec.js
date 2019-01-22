@@ -40,7 +40,6 @@ describe('Wallets service', async function () {
       for (let wallet in walletsFromDb) {
         expect(moment(wallet.created).isSameOrAfter(cutoff_day)).to.equal(true)
       }
-
       common.prequest.restore()
     })
     it('puts a bunch of data from the ledge API in the table', async function () {
@@ -61,16 +60,32 @@ describe('Wallets service', async function () {
       expect(sample).to.have.property('funded')
       expect(sample).to.have.property('created')
     })
-    it('handles the JSON parse error', async function(){
+    it('updates data for previously existing wallet dates', async function () {
+      const original_api_wallet = await factory.attrs('wallet_from_api')
+      const second_api_wallet = await factory.attrs('wallet_from_api')
+
+      sinon.stub(common, 'prequest').returns(JSON.stringify([original_api_wallet]))
+      service = new WalletService()
+      await service.updateFromLedger()
+      common.prequest.restore()
+
+      sinon.stub(common, 'prequest').returns(JSON.stringify([second_api_wallet]))
+      await service.updateFromLedger()
+      common.prequest.restore()
+      const walletsFromDb = await db.Wallet.findAll()
+      expect(walletsFromDb).to.have.property('length', 1)
+
+    })
+    it('handles the JSON parse error', async function () {
       const apiResults = require('../fixtures/ledger_wallets')
       sinon.stub(common, 'prequest').returns(JSON.stringify(apiResults))
       service = new WalletService()
-      sinon.stub(service,'getFromLedger').throws(new Error('Unexpected token < in JSON at position 0'))
+      sinon.stub(service, 'getFromLedger').throws(new Error('Unexpected token < in JSON at position 0'))
       await service.updateFromLedger()
       common.prequest.restore()
     })
-    afterEach(async function(){
-      if(common.prequest.restore){
+    afterEach(async function () {
+      if (common.prequest.restore) {
         common.prequest.restore()
       }
     })
@@ -142,9 +157,6 @@ describe('Wallets service', async function () {
       //validation
       expect(response).to.include('noproxy')
       common.prequest.restore()
-    })
-    it('converts walletProviderBalance from probi', async function () {
-
     })
   })
 })

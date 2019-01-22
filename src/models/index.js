@@ -27,8 +27,9 @@ class DbUtil {
       const modelPath = path.join(__dirname, file)
       const model = this.sequelize.import(modelPath)
       this[model.name] = model
-      if (typeof this[model.name].associate === 'function')
+      if (typeof this[model.name].associate === 'function'){
         this[model.name].associate(this)
+      }
     }
   }
 
