@@ -187,6 +187,33 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
     }
   }
 
+  UsageSummary.dailyNewUsers = async function (args, group = []) {
+    const query = knex('dw.fc_usage').select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
+      .where('ymd', '>=', moment().subtract(args.daysAgo, 'days').format('YYYY-MM-DD'))
+      .where('first_time', true)
+      .whereIn('channel', args.channels)
+      .whereIn('platform', args.platforms)
+      .groupBy('ymd')
+      .orderBy('ymd', 'desc').as('fc')
+    if (args.ref !== undefined && _.compact(args.ref).length > 0) {
+      query.whereIn('ref', args.ref)
+    }
+    if (group.includes('platform') || group.includes('version')) {
+      var day_totals = await pg_client.query(query.toString())
+      if (group.includes('platform')) {
+        query.select('platform').groupBy('platform')
+      }
+      if (group.includes('version')) {
+        query.select('version').groupBy('version')
+      }
+      //ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
+      const results = await pg_client.query(query.toString())
+      results.rows.forEach(r => { r.daily_percentage = (_.toNumber(r.count) / _.toNumber(_.find(day_totals.rows, {'ymd': r.ymd}).count)) * 100 })
+      return results
+    } else {
+      return await pg_client.query(query.toString())
+    }
+  }
   UsageSummary.dauVersion = async function (args) {
     const DAU_VERSION_NO_REF = `
 SELECT
