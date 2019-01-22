@@ -162,6 +162,12 @@ var b = function (text) { return '<strong>' + text + '</strong>' }
 
 var builders = {round, td, ptd, th, tr, st, td, st1, st3, stp, b, std}
 
+let clampZeroToOne = (v) => {
+  if (v < 0) return 0
+  if (v > 1) return 1
+  return v
+}
+
 // Install promotion info in the control bar
 var partners, refs
 
@@ -486,6 +492,61 @@ var buildTelemetryChartBuilder = function (opts) {
   }
 }
 
+// Build handler for a single value chart updater
+let buildSingleValueChartHandler = (chartContainerId, x, y, xLabel, yLabel, opts) => {
+  opts = opts || {}
+  opts.valueClamper = opts.valueClamper || _.identity
+  opts.colorIdx = opts.colorIdx || 0
+
+  return (rows) => {
+    // Build a list of unique x-axis labels (mostly ymd)
+    var labels = _.chain(rows)
+      .map((row) => { return row[x] })
+      .uniq()
+      .sort()
+      .value()
+
+    var product = _.object(_.map(labels, function (label) {
+      return [label, {}]
+    }))
+    rows.forEach(function (row) {
+      product[row[x]][y] = opts.valueClamper(row[y])
+    })
+
+    let dataset = labels.map((lbl) => {
+      return product[lbl][y] || 0
+    })
+
+    let colourer = (idx, opacity) => {
+      return window.STATS.COLOR.colorForIndex(idx, opacity)
+    }
+
+    var data = {
+      labels: labels,
+      datasets: [
+        {
+          label: yLabel,
+          data: dataset,
+          borderColor: colourer(opts.colorIdx, 1),
+          pointColor: colourer(opts.colorIdx, 0.5),
+          backgroundColor: colourer(opts.colorIdx, 0.05)
+        }
+      ]
+    }
+
+    let container = $('#' + chartContainerId)
+    let chartId = chartContainerId + 'Chart'
+    container.empty()
+    container.append(`<canvas id='${chartId}' height='300' width='800'></canvas>`)
+
+    var usageChart = document.getElementById(chartId)
+    new Chart.Line(usageChart.getContext('2d'), {
+      data: data,
+      options: window.STATS.COMMON.standardYAxisOptions
+    })
+  }
+}
+
 // Build a handler for a successful API request
 var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   opts = opts || {}
@@ -501,6 +562,8 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
     }
     return formatter(value)
   }
+
+  if (opts.formatter) { value_func = opts.formatter }
 
   return function (rows) {
     console.log('executing a handler')
@@ -807,8 +870,85 @@ const retentionMonthHandler = function (rows) {
 }
 
 const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
-// Data type success handlers
+
 var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
+
+const usageMeasureHandler = (rows) => {
+  let CostPerInstall = 0
+
+  if (rows.length === 0) return
+  $('#DNUDAUFullContents').fadeIn()
+
+  const resetCost = (evt) => {
+    if (evt) evt.stopPropagation()
+    $('#DNUDAUCostDisplay').hide()
+    $('#DNUDAUCaptureValues').show()
+  }
+  $("#DNUDAUCostChange").on("click", resetCost)
+  resetCost()
+
+  dauHandler = buildSingleValueChartHandler('dauChartContainer', 'ymd', 'dau', 'Date', 'DAU', { colorIdx: 0 })
+  dauHandler(rows)
+
+  dnuHandler = buildSingleValueChartHandler('dnuChartContainer', 'ymd', 'dnu', 'Date', 'DNU', { colorIdx: 1 })
+  dnuHandler(rows)
+
+  retainedHandler = buildSingleValueChartHandler('retainedChartContainer', 'ymd', 'retained', 'Date', 'Retained', {
+    colorIdx: 2,
+    valueClamper: clampZeroToOne
+  })
+  retainedHandler(rows)
+
+  let tbl = $('#DNUDAUDataTable tbody')
+  tbl.empty()
+  rows.reverse().forEach((row) => {
+    tbl.append(tr([
+      td(row.ymd),
+      td(st(row.dau), 'right'),
+      td(st(row.dnu), 'right'),
+      td(st(row.dnuSum), 'right'),
+      td(stp(row.retained), 'right')
+    ]))
+  })
+
+  let firstRecords = (lst, n=7) => {
+    if (lst.length < n) return lst
+    return lst.slice(0, n)
+  }
+
+  let firstRows = firstRecords(rows)
+  let firstRowValues = {
+    dau: STATS.STATS.avg(_.pluck(firstRows, 'dau')),
+    installs: STATS.STATS.avg(_.pluck(firstRows, 'dnuSum'))
+  }
+  firstRowValues.retained = firstRowValues.dau / firstRowValues.installs
+
+  let oneDay = ` <small>${moment(rows[0].ymd).format('MMM Do')}</small>`
+  let sevenDay = ` <small>last 7 days</small>`
+
+  $('#DNUDAURetentionLabel').html(stp(rows[0].retained) + oneDay)
+  $('#DNUDAURetentionLabel7').html(stp(firstRowValues.retained) + sevenDay)
+
+  $('#DNUDAUDailyActivesLabel').html(st(rows[0].dau) + oneDay)
+  $('#DNUDAUDailyActivesLabel7').html(st(firstRowValues.dau) + sevenDay)
+
+  $('#DNUDAUInstallsLabel').html(st(rows[0].dnuSum) + oneDay)
+  $('#DNUDAUInstallsLabel7').html(st(firstRowValues.installs) + sevenDay)
+
+  $("#DNUDAUUpdate").on("click", (evt) => {
+    CostPerInstall = parseFloat($("#DNUDAUCost").val())
+    if (_.isNaN(CostPerInstall)) CostPerInstall = 0
+    CostCurrency = $("#DNUDAUCurrency").val()
+    let costPerDAU = {
+      one: (rows[0].dnuSum * CostPerInstall) / rows[0].dau,
+      seven: (firstRowValues.installs * CostPerInstall) / firstRowValues.dau
+    }
+    $('#DNUDAUCostPerDAULabel').html(std(costPerDAU.one) + ' <small>(' + CostCurrency + ')</small> ' + oneDay)
+    $('#DNUDAUCostPerDAULabel7').html(std(costPerDAU.seven) + ' <small>(' + CostCurrency + ')</small> ' + sevenDay)
+    $('#DNUDAUCostDisplay').show()
+    $('#DNUDAUCaptureValues').hide()
+  })
+}
 
 var retentionHandler = buildSuccessHandler('ymd', 'woi', 'Date', 'Week of installation', {colourBy: 'index'})
 
@@ -840,6 +980,7 @@ var walletsBalanceAverageHandler = buildSuccessHandler('ymd', 'platform', 'Date'
 // Array of content panels
 var contents = [
   'usageContent',
+  'DNUDAUContent',
   'publisherContent',
   'usageTelemetry',
   'crashesContent',
@@ -939,6 +1080,16 @@ var versionsRetriever = function () {
 var DAUPlatformRetriever = function () {
   $.ajax('/api/1/dau_platform?' + standardParams(), {
     success: usagePlatformHandler
+  })
+}
+
+var DNUDAURetriever = function () {
+  $('#DNUDAUFullContents').hide()
+  setTimeout(() => {
+    $('#DNUDAUInstructions').fadeOut()
+  }, 10000)
+  $.ajax('/api/1/daily_retention?' + standardParams(), {
+    success: usageMeasureHandler
   })
 }
 
@@ -1182,6 +1333,12 @@ var menuItems = {
     show: 'overviewContent',
     title: 'Overview',
     retriever: overviewRetriever
+  },
+  'mnDNUDAURetention': {
+    show: 'DNUDAUContent',
+    title: 'Daily Retention',
+    subtitle: 'Daily retention, calculated using the latest DAU and cumulative installations (DNU)',
+    retriever: DNUDAURetriever
   },
   'mnRetention': {
     show: 'usageContent',
@@ -1726,6 +1883,18 @@ let initialize_router = () => {
 
   router.get('usage_agg', function (req) {
     pageState.currentlySelected = 'mnUsageAgg'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showPromotions = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = true
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('dnu_dau_retention', function (req) {
+    pageState.currentlySelected = 'mnDNUDAURetention'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showPromotions = true
