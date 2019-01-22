@@ -1,0 +1,110 @@
+<div class="alert alert-success" role="alert" id="DNUDAUInstructions">
+  Select a set of referral codes and change the number of days to 'All'
+</div>
+
+<div id="DNUDAUFullContents">
+<div class="row">
+  <div class="col-md-3">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Retention</h3>
+      </div>
+      <div class="panel-body">
+	<h4 class="text-center" id="DNUDAURetentionLabel">
+	</h4>
+	<h4 class="text-center" id="DNUDAURetentionLabel7">
+	</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Daily Actives</h3>
+      </div>
+      <div class="panel-body">
+	<h4 class="text-center" id="DNUDAUDailyActivesLabel">
+	</h4>
+	<h4 class="text-center" id="DNUDAUDailyActivesLabel7">
+	</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Cumulative Installs</h3>
+      </div>
+      <div class="panel-body">
+	<h4 class="text-center" id="DNUDAUInstallsLabel">
+	</h4>
+	<h4 class="text-center" id="DNUDAUInstallsLabel7">
+	</h4>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">Cost / DAU</h3>
+      </div>
+      <div class="panel-body">
+	 <div id="DNUDAUCaptureValues">
+           <input id="DNUDAUCost" type="text" class="form-control" placeholder="Price per install">
+           <select id="DNUDAUCurrency" class="form-control">
+             <option>USD</option>
+             <option>BAT</option>
+           </select>
+	   <button id="DNUDAUUpdate" class="btn btn-primary">Update</button>
+         </div>
+	 <div id="DNUDAUCostDisplay">
+	   <h4 class="text-center" id="DNUDAUCostPerDAULabel">
+	   </h4>
+	   <h4 class="text-center" id="DNUDAUCostPerDAULabel7">
+	   </h4>
+	   <div class="text-center"><a id="DNUDAUCostChange">change...</a></div>
+         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-8">
+
+<div>
+  <div id="dauChartContainer">
+  </div>
+</div>
+
+<div>
+  <div id="dnuChartContainer">
+  </div>
+</div>
+
+<div>
+  <div id="retainedChartContainer">
+  </div>
+</div>
+
+  </div>
+  <div class="col-md-4">
+
+<div class="table-responsive">
+  <table class="table table-striped table-condensed" id="DNUDAUDataTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th class="text-right">DAU</th>
+        <th class="text-right">DNU</th>
+        <th class="text-right">Installs</th>
+	<th class="text-right">Retention</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+</div>
+</div>
+</div>
+</div>
