@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const _ = require('underscore')
+const _ = require('lodash')
 var assert = require('assert')
 
 var dataset = require('./dataset')
@@ -304,13 +304,13 @@ exports.setup = (server, client, mongo) => {
       let [days, platforms, channels, ref] = retrieveCommonParameters(request)
       let query, args
       args = {
-          daysAgo: days,
-          platform: platforms,
-          channel: channels
+        daysAgo: days,
+        platform: platforms,
+        channel: channels
       }
       if (arrayIsTruthy(ref)) {
-          args.ref = ref
-      }      
+        args.ref = ref
+      }
       let results = await db.UsageSummary.dauVersion(args)
       results.forEach((row) => common.formatPGRow(row))
       // condense small version counts to an 'other' category
@@ -690,6 +690,29 @@ exports.setup = (server, client, mongo) => {
 
       }
 
+      results.rows.forEach((row) => common.formatPGRow(row))
+      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
+      results.rows.forEach((row) => common.convertPlatformLabels(row))
+      reply(results.rows)
+    }
+  })
+
+  // Daily new users
+  server.route({
+    method: 'GET',
+    path: '/api/1/daily_new_users',
+    handler: async function (request, reply) {
+      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      const args = {
+        daysAgo: parseInt(days.replace(' days', '')),
+        platforms: platforms,
+        channels: channels,
+        ref: ref
+      }
+      if(_.isEmpty(_.compact(ref))){
+         delete args.ref
+      }
+      let results = await db.UsageSummary.dailyNewUsers(args)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))

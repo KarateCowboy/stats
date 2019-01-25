@@ -873,6 +873,8 @@ const retentionMonthHandler = function (rows) {
 
 const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
+const dailyNewUsersHandler = buildSuccessHandler('ymd','platform')
+
 var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
 const usageMeasureHandler = (rows) => {
@@ -886,13 +888,13 @@ const usageMeasureHandler = (rows) => {
     $('#DNUDAUCostDisplay').hide()
     $('#DNUDAUCaptureValues').show()
   }
-  $("#DNUDAUCostChange").on("click", resetCost)
+  $('#DNUDAUCostChange').on('click', resetCost)
   resetCost()
 
-  dauHandler = buildSingleValueChartHandler('dauChartContainer', 'ymd', 'dau', 'Date', 'DAU', { colorIdx: 0 })
+  dauHandler = buildSingleValueChartHandler('dauChartContainer', 'ymd', 'dau', 'Date', 'DAU', {colorIdx: 0})
   dauHandler(rows)
 
-  dnuHandler = buildSingleValueChartHandler('dnuChartContainer', 'ymd', 'dnu', 'Date', 'DNU', { colorIdx: 1 })
+  dnuHandler = buildSingleValueChartHandler('dnuChartContainer', 'ymd', 'dnu', 'Date', 'DNU', {colorIdx: 1})
   dnuHandler(rows)
 
   retainedHandler = buildSingleValueChartHandler('retainedChartContainer', 'ymd', 'retained', 'Date', 'Retained %', {
@@ -919,7 +921,7 @@ const usageMeasureHandler = (rows) => {
     ]))
   })
 
-  let firstRecords = (lst, n=7) => {
+  let firstRecords = (lst, n = 7) => {
     if (lst.length < n) return lst
     return lst.slice(0, n)
   }
@@ -943,10 +945,10 @@ const usageMeasureHandler = (rows) => {
   $('#DNUDAUInstallsLabel').html(st(rows[0].dnuSum) + oneDay)
   $('#DNUDAUInstallsLabel7').html(st(firstRowValues.installs) + sevenDay)
 
-  $("#DNUDAUUpdate").on("click", (evt) => {
-    CostPerInstall = parseFloat($("#DNUDAUCost").val())
+  $('#DNUDAUUpdate').on('click', (evt) => {
+    CostPerInstall = parseFloat($('#DNUDAUCost').val())
     if (_.isNaN(CostPerInstall)) CostPerInstall = 0
-    CostCurrency = $("#DNUDAUCurrency").val()
+    CostCurrency = $('#DNUDAUCurrency').val()
     let costPerDAU = {
       one: (rows[0].dnuSum * CostPerInstall) / rows[0].dau,
       seven: (firstRowValues.installs * CostPerInstall) / firstRowValues.dau
@@ -1268,7 +1270,6 @@ var overviewRetriever = async function () {
     console.log(e)
   }
 
-
   var btc = await $.ajax('/api/1/ledger_overview')
   var bat = await $.ajax('/api/1/bat/ledger_overview')
   window.OVERVIEW.ledger(btc, bat, builders)
@@ -1328,6 +1329,14 @@ var telemetryStandardRetriever = function () {
   fillOptionsIfNotEmpty('/api/1/ci/machines', 'machines')
   fillOptionsIfNotEmpty('/api/1/ci/versions', 'telemetryVersions')
   telemetryRetriever()
+}
+
+const dailyNewUsersRetriever = function () {
+  $.ajax('/api/1/daily_new_users?' + standardParams(), {
+    success: (data) => {
+      dailyNewUsersHandler(data)
+    }
+  })
 }
 
 // Object of menu item meta data
@@ -1506,6 +1515,12 @@ var menuItems = {
     title: 'Downloads',
     subtitle: 'By Day',
     retriever: downloadsRetriever
+  },
+  'mnDailyNewUsers': {
+    show: 'usageContent',
+    title: 'Daily New Users (DNU)',
+    subtitle: '',
+    retriever: dailyNewUsersRetriever
   }
 }
 
@@ -1701,7 +1716,7 @@ var refreshData = function () {
 
 let initialize_router = () => {
 // Setup menu handler routes
-  var router = new Grapnel()
+  const router = new Grapnel()
 
   router.get('search', function (req) {
     pageState.currentlySelected = 'mnSearch'
@@ -1901,18 +1916,6 @@ let initialize_router = () => {
     refreshData()
   })
 
-  router.get('dnu_dau_retention', function (req) {
-    pageState.currentlySelected = 'mnDNUDAURetention'
-    viewState.showControls = true
-    viewState.showDaysSelector = true
-    viewState.showPromotions = true
-    viewState.showShowToday = true
-    viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
-    updatePageUIState()
-    refreshData()
-  })
-
   router.get('top_crashes', function (req) {
     pageState.currentlySelected = 'mnTopCrashes'
     viewState.showControls = true
@@ -2056,7 +2059,7 @@ let initialize_router = () => {
     refreshData()
   })
 
-  // Display a single crash report
+// Display a single crash report
   router.get('crash/:id', function (req) {
     pageState.currentlySelected = 'mnTopCrashes'
     viewState.showControls = false
@@ -2154,7 +2157,7 @@ let initialize_router = () => {
     })
   })
 
-  // Display a list of crash reports
+// Display a list of crash reports
   router.get('crash_list/:platform/:version/:days/:crash_reason/:cpu/:signature', function (req) {
     pageState.currentlySelected = 'mnTopCrashes'
     // Show and hide sub-sections
@@ -2200,6 +2203,17 @@ let initialize_router = () => {
     updatePageUIState()
     refreshData()
   })
+
+  router.get('daily_new_users', function(req){
+    pageState.currentlySelected = 'mnDailyNewUsers'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showPromotions = false
+    viewState.showShowToday = false
+    updatePageUIState()
+    refreshData()
+  })
+
 }
 
 // build platform button handlers
