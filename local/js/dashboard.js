@@ -1518,7 +1518,7 @@ var menuItems = {
   },
   'mnDailyNewUsers': {
     show: 'usageContent',
-    title: 'Daily New Users',
+    title: 'Daily New Users (DNU)',
     subtitle: '',
     retriever: dailyNewUsersRetriever
   }
