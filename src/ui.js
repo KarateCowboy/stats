@@ -162,9 +162,9 @@ exports.setup = (server, db) => {
     [ '/bootstrap/{param*}', './node_modules/bootstrap/dist' ],
     [ '/jquery/{param*}', './node_modules/jquery/dist' ],
     [ '/local/{param*}', './local' ],
+    [ '/dist/{param*}','./dist'],
     [ '/bower/{param*}', './bower_components' ],
-    [ '/ss/{param*}', './node_modules/simple-statistics/dist' ],
-    [ '/dist/{param*}','./dist']
+    [ '/ss/{param*}', './node_modules/simple-statistics/dist' ]
   ]
 
   statics.forEach((stat) => {
