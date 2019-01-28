@@ -1094,8 +1094,7 @@ var DAUPlatformRetriever = function () {
 }
 
 var DNUDAURetriever = function () {
-  // $('#DNUDAUFullContents').hide()
-  console.log('executing DNUDAURetriever')
+  $('#DNUDAUFullContents').hide()
   setTimeout(() => {
     $('#DNUDAUInstructions').fadeOut()
   }, 10000)
