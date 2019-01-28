@@ -873,7 +873,7 @@ const retentionMonthHandler = function (rows) {
 
 const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
-const dailyNewUsersHandler = buildSuccessHandler('ymd','platform')
+const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
 
 var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
@@ -2059,6 +2059,18 @@ let initialize_router = () => {
     refreshData()
   })
 
+  router.get('dnu_dau_retention', function (req) {
+    pageState.currentlySelected = 'mnDNUDAURetention'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showPromotions = false
+    viewState.showShowToday = true
+    viewState.showRefFilter = true
+    VueApp.$data.showRefFilter = true
+    updatePageUIState()
+    refreshData()
+  })
+
 // Display a single crash report
   router.get('crash/:id', function (req) {
     pageState.currentlySelected = 'mnTopCrashes'
@@ -2204,7 +2216,7 @@ let initialize_router = () => {
     refreshData()
   })
 
-  router.get('daily_new_users', function(req){
+  router.get('daily_new_users', function (req) {
     pageState.currentlySelected = 'mnDailyNewUsers'
     viewState.showControls = true
     viewState.showDaysSelector = true
