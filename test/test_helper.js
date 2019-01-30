@@ -31,7 +31,10 @@ require('./fixtures/publisher_total').define()
 require('./fixtures/ledger/wallets').define()
 const fixtures = {
   fc_usage: require('./fixtures/fc_usage'),
-  download: require('./fixtures/download')
+  download: require('./fixtures/download'),
+  campaigns: require('./fixtures/campaign'),
+  referral_codes: require('./fixtures/referral_code_pg')
+
 }
 
 class TestHelper {
@@ -74,6 +77,10 @@ class TestHelper {
         'fc_usage_month_exceptions',
         'fc_usage',
         'fc_wallets'
+      ],
+      'dtl': [
+        'campaigns',
+        'referral_codes'
       ]
     }
     this.materialized_views = {
@@ -104,6 +111,10 @@ class TestHelper {
       Object.keys(fixtures).forEach(f => fixtures[f].define())
     }
     global.factory = factory
+  }
+
+  async load_fixtures () {
+
   }
 
   async truncate () {

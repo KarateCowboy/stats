@@ -16,8 +16,8 @@ describe('models util', async function () {
       ]
       sinon.stub(fs, 'readdirSync').returns(dirContents)
       let db = new DbUtil(process.env.TEST_DATABASE_URL, process.env.TEST_MLAB_URI)
-      expect(db.dirFiles).to.contain('user.pgmodel.js')
-      expect(db.dirFiles).to.not.contain('misplaced.txt')
+      expect(db.pgFiles).to.contain('user.pgmodel.js')
+      expect(db.pgFiles).to.not.contain('misplaced.txt')
       fs.readdirSync.restore()
     })
   })
