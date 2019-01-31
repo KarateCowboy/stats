@@ -185,3 +185,12 @@ ul.nav li.dropdown:hover > ul.dropdown-menu {
 li.dropdown ul li img {
   margin-right: 10px;
 }
+
+.fa-blank
+{
+  visibility:hidden !important;
+}
+
+h5.platform-list span {
+  margin-right: 6px;
+}

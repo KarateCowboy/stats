@@ -1587,27 +1587,31 @@ const updatePageUIState = () => {
   // highlight currently selected days
   _.each(days, (d) => {
     if (pageState.days === d) {
-      $(`#controls`).find(`a[data-days="${d}"]`).parent().addClass('active')
+      $(`#controls`).find(`a[data-days="${d}"] i`).removeClass('fa-blank')
     } else {
-      $(`#controls`).find(`a[data-days="${d}"]`).parent().removeClass('active')
+      $(`#controls`).find(`a[data-days="${d}"] i`).addClass('fa-blank')
     }
   })
 
   // highlight currently selected platforms
   _.each(pageState.platformFilter, (v, k, lst) => {
     if (v) {
-      $(`#controls`).find(`a[data-platform="${k}"]`).parent().addClass('active')
+      $(`#controls`).find(`a[data-platform="${k}"] i`).removeClass('fa-blank')
+      $(`#controls`).find(`h5.platform-list span.${k}`).show()
     } else {
-      $(`#controls`).find(`a[data-platform="${k}"]`).parent().removeClass('active')
+      $(`#controls`).find(`a[data-platform="${k}"] i`).addClass('fa-blank')
+      $(`#controls`).find(`h5.platform-list span.${k}`).hide()
     }
   })
 
   // highlight currently selected channels
   _.each(pageState.channelFilter, (v, k, lst) => {
     if (v) {
-      $(`#controls`).find(`a[data-channel="${k}"]`).parent().addClass('active')
+      $(`#controls`).find(`a[data-channel="${k}"] i`).removeClass('fa-blank')
+      $(`#controls`).find(`h5.platform-list span.${k}`).show()
     } else {
-      $(`#controls`).find(`a[data-channel="${k}"]`).parent().removeClass('active')
+      $(`#controls`).find(`a[data-channel="${k}"] i`).addClass('fa-blank')
+      $(`#controls`).find(`h5.platform-list span.${k}`).hide()
     }
   })
 
@@ -1619,10 +1623,10 @@ const updatePageUIState = () => {
   }
 
   if (pageState.showToday) {
-    $(`#controls`).find(`a[data-days="0"]`).parent().addClass('active')
+    $(`#controls`).find(`a[data-days="0"] i`).removeClass('fa-blank')
     $("#controls-selected-days").html($("#controls-selected-days").html() + ' + Now')
   } else {
-    $(`#controls`).find(`a[data-days="0"]`).parent().removeClass('active')
+    $(`#controls`).find(`a[data-days="0"] i`).addClass('fa-blank')
   }
 
   if (viewState.showShowToday) {
