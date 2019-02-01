@@ -1413,31 +1413,38 @@ var menuItems = {
 }
 
 // Mutable page state
-var pageState = {
-  currentlySelected: null,
-  days: 14,
-  version: null,
-  ref: null,
-  platformFilter: {
-    'osx': true,
-    'winx64': true,
-    'winia32': true,
-    'linux': true,
-    'ios': true,
-    'android': false,
-    'androidbrowser': true,
-    'osx-bc': true,
-    'winx64-bc': true,
-    'winia32-bc': true,
-    'linux-bc': true
-  },
-  channelFilter: {
-    'dev': true,
-    'beta': false,
-    'release': true
-  },
-  showToday: false
+var pageState;
+pageState = window.localStorage.getItem('pageState') ? JSON.parse(window.localStorage.getItem('pageState')) : null
+
+if (!pageState) {
+  pageState = {
+    currentlySelected: null,
+    days: 14,
+    version: null,
+    ref: null,
+    platformFilter: {
+      'osx': true,
+      'winx64': true,
+      'winia32': true,
+      'linux': true,
+      'ios': true,
+      'android': false,
+      'androidbrowser': true,
+      'osx-bc': true,
+      'winx64-bc': true,
+      'winia32-bc': true,
+      'linux-bc': true
+    },
+    channelFilter: {
+      'dev': true,
+      'beta': false,
+      'release': true
+    },
+    showToday: false
+  }
 }
+
+console.log(pageState)
 
 var viewState = {
   showControls: true,
@@ -1636,8 +1643,13 @@ const updatePageUIState = () => {
   }
 }
 
+const persistPageState = () => {
+  window.localStorage.setItem('pageState', JSON.stringify(pageState))
+}
+
 // Load data for the selected item
 const refreshData = () => {
+  persistPageState()
   if (menuItems[pageState.currentlySelected]) {
     menuItems[pageState.currentlySelected].retriever()
   }
