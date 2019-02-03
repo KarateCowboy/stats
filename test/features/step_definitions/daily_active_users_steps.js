@@ -59,7 +59,10 @@ When(/^I pick two referral codes$/, async function () {
   testing_ymd = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
   let usages = await CoreUsage.find({year_month_day: testing_ymd.format('YYYY-MM-DD')})
   sample_codes = usages.slice(0, 2).map(u => u.ref)
-  await browser.select_by_value_when_visible('#daysSelector', '120')
+  await browser.click_when_visible('#controls-selected-days')
+  await browser.click_when_visible('#controls-days-menu > li:nth-of-type(3)') //120 days
+  await browser.click('#contentTitle')
+  await browser.pause(25)
   await browser.click('#ref-filter')
   await browser.keys(sample_codes[0])
   await browser.keys('\uE007')
