@@ -1,5 +1,4 @@
 // Platform meta data
-var VueApp
 const platforms = {
   osx: {
     id: 'osx',
@@ -1020,14 +1019,14 @@ var serializeChannelParams = function () {
 }
 
 var standardParams = function () {
-  let referral_codes = VueApp && viewState.showRefFilter ? VueApp.$data.selected_refs.join(',') : null
+  let referral_codes = $('#ref-filter').select2('data').map(i => i.id)
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
     channelFilter: serializeChannelParams(),
     showToday: pageState.showToday,
     version: pageState.version,
-    ref: referral_codes
+    ref: referral_codes.join(',')
   })
 }
 
@@ -1334,6 +1333,7 @@ var telemetryStandardRetriever = function () {
 const dailyNewUsersRetriever = function () {
   $.ajax('/api/1/daily_new_users?' + standardParams(), {
     success: (data) => {
+      console.log('firing retriever')
       dailyNewUsersHandler(data)
     }
   })
@@ -1745,7 +1745,6 @@ let initialize_router = () => {
     viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1779,7 +1778,6 @@ let initialize_router = () => {
     viewState.showPromotions = false
     viewState.showShowToday = false
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1791,7 +1789,6 @@ let initialize_router = () => {
     viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1803,7 +1800,6 @@ let initialize_router = () => {
     viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1814,7 +1810,6 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1826,7 +1821,6 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1838,7 +1832,6 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1850,7 +1843,6 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1862,7 +1854,6 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1874,7 +1865,6 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1887,7 +1877,6 @@ let initialize_router = () => {
     viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1899,7 +1888,6 @@ let initialize_router = () => {
     viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1911,7 +1899,6 @@ let initialize_router = () => {
     viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1923,7 +1910,6 @@ let initialize_router = () => {
     viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
 
@@ -1940,7 +1926,6 @@ let initialize_router = () => {
     viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
 
@@ -2066,7 +2051,6 @@ let initialize_router = () => {
     viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -2222,6 +2206,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = false
     viewState.showShowToday = false
+    viewState.showRefFilter = true
+    viewState.showShowToday = true
     updatePageUIState()
     refreshData()
   })
@@ -2323,15 +2309,18 @@ $('[data-toggle="tooltip"]').tooltip()
 
 let publisherPlatforms
 let publisherPlatformsByPlatform
-let referral_codes = []
 
 async function loadInitialData () {
   publisherPlatforms = await $.ajax('/api/1/publishers/platforms')
   publisherPlatformsByPlatform = _.object(publisherPlatforms.map((platform) => { return [platform.platform, platform] }))
-  const response = await $.ajax('/api/1/referral_codes')
-  response.forEach(code => {
-    referral_codes.push(code.code_text)
-  })
+  // const response = await $.ajax('/api/1/campaigns')
+  // campaigns.results = _.sortBy(response, ['name']).map((c) => {
+  //   return {
+  //     text: c.name,
+  //     children: [c.referralCodes.map((r) => { return {id: r.code_text, text: r.code_text} })]
+  //   }
+  // })
+  // console.log(campaigns)
   installPromotionsPopoverHandler()
   $('#clearRef').hide()
 
@@ -2360,18 +2349,30 @@ function initializeGlobals () {
 }
 
 function initialize_components () {
-  Vue.component('v-select', VueSelect.VueSelect)
-  VueApp = new Vue({
-    el: '#ref-filter',
-    components: {VueSelect},
-    data: {
-      showRefFilter: viewState.showRefFilter,
-      selected_refs: [],
-      refcodes: referral_codes
-    },
-    methods: {
-      refresh_data: () => { refreshData() }
+  $('#ref-filter').select2({
+    placeholder: 'Select a ref code',
+    width: 'resolve',
+    ajax: {
+      url: '/api/1/campaigns',
+      processResults: function (response) {
+        let campaigns = {
+          results: []
+        }
+        campaigns.results = _.sortBy(response, ['name']).map((c) => {
+          const childOptions = c.referralCodes.map((r) => { return {id: r.code_text, text: r.code_text} })
+          return {
+            text: c.name,
+            children: childOptions
+          }
+        })
+        console.log(campaigns)
+        return campaigns
+      }
     }
+  })
+  $('#ref-filter').on('change', function () {
+    console.log('changed the data')
+    refreshData()
   })
 }
 

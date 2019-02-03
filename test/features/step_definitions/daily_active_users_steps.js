@@ -56,14 +56,13 @@ Then(/^I should see DAU numbers for all referral codes$/, async function () {
 })
 
 When(/^I pick two referral codes$/, async function () {
+  const codes = await knex('dw.fc_usage').where('ref', '!=', 'none').andWhere('first_time', true).andWhere('total', '>', 0).select('ref').limit(1)
   testing_ymd = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
-  let usages = await CoreUsage.find({year_month_day: testing_ymd.format('YYYY-MM-DD')})
-  sample_codes = usages.slice(0, 2).map(u => u.ref)
+  sample_codes = codes.map(c => c.ref)
   await browser.select_by_value_when_visible('#daysSelector', '120')
-  await browser.click('#ref-filter')
-  await browser.keys(sample_codes[0])
-  await browser.keys('\uE007')
-  await browser.keys(sample_codes[1])
+  await browser.click('.selection')
+  const refCodes = await this.sample_campaign.getReferralCodes()
+  await browser.keys(_.first(refCodes.models).get('code_text'))
   await browser.keys('\uE007')
 })
 
@@ -74,13 +73,19 @@ When(/^I should see DAU numbers for those two referral codes$/, async function (
 })
 
 Then(/^I should see DNU numbers for those two referral codes$/, async function () {
-  const total = await CoreUsage.count({
-    'ref': {$in: sample_codes},
-    year_month_day: testing_ymd.format('YYYY-MM-DD')
+  const api_common = require('../../../src/api/common')
+  const dnu_results = await db.UsageSummary.dailyNewUsers({
+    ref: [sample_codes],
+    platforms: api_common.allPlatforms,
+    channels: api_common.allChannels,
+    daysAgo: 120
   })
-  expect(total).to.be.greaterThan(0, 'total for testing should be greater than 0')
-  const usageData = await browser.getHTML('#usageContent .table-responsive')
-  expect(usageData).to.include(total.toLocaleString('en'))
+  await browser.pause(100)
+  const trs = await browser.getHTML(`#usageDataTable > tbody > tr`)
+  for (let dnu of dnu_results.rows) {
+    const tr = trs.find((t) => { return t.includes(dnu.ymd)})
+    expect(tr).to.include(dnu.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','))
+  }
 })
 
 Then(/^I should see the DNU numbers for all referral codes$/, async function () {
@@ -88,7 +93,7 @@ Then(/^I should see the DNU numbers for all referral codes$/, async function () 
   const total = await CoreUsage.count({year_month_day: working_date.format('YYYY-MM-DD')})
   const usageData = await browser.getHTML('#usageContent .table-responsive')
   expect(usageData).to.include(total.toLocaleString('en'))
-  expect(usageData).to.include('357')
+  expect(usageData).to.include(total)
 })
 
 Given(/^there are usages for all platforms and multiple versions for the last week$/, async function () {

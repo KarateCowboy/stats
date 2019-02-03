@@ -5,12 +5,13 @@
 exports.up = async function (knex, Promise) {
   await knex.schema.withSchema('dtl').createTable('referral_codes', (table) => {
     table.increments('id')
-    table.string('code_text').unique()
+    table.string('code_text')
     table.integer('campaign_id')
-    table.timestamps(true,true)
+    table.timestamps(true, true)
+    table.unique(['campaign_id', 'code_text'])
   })
 }
 
 exports.down = async function (knex, Promise) {
-  await knex.schema.dropTable('dtl.campaigns')
+  await knex.schema.dropTable('dtl.referral_codes')
 }

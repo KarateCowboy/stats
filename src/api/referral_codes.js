@@ -1,3 +1,4 @@
+const _ = require('lodash')
 const ReferralCode = require('../models/referral-code.model')()
 
 exports.setup = (server, client, mongo) => {
@@ -5,8 +6,8 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/referral_codes',
     handler: async function (request, reply) {
-      const ref_codes = await ReferralCode.find({}).sort({code_text: 1}).lean()
-      reply(ref_codes)
+      const ref_codes = await db.ReferralCode.fetchAll()
+      reply(_.sortBy(ref_codes.models, 'code_text'))
     }
   })
 }

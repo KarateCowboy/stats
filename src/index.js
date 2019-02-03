@@ -18,6 +18,7 @@ let search = require('./api/search')
 let eyeshade = require('./api/eyeshade')
 let bat_eyeshade = require('./api/bat_eyeshade')
 let publishers = require('./api/publishers')
+const campaigns = require('./api/campaigns')
 let meta = require('./api/meta')
 const mongoose = require('mongoose')
 let telemetry = require('./api/telemetry')
@@ -53,7 +54,7 @@ module.exports.setup = async (connections) => {
   })
 
   // Setup the APIs
-  _.each([stats, jobs, crashes, search, eyeshade, bat_eyeshade, publishers, meta, telemetry, referral, referral_codes], (api) => { api.setup(server, connections.pg, connections.mg) })
+  _.each([stats, jobs, crashes, search, eyeshade, campaigns, bat_eyeshade, publishers, meta, telemetry, referral, referral_codes], (api) => { api.setup(server, connections.pg, connections.mg) })
 
   // Setup the UI for the dashboard
   ui.setup(server, connections.pg)

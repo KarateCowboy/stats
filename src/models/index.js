@@ -17,6 +17,7 @@ class DbUtil {
 
     this.dirFiles = fs.readdirSync(__dirname)
     this.pgFiles = this.pgModelsFilter(this.dirFiles)
+    this.bsFiles = this.bsModelsFilter(this.dirFiles)
     this.models = []
   }
 
@@ -28,13 +29,25 @@ class DbUtil {
       const modelPath = path.join(__dirname, file)
       const model = this.sequelize.import(modelPath)
       this[model.name] = model
-      this.models.push(model)
+      this.models.push(model.name)
     }
     this.models.forEach((m) => {
       if (typeof m.associate === 'function') {
         m.associate()
       }
     })
+
+    if (global.knex === undefined) {
+      throw new Error('Global knex instance must be defined before loading Bookshelf ORM')
+    }
+    for (let file of this.bsFiles) {
+      let modelName = _.camelCase(file.replace('.bsmodel.js', ''))
+      let firstLetter = modelName.slice(0, 1).toUpperCase()
+      modelName = modelName.replace(/^[a-z]{1,1}/, firstLetter)
+      const modelPath = path.join(__dirname, file)
+      this[modelName] = require(modelPath)(global.knex)
+      this.models.push(modelName)
+    }
   }
 
   connect () {
@@ -56,6 +69,14 @@ class DbUtil {
       return file.indexOf('.') !== 0 &&
         file !== this.basename &&
         file.slice(-10) === 'pgmodel.js'
+    })
+  }
+
+  bsModelsFilter (list) {
+    return list.filter(file => {
+      return file.indexOf('.') !== 0 &&
+        file !== this.basename &&
+        file.slice(-10) === 'bsmodel.js'
     })
   }
 }

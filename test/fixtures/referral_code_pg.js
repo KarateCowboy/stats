@@ -10,10 +10,10 @@ const _ = require('lodash')
 const ObjectID = require('mongodb').ObjectID
 
 const define = () => {
-  factory.setAdapter(new FactoryGirl.SequelizeAdapter(), 'ref_code_pg')
+  factory.setAdapter(new FactoryGirl.BookshelfAdapter(), 'ref_code_pg')
 
   factory.define('ref_code_pg', db.ReferralCode, {
-      'code_text': () => { return _.shuffle((new ObjectID()).toString().slice(0, 6).toUpperCase().split('')).join('')},
+      'code_text': () => { let o = new ObjectID(); return _.shuffle(o.toString()).join('').slice(0,6).toUpperCase() },
       'campaign_id': () => _.random(2000)
     }
   )

@@ -16,7 +16,7 @@ Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
 })
 Then(/^the ref select should be visible and have no ref entered$/, async function () {
   const ref_filter_html = await browser.get_html_when_visible('#ref-filter')
-  expect(ref_filter_html).to.not.contain('selected-tag')
+  expect(ref_filter_html).to.not.contain('select2-selection__choice')
 })
 Then(/^the this month button should "([^"]*)" be visible$/, async function (visible) {
   const is_visible = await browser.isVisible('#btn-show-today')

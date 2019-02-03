@@ -12,7 +12,7 @@ const {Util} = require('../../src/models/util')
 const faker = require('faker')
 
 const define = () => {
-  factory.setAdapter(new FactoryGirl.SequelizeAdapter(), 'campaign')
+  factory.setAdapter(new FactoryGirl.BookshelfAdapter(), 'campaign')
 
   factory.define('campaign', db.Campaign, {
       name: () => { return `${faker.name.findName()} Promotional Campaign`}

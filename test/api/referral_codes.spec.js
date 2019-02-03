@@ -11,13 +11,13 @@ describe('crud endpoints', async function () {
 
   describe('index/list', async function () {
     //TODO: fix this. it works in prod but not in the tests for some reason
-    it.skip('returns a bunch of referral codes', async function () {
+    it('returns a bunch of referral codes', async function () {
       let params = {
         method: 'GET',
         url: '/api/1/referral_codes'
       }
       for (let i = 1; i <= 5; i++) {
-        let ref_code = await factory.build('referral_code')
+        let ref_code = await factory.build('ref_code_pg')
         await ref_code.save()
       }
       const server = await main.setup({pg: pg_client, mg: mongo_client})

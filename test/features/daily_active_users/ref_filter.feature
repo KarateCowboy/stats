@@ -1,7 +1,7 @@
 Feature: Filter by referral code
 
   Background:
-    Given there are "10000" mixed ref usages for the prior month
+    Given there are new user records for the last two months, across several campaigns
     And I am logged in to the system
 
   @smoketest-pass
@@ -45,7 +45,7 @@ Feature: Filter by referral code
     And I enter an existing referral code in the text box
     #Then the report should limit to the existing referrals statistics
 
-  @smoketest-pass
+  @smoketest-pass @dev
   Scenario: Use with Daily New Users by Platform
     And I view the Daily New Users by Platform report
     Then the ref select should be visible and have no ref entered

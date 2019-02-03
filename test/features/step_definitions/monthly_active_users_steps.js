@@ -32,9 +32,15 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false, other_attribu
     working_date.add(1, 'days')
     let refs = []
     if (!mixed_ref) {
-      refs.push('none')
+      const noneRef = new db.ReferralCode({code_text: 'none'})
+      refs.push(noneRef)
     } else {
-      refs = await Promise.all(_.range(1, 8).map(async (i) => { return (await factory.attrs('core_winx64_usage')).ref}))
+      const campaigns = await factory.createMany('campaign', 3, {created_at: working_date.toDate()})
+      await Promise.all(campaigns.map(async (c) => {
+        let newRefs = await factory.createMany('ref_code_pg', 5, {campaign_id: c.id})
+        refs.push(newRefs)
+      }))
+      refs = _.flatten(refs)
     }
     for (let ref of refs) {
       for (let j of _.range(1, (per_day + 1) / refs.length)) {
@@ -42,7 +48,7 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false, other_attribu
           year_month_day: working_date.format('YYYY-MM-DD'),
           woi: working_date.clone().subtract(7, 'days').format('YYYY-MM-DD'),
           ts: () => { return working_date.clone().toDate().getTime()},
-          ref: ref,
+          ref: ref.get('code_text'),
           channel: 'release'
         }
         if (other_attributes) {
@@ -85,34 +91,38 @@ Given(/^"([^"]*)" mau data is missing$/, async function (platform) {
   await knex('dw.fc_usage_month').where('platform', platform).delete()
 })
 Given(/^I enter an existing referral code in the text box$/, async function () {
-  const sample = await CoreUsage.findOne()
+  let sample = await db.ReferralCode.where('code_text', '!=', 'none').fetch()
   await browser.select_by_value_when_visible('#daysSelector', '120')
-  this.setTo('sample', sample)
-  await browser.click('#ref-filter')
-  await browser.keys(sample.ref)
+  this.setTo('sampleRef', sample)
+  await browser.click('.selection')
+  await browser.keys(sample.get('code_text'))
+  await  browser.pause(300)
   await browser.keys('\uE007')
-  await  browser.pause(500)
+  await  browser.pause(550)
+  await browser.keys('\uE007')
+  await  browser.pause(550)
 })
 
 Then(/^the report should limit to the existing referrals statistics$/, async function () {
   const total = await mongo_client.collection('brave_core_usage').count({
-    ref: this.sample.ref
+    ref: this.sampleRef.code_text
   })
   const usageData = await browser.getHTML('#usageContent .table-responsive')
   expect(usageData).to.include(total.toLocaleString('en'))
 })
 
 Then(/^the report should show only the average dau for that referral code$/, async function () {
-  const count_for_day = await CoreUsage.count({year_month_day: this.sample.year_month_day, ref: this.sample.ref})
+  const count_for_day = await CoreUsage.count({ref: this.sampleRef.get('code_text')})
   const usage_data_table = await browser.getHTML('#usageDataTable')
-  expect(count_for_day).to.be.greaterThan(0,'count to check for should be greater than 0')
-  expect(usage_data_table).to.contain(count_for_day / 30)
+  expect(count_for_day).to.be.greaterThan(0, 'count to check for should be greater than 0')
+  expect(usage_data_table).to.contain(Math.round(count_for_day / 30))
 })
 
 Then(/^I should see monthly average for all referral codes$/, async function () {
   const count_for_day = await CoreUsage.count({})
   const usage_data_table = await browser.getHTML('#usageDataTable')
-  expect(usage_data_table).to.contain((count_for_day / 30).toLocaleString('en'))
+  const ave_monthly_dau = await knex('dw.fc_average_monthly_usage_mv').select('ymd').sum({'count': 'average_dau'}).groupBy('ymd').orderBy('ymd', 'desc')
+  expect(usage_data_table).to.contain(parseInt(_.first(ave_monthly_dau).count).toLocaleString('en'))
 
 })
 

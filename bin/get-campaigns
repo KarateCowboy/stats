@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const Script = require('./script')
+
+class GetCampaignsAndRefs extends Script {
+  constructor () {
+    super()
+  }
+
+  async run () {
+    this.setup()
+    ////////////
+    const options = {
+      method: 'GET',
+      uri: `${process.env.PUBLISHER_URL}/api/v1/stats/promo_campaigns`,
+      headers: {
+        Authorization: 'Bearer ' + process.env.PUBLISHERS_TOKEN
+      }
+    }
+    let response
+    try {
+      response = await this.prequest(options)
+      response = JSON.parse(response)
+    } catch (e) {
+      console.log(e.message)
+      console.dir(response, {colors: true})
+      process.exit(1)
+    }
+    await Promise.all(response.map(async (promo) => {
+      let campaign = new db.Campaign({name: promo.name})
+      try {
+        await campaign.save()
+      } catch (e) {
+        if (e.message.includes('unique constraint') === false) {
+          console.log('Error: ' + e.message)
+          process.exit(1)
+        }
+      }
+
+      await Promise.all(promo.promo_registrations.map(async (ref) => {
+        try {
+          let referralCode = new db.ReferralCode({campaign_id: campaign.id, code_text: ref.referral_code})
+          await referralCode.save()
+        } catch (e) {
+          if (e.message.includes('unique constraint') === false) {
+            console.log('Error: ' + e.message)
+            process.exit(1)
+          }
+        }
+      }))
+    }))
+    ////////////////////
+    await this.shutdown()
+  }
+}
+
+const runtime = new GetCampaignsAndRefs()
+runtime.run()
+

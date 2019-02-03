@@ -10,5 +10,5 @@ const moment = require('moment')
 const _ = require('underscore')
 
 When(/^I clear the ref filter box$/, async function () {
-  await browser.click('button.close')
+  await browser.click('.select2-selection__choice__remove')
 })
