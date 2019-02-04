@@ -1413,8 +1413,11 @@ var menuItems = {
 }
 
 // Mutable page state
-var pageState;
+var pageState
 pageState = window.localStorage.getItem('pageState') ? JSON.parse(window.localStorage.getItem('pageState')) : null
+
+// this is required for now. the control that displays the ref code cannot be programmatically controlled yet.
+pageState.ref = null
 
 if (!pageState) {
   pageState = {
