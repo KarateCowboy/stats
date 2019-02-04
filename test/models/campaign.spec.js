@@ -8,14 +8,14 @@ describe('Campaign model', async function () {
       const c = await db.Campaign.where('id', 1).fetch()
       expect(c.get('name')).to.equal('James Promo')
     })
-    it('requires the name to be at least four characters long', async function () {
+    it('requires the name', async function () {
       let thrown = false
       try {
-        const new_campaign = new db.Campaign({name: '1'})
+        const new_campaign = new db.Campaign({name: ''})
         await new_campaign.save()
       } catch (e) {
         thrown = true
-        expect(e.message).to.include('name is required and must be at least four characters long')
+        expect(e.message).to.include('name is required')
       }
       expect(thrown).to.equal(true, 'Campaign should throw an error on save')
     })
