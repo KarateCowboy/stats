@@ -2358,7 +2358,7 @@ function initialize_components () {
         let campaigns = {
           results: []
         }
-        campaigns.results = _.sortBy(response, ['name']).map((c) => {
+        campaigns.results = _.sortBy(response, 'name').map((c) => {
           const childOptions = c.referralCodes.map((r) => { return {id: r.code_text, text: r.code_text} })
           return {
             text: c.name,
