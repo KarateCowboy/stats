@@ -37,9 +37,13 @@ class GetCampaignsAndRefs extends Script {
       process.exit(1)
     }
     await Promise.all(response.map(async (promo) => {
-      let campaign = new db.Campaign({name: promo.name})
+      let campaign = await db.Campaign.where('name', promo.name).fetch() 
+      
       try {
-        await campaign.save()
+        if (!!!campaign) {
+          campaign = new db.Campaign({name: promo.name})
+          await campaign.save()
+        }
       } catch (e) {
         if (e.message.includes('unique constraint') === false) {
           console.log('Error: ' + e.message)
