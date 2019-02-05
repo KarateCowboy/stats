@@ -57,12 +57,18 @@ Then(/^I should see DAU numbers for all referral codes$/, async function () {
 
 When(/^I pick two referral codes$/, async function () {
   const codes = await knex('dw.fc_usage').where('ref', '!=', 'none').andWhere('first_time', true).andWhere('total', '>', 0).select('ref').limit(1)
-  testing_ymd = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
   sample_codes = codes.map(c => c.ref)
-  await browser.select_by_value_when_visible('#daysSelector', '120')
-  await browser.click('.selection')
   const refCodes = await this.sample_campaign.getReferralCodes()
   await browser.keys(_.first(refCodes.models).get('code_text'))
+  testing_ymd = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
+  await browser.click_when_visible('#controls-selected-days')
+  await browser.click_when_visible('#controls-days-menu > li:nth-of-type(3)') //120 days
+  await browser.click('#contentTitle')
+  await browser.pause(25)
+  await browser.click('#ref-filter')
+  await browser.keys(sample_codes[0])
+  await browser.keys('\uE007')
+  await browser.keys(sample_codes[1])
   await browser.keys('\uE007')
 })
 

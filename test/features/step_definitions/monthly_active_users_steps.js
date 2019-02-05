@@ -92,11 +92,14 @@ Given(/^"([^"]*)" mau data is missing$/, async function (platform) {
 })
 Given(/^I enter an existing referral code in the text box$/, async function () {
   let sample = await db.ReferralCode.where('code_text', '!=', 'none').fetch()
-  await browser.select_by_value_when_visible('#daysSelector', '120')
   this.setTo('sampleRef', sample)
-  await browser.click('.selection')
+  await browser.click_when_visible('#controls-selected-days')
+  await browser.click('#controls-days-menu > li:nth-of-type(3)') //120 days
+  await browser.click('#contentTitle') // hide drop-down / remove from focus
   await browser.keys(sample.get('code_text'))
   await  browser.pause(300)
+  await browser.click('#ref-filter')
+  await browser.keys(sample.get('code_text'))
   await browser.keys('\uE007')
   await  browser.pause(550)
   await browser.keys('\uE007')

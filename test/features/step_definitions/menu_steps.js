@@ -9,9 +9,10 @@ const {expect} = require('chai')
 
 Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
   buttons = buttons.split(',')
+  await browser.click_when_visible('#controls-channels-dropdown')
   for (let button of buttons) {
-    const result = await browser.getAttribute(`#btn-channel-${button}`, 'checked')
-    expect(result, `button ${button} should be checked by default`).to.equal('true')
+    const result = await browser.getAttribute(`#controls-channels-menu > #${button}`, 'class')
+    expect(result).to.equal('active', `button ${button} should be checked by default`)
   }
 })
 Then(/^the ref select should be visible and have no ref entered$/, async function () {
