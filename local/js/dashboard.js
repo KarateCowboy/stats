@@ -1474,7 +1474,7 @@ var pageState
 pageState = window.localStorage.getItem('pageState') ? JSON.parse(window.localStorage.getItem('pageState')) : null
 
 // this is required for now. the control that displays the ref code cannot be programmatically controlled yet.
-pageState.ref = null
+// pageState.ref = []
 
 if (!pageState) {
   pageState = {
@@ -2264,11 +2264,6 @@ let publisherPlatformsByPlatform
 async function loadInitialData () {
   publisherPlatforms = await $.ajax('/api/1/publishers/platforms')
   publisherPlatformsByPlatform = _.object(publisherPlatforms.map((platform) => { return [platform.platform, platform] }))
-  const response = await $.ajax('/api/1/referral_codes')
-  response.forEach(code => {
-    referral_codes.push(code.code_text)
-  })
-  installPromotionsPopoverHandler()
   $('#clearRef').hide()
 
   await window.REFERRAL.referralSummaryStatsRetriever()
