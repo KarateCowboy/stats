@@ -459,42 +459,95 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   return function (rows) {
     var table = $('#usageDataTable tbody')
 
-    $('#x_label').html(x_label)
-    $('#y_label').html(y_label)
+    const pivot = () => {
+      table.empty()
 
-    table.empty()
-    var ctrl = rows[x]
-    var ctrlClass = ''
-    var grandTotalAccumulator = 0
-    var previousValue, difference, differenceRate, i
-    rows.forEach(function (row) {
-      if (!previousValue) previousValue = row.count
-      if (row[x] !== ctrl) {
-        // The ctrl has broken, we need to change grouping
-        if (ctrlClass === 'active') {
-          ctrlClass = ''
-        } else {
-          ctrlClass = 'active'
+      let tableHeader = table.parent().find('thead')
+      tableHeader.empty()
+
+      // build a sorted list of column headers
+      let columns = {}
+      rows = rows.sort((a, b) => {
+        return b[x].localeCompare(a[x]) || b[y].localeCompare(a[y])
+      })
+      rows.forEach((row) => { columns[row[y]] = true })
+      columns = Object.keys(columns).sort()
+
+      // get the list of the keys for each row
+      let groups = _.groupBy(rows, (row) => { return row[x] })
+      let ks = Object.keys(groups).sort((a, b) => { return b.localeCompare(a) })
+
+      // build the table headers
+      let tableHeaderBuffer = `<tr><th>${x_label}</th>`
+      for (let column of columns) {
+        tableHeaderBuffer += `<th>${column}</th>`
+      }
+      tableHeaderBuffer += `<th>Total</th></tr>`
+      tableHeader.html(tableHeaderBuffer)
+
+      table.parent().addClass('table-striped')
+
+      let buffer = ''
+      for (let k of ks) {
+        buffer += `<tr><td>${k}</td>`
+        // calculate the total for the row
+        let rowTotal = _.reduce(groups[k], (memo, row) => { return memo + (row.count || 0) }, 0)
+        for (let column of columns) {
+          let record = groups[k].find((row) => { return row[y] === column })
+          // if a row doesn't exist build a blank one
+          if (!record) record = { count: 0 }
+          buffer += `<td>${value_func(record, record.count)} <small class='text-muted'>${stp(record.count / rowTotal)}</small></td>`
         }
-        ctrl = row[x]
+        buffer += `<td>${st(rowTotal)}</td></tr>`
       }
-      var buf = '<tr class="' + ctrlClass + '">'
-      buf = buf + '<td>' + row[x] + '</td>'
-      buf = buf + '<td>' + (row[y] || 'All') + '</td>'
-      buf = buf + '<td class="text-right">' + value_func(row, row.count) + '</td>'
-      if (row.daily_percentage !== undefined) {
-        buf = buf + '<td class="text-right">' + stp(row.daily_percentage / 100) + '</td>'
-      }
-      if (opts.growth_rate) {
-        difference = row.count - previousValue
-        differenceRate = (difference / parseFloat(previousValue) * 100).toFixed(1)
-        buf = buf + '<td class="text-right">' + value_func(row, difference) + '<span class="subvalue"> ' + differenceRate + '%</span>' + '</td>'
-      }
-      buf = buf + '</tr>'
-      table.append(buf)
-      previousValue = row.count
-      grandTotalAccumulator += row.count
-    })
+      table.append(buffer)
+    }
+
+    const standardTable = () => {
+      table.empty()
+      let tableHeader = table.parent().find('thead')
+      tableHeader.empty()
+      tableHeader.html(`<tr><th>${x_label}</th><th>${y_label}</th><th></th></tr>`)
+
+      var ctrl = rows[x]
+      var ctrlClass = ''
+      var grandTotalAccumulator = 0
+      var previousValue, difference, differenceRate, i
+      rows.forEach(function (row) {
+        if (!previousValue) previousValue = row.count
+        if (row[x] !== ctrl) {
+          // The ctrl has broken, we need to change grouping
+          if (ctrlClass === 'active') {
+            ctrlClass = ''
+          } else {
+            ctrlClass = 'active'
+          }
+          ctrl = row[x]
+        }
+        var buf = '<tr class="' + ctrlClass + '">'
+        buf = buf + '<td>' + row[x] + '</td>'
+        buf = buf + '<td>' + (row[y] || 'All') + '</td>'
+        buf = buf + '<td class="text-right">' + value_func(row, row.count) + '</td>'
+        if (row.daily_percentage !== undefined) {
+          buf = buf + '<td class="text-right">' + stp(row.daily_percentage / 100) + '</td>'
+        }
+        if (opts.growth_rate) {
+          difference = row.count - previousValue
+          differenceRate = (difference / parseFloat(previousValue) * 100).toFixed(1)
+          buf = buf + '<td class="text-right">' + value_func(row, difference) + '<span class="subvalue"> ' + differenceRate + '%</span>' + '</td>'
+        }
+        buf = buf + '</tr>'
+        table.append(buf)
+        previousValue = row.count
+        grandTotalAccumulator += row.count
+      })
+    }
+
+    if (opts.pivot) {
+      pivot()
+    } else {
+      standardTable()
+    }
 
     if (opts.growth_rate && rows[0]) {
       averageGrowthRate = Math.pow(rows[rows.length - 1].count / rows[0].count, 1 / rows.length) - 1
@@ -762,7 +815,9 @@ const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platfor
 
 const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
 
-var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
+var usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
+
+var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true })
 
 const usageMeasureHandler = (rows) => {
   let CostPerInstall = 0
@@ -851,7 +906,7 @@ var retentionHandler = buildSuccessHandler('ymd', 'woi', 'Date', 'Week of instal
 
 var aggMAUHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', growth_rate: true})
 
-var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index'})
+var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index', pivot: true})
 
 var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
@@ -1018,7 +1073,7 @@ var MAUAggPlatformRetriever = function () {
 
 var MAUAverageAggPlatformRetriever = function () {
   $.ajax('/api/1/dau_monthly_average?' + standardParams(), {
-    success: usagePlatformHandler
+    success: usagePlatformHandlerStandard
   })
 }
 
@@ -1030,7 +1085,7 @@ var MAUAveragePlatformRetriever = function () {
 
 var MAUAverageNewAggPlatformRetriever = function () {
   $.ajax('/api/1/dau_first_monthly_average?' + standardParams(), {
-    success: usagePlatformHandler
+    success: usagePlatformHandlerStandard
   })
 }
 
@@ -1048,7 +1103,7 @@ var DNUPlatformRetriever = function () {
 
 var DAURetriever = function () {
   $.ajax('/api/1/dau?' + standardParams(), {
-    success: usagePlatformHandler
+    success: usagePlatformHandlerStandard
   })
 }
 
@@ -1413,8 +1468,11 @@ var menuItems = {
 }
 
 // Mutable page state
-var pageState;
+var pageState
 pageState = window.localStorage.getItem('pageState') ? JSON.parse(window.localStorage.getItem('pageState')) : null
+
+// this is required for now. the control that displays the ref code cannot be programmatically controlled yet.
+pageState.ref = null
 
 if (!pageState) {
   pageState = {
