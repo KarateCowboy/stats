@@ -718,13 +718,13 @@ const weeklyRetentionHandler = async function (rows) {
     lineColor: '#999999'
   }
 
-  //prepend any warnings about incomplete data
+  // prepend any warnings about incomplete data
   buffer += `<table class="table" id="missingRetentionWarnings">`
   const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD')
   for (let platform in retention_warnings) {
-    retention_warnings[platform] = retention_warnings[platform].filter((p) => { return p !== yesterday})
+    retention_warnings[platform] = retention_warnings[platform].filter((p) => { return p !== yesterday })
     if (retention_warnings[platform].length > 0) {
-      const message_string = `Missing ${ platform } data: ${retention_warnings[platform].sort().reverse().splice(0, 5).join(', ')}`
+      const message_string = `Missing ${platform} data: ${retention_warnings[platform].sort().reverse().splice(0, 5).join(', ')}`
       buffer += `<tr><td style="color: red">${message_string}</td>`
     }
   }
@@ -1019,7 +1019,10 @@ var serializeChannelParams = function () {
 }
 
 var standardParams = function () {
-  let referral_codes = $('#ref-filter').select2('data').map(i => i.id)
+  let referral_codes = []
+  if($('#ref-filter').hasClass("select2-hidden-accessible")){
+    referral_codes = $('#ref-filter').select2('data').map(i => i.id)
+  }
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
@@ -1077,7 +1080,6 @@ const weeklyRetentionRetriever = async function () {
       }
     })
   })
-
 }
 
 var versionsRetriever = function () {
@@ -2211,7 +2213,6 @@ let initialize_router = () => {
     updatePageUIState()
     refreshData()
   })
-
 }
 
 // build platform button handlers
@@ -2325,7 +2326,6 @@ async function loadInitialData () {
   $('#clearRef').hide()
 
   await window.REFERRAL.referralSummaryStatsRetriever()
-
 }
 
 function initializeGlobals () {
@@ -2348,31 +2348,38 @@ function initializeGlobals () {
   }
 }
 
-function initialize_components () {
-  $('#ref-filter').select2({
-    placeholder: 'Select a ref code',
-    width: 'resolve',
-    ajax: {
-      url: '/api/1/campaigns',
-      processResults: function (response) {
-        let campaigns = {
-          results: []
-        }
-        campaigns.results = _.sortBy(response, 'name').map((c) => {
-          const childOptions = c.referralCodes.map((r) => { return {id: r.code_text, text: r.code_text} })
-          return {
-            text: c.name,
-            children: childOptions
-          }
-        })
-        console.log(campaigns)
-        return campaigns
-      }
+initialize_components = () => {
+  $.ajax('/api/1/campaigns', {
+    success: (response) => {
+      const campaigns = response
+      let template = ''
+      _.sortBy(response, 'name').map((c) => {
+        let optgroup = `<optgroup label="${c.name}">`
+        c.referralCodes.forEach((r) => { optgroup += `<option id=${r.id}>${r.code_text}</option>` })
+        optgroup += '</optgroup>'
+        template += optgroup
+      })
+
+      $('#ref-filter').empty()
+      $('#ref-filter').append(template)
+      $('#ref-filter').select2({width: 300})
+      $('#ref-filter').on('select2:open', function () {
+
+        setTimeout(function () {
+          $('li[role=group]').on('click', (obj) => {
+            let campaignName = $(obj.target).html()
+            let campaign = _.find(campaigns, {'name': campaignName})
+            const current = $('#ref-filter').select2('data').map(i => i.text)
+            $('#ref-filter').val(current.concat(campaign.referralCodes.map(r => r.code_text)))
+            $('#ref-filter').trigger('change')
+          })
+        }, 500)
+      })
+      $('#ref-filter').on('change', function () {
+        refreshData()
+      })
+
     }
-  })
-  $('#ref-filter').on('change', function () {
-    console.log('changed the data')
-    refreshData()
   })
 }
 
