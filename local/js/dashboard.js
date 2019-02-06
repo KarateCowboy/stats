@@ -1884,7 +1884,6 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -2319,7 +2318,6 @@ initialize_components = () => {
       ref_filter.empty()
       ref_filter.append(template)
       ref_filter.select2({width: 300, placeholder: 'Campaign / referral codes'})
-      //ref_filter.on('select2:open', addCampaignClickListener)
       $('body').bind('DOMSubtreeModified', async function () {
         const select = $('.select2-results__option[role=group]')
         if (select.length > 0) {
