@@ -2303,7 +2303,7 @@ initialize_components = () => {
 
       $('#ref-filter').empty()
       $('#ref-filter').append(template)
-      $('#ref-filter').select2({width: 300, placeholder: 'Click a campaign or ref'})
+      $('#ref-filter').select2({width: 300, placeholder: 'Campaign / referral codes'})
       $('#ref-filter').on('select2:open', function () {
 
         setTimeout(function () {
