@@ -39,9 +39,9 @@ Given(/^there are new user records for the last two months, across several campa
   const two_months_ago = moment().subtract(2, 'months')
   this.setTo('two_months_ago', two_months_ago)
   const campaign_one = await factory.create('campaign', {created_at: two_months_ago.toDate()})
-  this.setTo('sample_campaign', campaign_one)
   const camp_one_refs = await factory.createMany('ref_code_pg', 1, {campaign_id: campaign_one.id})
   const campaign_two = await factory.create('campaign', {created_at: two_months_ago.toDate()})
+  this.setTo('sample_campaign', campaign_two)
   const camp_two_refs = await factory.createMany('ref_code_pg', 2, {campaign_id: campaign_two.id})
   const campaign_three = await factory.create('campaign', {created_at: two_months_ago.toDate()})
   const camp_three_refs = await factory.createMany('ref_code_pg', 3, {campaign_id: campaign_three.id})
@@ -80,7 +80,7 @@ Then(/^I should see data in the Daily New Users table updated to match the campa
   const trs = await browser.getHTML(`#usageDataTable > tbody > tr`)
   for (let dnu of dnu_results.rows) {
     const tr = trs.find((t) => { return t.includes(dnu.ymd)})
-    expect(tr).to.include(dnu.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","))
+    expect(tr).to.include(dnu.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','))
   }
 })
 

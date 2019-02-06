@@ -9,6 +9,7 @@ exports.up = async function (knex, Promise) {
     table.integer('campaign_id')
     table.timestamps(true, true)
     table.unique(['campaign_id', 'code_text'])
+    table.index('campaign_id')
   })
 }
 

@@ -494,7 +494,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
         for (let column of columns) {
           let record = groups[k].find((row) => { return row[y] === column })
           // if a row doesn't exist build a blank one
-          if (!record) record = { count: 0 }
+          if (!record) record = {count: 0}
           buffer += `<td>${value_func(record, record.count)} <small class='text-muted'>${stp(record.count / rowTotal)}</small></td>`
         }
         buffer += `<td>${st(rowTotal)}</td></tr>`
@@ -816,7 +816,7 @@ const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
 
 var usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
-var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true })
+var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
 
 const usageMeasureHandler = (rows) => {
   let CostPerInstall = 0
@@ -963,7 +963,7 @@ var serializeChannelParams = function () {
 
 var standardParams = function () {
   let referral_codes = []
-  if($('#ref-filter').hasClass("select2-hidden-accessible")){
+  if ($('#ref-filter').hasClass('select2-hidden-accessible')) {
     referral_codes = $('#ref-filter').select2('data').map(i => i.id)
   }
   return $.param({
@@ -1644,9 +1644,9 @@ const updatePageUIState = () => {
   }
 
   if (viewState.showDaysSelector) {
-    $("#controls-days-menu").parent().show()
+    $('#controls-days-menu').parent().show()
   } else {
-    $("#controls-days-menu").parent().hide()
+    $('#controls-days-menu').parent().hide()
   }
 
   const days = [10000, 365, 120, 90, 60, 30, 14, 7]
@@ -1684,22 +1684,22 @@ const updatePageUIState = () => {
 
   // update menu label for days
   if (pageState.days === 10000) {
-    $("#controls-selected-days").html("All days")
+    $('#controls-selected-days').html('All days')
   } else {
-    $("#controls-selected-days").html(pageState.days + " days")
+    $('#controls-selected-days').html(pageState.days + ' days')
   }
 
   if (pageState.showToday) {
     $(`#controls`).find(`a[data-days="0"] i`).removeClass('fa-blank')
-    $("#controls-selected-days").html($("#controls-selected-days").html() + ' + Now')
+    $('#controls-selected-days').html($('#controls-selected-days').html() + ' + Now')
   } else {
     $(`#controls`).find(`a[data-days="0"] i`).addClass('fa-blank')
   }
 
   if (viewState.showShowToday) {
-    $("#controls-days-menu").find('a[data-days="0"]').parent().show()
+    $('#controls-days-menu').find('a[data-days="0"]').parent().show()
   } else {
-    $("#controls-days-menu").find('a[data-days="0"]').parent().hide()
+    $('#controls-days-menu').find('a[data-days="0"]').parent().hide()
   }
 }
 
@@ -2303,7 +2303,7 @@ initialize_components = () => {
 
       $('#ref-filter').empty()
       $('#ref-filter').append(template)
-      $('#ref-filter').select2({width: 300})
+      $('#ref-filter').select2({width: 300, placeholder: 'Click a campaign or ref'})
       $('#ref-filter').on('select2:open', function () {
 
         setTimeout(function () {
@@ -2319,13 +2319,15 @@ initialize_components = () => {
       $('#ref-filter').on('change', function () {
         refreshData()
       })
-
+      $('#clear-ref').on('click', function () {
+        $('#ref-filter').val(null).trigger('change')
+      })
     }
   })
 }
 
 const setupControls = () => {
-  $("#controls-days-menu").on("click", "a", (evt) => {
+  $('#controls-days-menu').on('click', 'a', (evt) => {
     const target = $(evt.target)
     const days = parseInt(target.data('days'))
     if (days !== 0) {
@@ -2337,7 +2339,7 @@ const setupControls = () => {
     refreshData()
   })
 
-  $("#controls-channels-menu").on("click", "a", (evt) => {
+  $('#controls-channels-menu').on('click', 'a', (evt) => {
     const target = $(evt.target)
     const channel = target.data('channel')
     pageState.channelFilter[channel] = !pageState.channelFilter[channel]
@@ -2358,13 +2360,13 @@ const setupControls = () => {
       pageState.platformFilter[platform] = !pageState.platformFilter[platform]
     } else {
       let [product, action] = platform.split(':')
-      if (action === "all") {
+      if (action === 'all') {
         for (let plat of productPlatforms[product]) { pageState.platformFilter[plat] = true }
       }
-      if (action === "none") {
+      if (action === 'none') {
         for (let plat of productPlatforms[product]) { pageState.platformFilter[plat] = false }
       }
-      if (action === "only") {
+      if (action === 'only') {
         for (let prod of ['muon', 'core', 'mobile']) {
           if (prod === product) {
             for (let plat of productPlatforms[prod]) {
@@ -2382,9 +2384,9 @@ const setupControls = () => {
     refreshData()
   }
 
-  $("#controls-muon-menu").on("click", "a", productMenuHandler)
-  $("#controls-core-menu").on("click", "a", productMenuHandler)
-  $("#controls-mobile-menu").on("click", "a", productMenuHandler)
+  $('#controls-muon-menu').on('click', 'a', productMenuHandler)
+  $('#controls-core-menu').on('click', 'a', productMenuHandler)
+  $('#controls-mobile-menu').on('click', 'a', productMenuHandler)
 }
 
 $(document).ready(function () {

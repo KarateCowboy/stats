@@ -22,6 +22,18 @@ class CustomWorld {
     this[variable] = value
   }
 
+  get menuHelpers () {
+    return {
+      async addToRefBox (text) {
+        await browser.click('.selection')
+        await browser.keys(text)
+        await browser.keys('\uE007')
+        await  browser.pause(100)
+        await browser.click('#contentTitle')// remove from focus
+      }
+    }
+  }
+
   incrementBy (number) {
     this.variable += number
   }

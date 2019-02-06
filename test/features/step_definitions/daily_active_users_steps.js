@@ -56,20 +56,14 @@ Then(/^I should see DAU numbers for all referral codes$/, async function () {
 })
 
 When(/^I pick two referral codes$/, async function () {
-  const codes = await knex('dw.fc_usage').where('ref', '!=', 'none').andWhere('first_time', true).andWhere('total', '>', 0).select('ref').limit(1)
-  sample_codes = codes.map(c => c.ref)
   const refCodes = await this.sample_campaign.getReferralCodes()
-  await browser.keys(_.first(refCodes.models).get('code_text'))
-  testing_ymd = moment().startOf('month').subtract(2, 'weeks').startOf('month').add(2, 'days')
+  this.setTo('sample_codes', refCodes.models.map(r => { return r.get('code_text')}))
   await browser.click_when_visible('#controls-selected-days')
   await browser.click_when_visible('#controls-days-menu > li:nth-of-type(3)') //120 days
   await browser.click('#contentTitle')
   await browser.pause(25)
-  await browser.click('#ref-filter')
-  await browser.keys(sample_codes[0])
-  await browser.keys('\uE007')
-  await browser.keys(sample_codes[1])
-  await browser.keys('\uE007')
+  await this.menuHelpers.addToRefBox(refCodes.models[0].get('code_text'))
+  await this.menuHelpers.addToRefBox(refCodes.models[1].get('code_text'))
 })
 
 When(/^I should see DAU numbers for those two referral codes$/, async function () {
@@ -81,7 +75,7 @@ When(/^I should see DAU numbers for those two referral codes$/, async function (
 Then(/^I should see DNU numbers for those two referral codes$/, async function () {
   const api_common = require('../../../src/api/common')
   const dnu_results = await db.UsageSummary.dailyNewUsers({
-    ref: [sample_codes],
+    ref: this.sample_codes,
     platforms: api_common.allPlatforms,
     channels: api_common.allChannels,
     daysAgo: 120
@@ -122,8 +116,8 @@ Given(/^there are usages for all platforms and multiple versions for the last we
 Then(/^I should see DAU data for all the platforms, broken down by version$/, async function () {
   let versions = await knex('dw.fc_usage').whereNot('platform', 'android').distinct('version')
   versions = versions.map(u => u.version)
-  const rows = await browser.getHTML('#usageDataTable  tr.active')
-  const first_eleven = _.take(rows, 11)
-  expect(first_eleven).to.have.property('length', 11)
-  expect(_.every(versions, (v) => { return _.flatten(first_eleven).toString().includes(v.toString())})).to.equal(true, 'Every version should exist in the first eleven rows of the table')
+  const table_header = await browser.getHTML('#usageDataTable  > thead > tr')
+  for (let version of versions) {
+    expect(table_header).to.include(version, 'Every version should exist in the first eleven rows of the table')
+  }
 })
