@@ -963,8 +963,9 @@ var serializeChannelParams = function () {
 
 var standardParams = function () {
   let referral_codes = []
-  if ($('#ref-filter').hasClass('select2-hidden-accessible')) {
-    referral_codes = $('#ref-filter').select2('data').map(i => i.id)
+  const ref_filter = $('#ref-filter')
+  if (ref_filter.hasClass('select2-hidden-accessible')) {
+    referral_codes = ref_filter.select2('data').map(i => i.id)
   }
   return $.param({
     days: pageState.days,
@@ -2290,9 +2291,22 @@ function initializeGlobals () {
 }
 
 initialize_components = () => {
+  let campaigns = []
+  const addCampaignClickListener = () => {
+    setTimeout(function () {
+      $('li[role=group]').on('click', (obj) => {
+        let campaignName = $(obj.target).html()
+        let campaign = _.find(campaigns, {'name': campaignName})
+        const current = $('#ref-filter').select2('data').map(i => i.text)
+        $('#ref-filter').val(current.concat(campaign.referralCodes.map(r => r.code_text)))
+        $('#ref-filter').trigger('change')
+      })
+    }, 300)
+
+  }
   $.ajax('/api/1/campaigns', {
     success: (response) => {
-      const campaigns = response
+      campaigns = response
       let template = ''
       _.sortBy(response, 'name').map((c) => {
         let optgroup = `<optgroup label="${c.name}">`
@@ -2301,26 +2315,25 @@ initialize_components = () => {
         template += optgroup
       })
 
-      $('#ref-filter').empty()
-      $('#ref-filter').append(template)
-      $('#ref-filter').select2({width: 300, placeholder: 'Campaign / referral codes'})
-      $('#ref-filter').on('select2:open', function () {
-
-        setTimeout(function () {
-          $('li[role=group]').on('click', (obj) => {
-            let campaignName = $(obj.target).html()
-            let campaign = _.find(campaigns, {'name': campaignName})
-            const current = $('#ref-filter').select2('data').map(i => i.text)
-            $('#ref-filter').val(current.concat(campaign.referralCodes.map(r => r.code_text)))
-            $('#ref-filter').trigger('change')
-          })
-        }, 500)
+      const ref_filter = $('#ref-filter')
+      ref_filter.empty()
+      ref_filter.append(template)
+      ref_filter.select2({width: 300, placeholder: 'Campaign / referral codes'})
+      //ref_filter.on('select2:open', addCampaignClickListener)
+      $('body').bind('DOMSubtreeModified', async function () {
+        const select = $('.select2-results__option[role=group]')
+        if (select.length > 0) {
+          if (select.hasClass('bound') === false) {
+            select.addClass('bound')
+            addCampaignClickListener()
+          }
+        }
       })
-      $('#ref-filter').on('change', function () {
+      ref_filter.on('change', function () {
         refreshData()
       })
       $('#clear-ref').on('click', function () {
-        $('#ref-filter').val(null).trigger('change')
+        ref_filter.val(null).trigger('change')
       })
     }
   })
