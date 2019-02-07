@@ -37,12 +37,11 @@ class GetCampaignsAndRefs extends Script {
       process.exit(1)
     }
     await Promise.all(response.map(async (promo) => {
-      let campaign = await db.Campaign.where('name', promo.name).fetch() 
-      
+      let campaign = (await db.Campaign.query().where('name', promo.name))[0]
+
       try {
         if (!!!campaign) {
-          campaign = new db.Campaign({name: promo.name})
-          await campaign.save()
+          campaign = await db.Campaign.query().insert({name: promo.name})
         }
       } catch (e) {
         if (e.message.includes('unique constraint') === false) {
@@ -53,8 +52,7 @@ class GetCampaignsAndRefs extends Script {
 
       await Promise.all(promo.promo_registrations.map(async (ref) => {
         try {
-          let referralCode = new db.ReferralCode({campaign_id: campaign.id, code_text: ref.referral_code})
-          await referralCode.save()
+          let referralCode = await db.ReferralCode.query().insert({campaign_id: campaign.id, code_text: ref.referral_code})
         } catch (e) {
           if (e.message.includes('unique constraint') === false) {
             console.log('Error: ' + e.message)

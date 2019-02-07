@@ -50,7 +50,7 @@ Given(/^there are new user records for the last two months, across several campa
     const dated_attrs = _.range(1, 60).map((i) => {
       return {
         ymd: moment().subtract(i, 'days').format('YYYY-MM-DD'),
-        ref: ref.get('code_text'),
+        ref: ref.code_text,
         first_time: true,
         total: () => { return _.random(1, 4000)}
       }
@@ -60,27 +60,33 @@ Given(/^there are new user records for the last two months, across several campa
 })
 
 Given(/^I filter Daily New Users by an existing campaign$/, async function () {
-  await browser.select_by_value_when_visible('#daysSelector', '120')
+  await this.menuHelpers.pickDaysBack(120)
   await browser.click('.selection')
   const refCodes = await this.sample_campaign.getReferralCodes()
-  await browser.keys(_.first(refCodes.models).get('code_text'))
-  await browser.keys('\uE007')
+  this.setTo('sampleRefCode', _.first(refCodes).code_text)
+  this.menuHelpers.addToRefBox(this.sampleRefCode)
 })
 
 Then(/^I should see data in the Daily New Users table updated to match the campaign filter$/, async function () {
   const api_common = require('../../../src/api/common')
-  const referral_code = await db.ReferralCode.where('campaign_id', this.sample_campaign.id).fetch()
   const dnu_results = await db.UsageSummary.dailyNewUsers({
-    ref: [referral_code.get('code_text')],
+    ref: [this.sampleRefCode],
     platforms: api_common.allPlatforms,
     channels: api_common.allChannels,
-    daysAgo: 60
+    daysAgo: 120
   })
-  await browser.pause(100)
+  await browser.pause(1000)
   const trs = await browser.getHTML(`#usageDataTable > tbody > tr`)
   for (let dnu of dnu_results.rows) {
     const tr = trs.find((t) => { return t.includes(dnu.ymd)})
-    expect(tr).to.include(dnu.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','))
+    try {
+      expect(tr).to.include(dnu.count.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','))
+    } catch (e) {
+      console.log(`Failed to match expected data to chart output.
+         ymd is ${dnu.ymd}, count is ${dnu.count}
+         Ref code is ${this.sampleRefCode}`)
+      throw e
+    }
   }
 })
 

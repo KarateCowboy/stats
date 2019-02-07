@@ -14,20 +14,19 @@ module.exports = function (knex) {
       return Schema
     }
 
-    get tableName () {
+    static get tableName () {
       return 'dtl.campaigns'
     }
 
     async getReferralCodes () {
-      const referralCodes = db.ReferralCode.where('campaign_id', this.attributes.id).fetchAll()
-      return referralCodes
+      return await db.ReferralCode.query().where('campaign_id', this.id)
     }
 
     static async allWithReferralCodes () {
-      const campaigns = await this.fetchAll()
+      const campaigns = await this.query()
       await Promise.all(campaigns.map(async (c) => {
         const codes = await c.getReferralCodes()
-        c.attributes.referralCodes = codes.models.map(m => m.toJSON())
+        c.referralCodes = codes.map(m => m.toJSON())
       }))
       return campaigns
     }

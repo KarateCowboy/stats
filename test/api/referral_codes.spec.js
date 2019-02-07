@@ -17,8 +17,7 @@ describe('crud endpoints', async function () {
         url: '/api/1/referral_codes'
       }
       for (let i = 1; i <= 5; i++) {
-        let ref_code = await factory.build('ref_code_pg')
-        await ref_code.save()
+        let ref_code = await factory.create('ref_code_pg')
       }
       const server = await main.setup({pg: pg_client, mg: mongo_client})
       let response = await server.inject(params)

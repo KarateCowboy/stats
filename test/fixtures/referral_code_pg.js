@@ -8,9 +8,10 @@ const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const _ = require('lodash')
 const ObjectID = require('mongodb').ObjectID
+const ObjectionAdapter = require('factory-girl-objection-adapter')
 
 const define = () => {
-  factory.setAdapter(new FactoryGirl.BookshelfAdapter(), 'ref_code_pg')
+  factory.setAdapter(new ObjectionAdapter(), 'ref_code_pg')
 
   factory.define('ref_code_pg', db.ReferralCode, {
       'code_text': () => { let o = new ObjectID(); return _.shuffle(o.toString()).join('').slice(0,6).toUpperCase() },

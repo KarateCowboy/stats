@@ -15,7 +15,7 @@ module.exports = function (knex) {
     get schema(){
       return Schema
     }
-    get tableName () {
+    static get tableName () {
       return 'dtl.referral_codes'
     }
   }

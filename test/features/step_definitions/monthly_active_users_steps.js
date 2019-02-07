@@ -32,7 +32,7 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false, other_attribu
     working_date.add(1, 'days')
     let refs = []
     if (!mixed_ref) {
-      const noneRef = new db.ReferralCode({code_text: 'none'})
+      const noneRef = await db.ReferralCode.query().insert({code_text: 'none'})
       refs.push(noneRef)
     } else {
       const campaigns = await factory.createMany('campaign', 3, {created_at: working_date.toDate()})
@@ -48,7 +48,7 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false, other_attribu
           year_month_day: working_date.format('YYYY-MM-DD'),
           woi: working_date.clone().subtract(7, 'days').format('YYYY-MM-DD'),
           ts: () => { return working_date.clone().toDate().getTime()},
-          ref: ref.get('code_text'),
+          ref: ref.code_text,
           channel: 'release'
         }
         if (other_attributes) {
@@ -91,13 +91,13 @@ Given(/^"([^"]*)" mau data is missing$/, async function (platform) {
   await knex('dw.fc_usage_month').where('platform', platform).delete()
 })
 Given(/^I enter an existing referral code in the text box$/, async function () {
-  let sample = await db.ReferralCode.where('code_text', '!=', 'none').fetch()
+  let sample = (await db.ReferralCode.query().where('code_text', '!=', 'none'))[0]
   this.setTo('sampleRef', sample)
   await browser.click_when_visible('#controls-selected-days')
   await browser.pause(30)
   await browser.click('#controls-days-menu > li:nth-of-type(3)') //120 days
   await browser.click('#contentTitle') // hide drop-down / remove from focus
-  await this.menuHelpers.addToRefBox(sample.get('code_text'))
+  await this.menuHelpers.addToRefBox(sample.code_text)
 })
 
 Then(/^the report should limit to the existing referrals statistics$/, async function () {
@@ -109,7 +109,7 @@ Then(/^the report should limit to the existing referrals statistics$/, async fun
 })
 
 Then(/^the report should show only the average dau for that referral code$/, async function () {
-  const count_for_day = await CoreUsage.count({ref: this.sampleRef.get('code_text')})
+  const count_for_day = await CoreUsage.count({ref: this.sampleRef.code_text})
   const usage_data_table = await browser.getHTML('#usageDataTable')
   expect(count_for_day).to.be.greaterThan(0, 'count to check for should be greater than 0')
   expect(usage_data_table).to.contain(Math.round(count_for_day / 30))

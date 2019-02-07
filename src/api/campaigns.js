@@ -6,7 +6,7 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/campaigns',
     handler: async function (request, reply) {
       const campaigns = await db.Campaign.allWithReferralCodes()
-      reply(campaigns.models)
+      reply(campaigns)
     }
   })
 }

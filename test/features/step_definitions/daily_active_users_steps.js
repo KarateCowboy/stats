@@ -57,13 +57,13 @@ Then(/^I should see DAU numbers for all referral codes$/, async function () {
 
 When(/^I pick two referral codes$/, async function () {
   const refCodes = await this.sample_campaign.getReferralCodes()
-  this.setTo('sample_codes', refCodes.models.map(r => { return r.get('code_text')}))
+  this.setTo('sample_codes', refCodes.map(r => { return r.code_text}))
   await browser.click_when_visible('#controls-selected-days')
   await browser.click_when_visible('#controls-days-menu > li:nth-of-type(3)') //120 days
   await browser.click('#contentTitle')
   await browser.pause(25)
-  await this.menuHelpers.addToRefBox(refCodes.models[0].get('code_text'))
-  await this.menuHelpers.addToRefBox(refCodes.models[1].get('code_text'))
+  await this.menuHelpers.addToRefBox(refCodes[0].code_text)
+  await this.menuHelpers.addToRefBox(refCodes[1].code_text)
 })
 
 When(/^I should see DAU numbers for those two referral codes$/, async function () {
