@@ -1,5 +1,4 @@
 // Platform meta data
-var VueApp
 const platforms = {
   osx: {
     id: 'osx',
@@ -167,117 +166,6 @@ let clampZeroToOneHundred = (v) => {
   if (v > 100) return 100
   return v
 }
-
-// Install promotion info in the control bar
-var partners, refs
-
-async function installPromotions () {
-  partners = await $.ajax('/api/1/promotions/partners')
-  refs = await $.ajax('/api/1/promotions/refs')
-  var refsSelect = $('#refs')
-
-  $('#refs_autocomplete').typeahead({
-    minLength: 0,
-    highlight: true
-  }, {
-    source: function (query, sync, async) {
-      query = query.toLowerCase()
-      refs.forEach((obj) => {
-        obj.searchable = (obj.ref + ' - ' + obj.description + ' (' + obj.partner + ')').toLowerCase()
-        obj.rendered = obj.ref + ' - ' + obj.description + ' (' + obj.partner + ')'
-      })
-      var selected = refs.filter((obj) => { return obj.searchable.match(query) })
-      sync(selected)
-    },
-    display: function (obj) {
-      return obj.rendered
-    },
-    templates: {
-      suggestion: function (obj) {
-        return `<p><img src="/local/img/publisher-icons/${publisherPlatformsByPlatform[obj.platform].icon_url}" width="24"> ${obj.ref} - ${obj.description} (${obj.partner})</p>`
-      }
-    }
-  })
-
-  $('#refs_autocomplete').on('typeahead:select', function (evt, obj) {
-    $('#clearRef').show()
-    pageState.ref = obj.ref
-    refreshData()
-  })
-
-  $('#refs_autocomplete').on('keyup', function (evt) {
-    if ($('#refs_autocomplete').val()) {
-      $('#clearRef').show()
-    } else {
-      $('#clearRef').hide()
-    }
-  })
-}
-
-function installPromotionsPopoverHandler () {
-  var partnersSelect = $('#partners')
-
-  var platformContainer = $('#addPromotionFormContainerPlatform')
-  platformContainer.empty()
-
-  publisherPlatforms.forEach((platform) => {
-    var buffer = `<option value="${platform.platform}">${platform.label}</option>`
-    platformContainer.append(buffer)
-  })
-
-  $('#addRef').popover({
-    html: true,
-    placement: 'bottom',
-    content: $('#addPromotionFormContainer').html(),
-    title: 'Add Promotion',
-    trigger: 'manual'
-  })
-
-  $('#addRef').on('click', () => {
-    $('#addRef').popover('toggle')
-    $('#addPromotionFormContainerPartner').val(partnersSelect.val())
-  })
-
-  $('#addRef').on('shown.bs.popover', () => {
-    console.log('installing popover handlers')
-    $('#addPromotionOk').on('click', async (evt) => {
-      var partner = $('#addPromotionFormContainerPartner').val()
-      var ref = $('#addPromotionFormContainerRef').val()
-      var description = $('#addPromotionFormContainerDescription').val()
-      var platform = $('#addPromotionFormContainerPlatform').val()
-      console.log(partner, ref, description, platform)
-      if (partner && ref && description && platform) {
-        $('#addRef').popover('hide')
-        var result = await $.ajax('/api/1/promotions/refs', {
-          type: 'POST',
-          data: {
-            ref: ref,
-            partner: partner,
-            description: description,
-            platform: platform
-          }
-        })
-        console.log(result)
-        installPromotions()
-      }
-    })
-    $('#addPromotionCancel').on('click', (evt) => {
-      $('#addRef').popover('hide')
-    })
-  })
-}
-
-function installPromotionsClearHandler () {
-  $('#clearRef').on('click', function () {
-    $('#refs_autocomplete').typeahead('val', '')
-    $('#clearRef').hide()
-    pageState.ref = null
-    refreshData()
-  })
-}
-
-installPromotions()
-installPromotionsClearHandler()
 
 var crashVersionHandler = function (rows) {
   var s = $('#crash-ratio-versions')
@@ -568,46 +456,97 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   if (opts.formatter) { value_func = opts.formatter }
 
   return function (rows) {
-    console.log('executing a handler')
     var table = $('#usageDataTable tbody')
 
-    $('#x_label').html(x_label)
-    $('#y_label').html(y_label)
+    const pivot = () => {
+      table.empty()
 
-    table.empty()
-    console.log(rows)
-    var ctrl = rows[x]
-    var ctrlClass = ''
-    var grandTotalAccumulator = 0
-    var previousValue, difference, differenceRate, i
-    rows.forEach(function (row) {
-      if (!previousValue) previousValue = row.count
-      if (row[x] !== ctrl) {
-        // The ctrl has broken, we need to change grouping
-        if (ctrlClass === 'active') {
-          ctrlClass = ''
-        } else {
-          ctrlClass = 'active'
+      let tableHeader = table.parent().find('thead')
+      tableHeader.empty()
+
+      // build a sorted list of column headers
+      let columns = {}
+      rows = rows.sort((a, b) => {
+        return b[x].localeCompare(a[x]) || b[y].localeCompare(a[y])
+      })
+      rows.forEach((row) => { columns[row[y]] = true })
+      columns = Object.keys(columns).sort()
+
+      // get the list of the keys for each row
+      let groups = _.groupBy(rows, (row) => { return row[x] })
+      let ks = Object.keys(groups).sort((a, b) => { return b.localeCompare(a) })
+
+      // build the table headers
+      let tableHeaderBuffer = `<tr><th>${x_label}</th>`
+      for (let column of columns) {
+        tableHeaderBuffer += `<th>${column}</th>`
+      }
+      tableHeaderBuffer += `<th>Total</th></tr>`
+      tableHeader.html(tableHeaderBuffer)
+
+      table.parent().addClass('table-striped')
+
+      let buffer = ''
+      for (let k of ks) {
+        buffer += `<tr><td>${k}</td>`
+        // calculate the total for the row
+        let rowTotal = _.reduce(groups[k], (memo, row) => { return memo + (row.count || 0) }, 0)
+        for (let column of columns) {
+          let record = groups[k].find((row) => { return row[y] === column })
+          // if a row doesn't exist build a blank one
+          if (!record) record = {count: 0}
+          buffer += `<td>${value_func(record, record.count)} <small class='text-muted'>${stp(record.count / rowTotal)}</small></td>`
         }
-        ctrl = row[x]
+        buffer += `<td>${st(rowTotal)}</td></tr>`
       }
-      var buf = '<tr class="' + ctrlClass + '">'
-      buf = buf + '<td>' + row[x] + '</td>'
-      buf = buf + '<td>' + (row[y] || 'All') + '</td>'
-      buf = buf + '<td class="text-right">' + value_func(row, row.count) + '</td>'
-      if (row.daily_percentage !== undefined) {
-        buf = buf + '<td class="text-right">' + stp(row.daily_percentage / 100) + '</td>'
-      }
-      if (opts.growth_rate) {
-        difference = row.count - previousValue
-        differenceRate = (difference / parseFloat(previousValue) * 100).toFixed(1)
-        buf = buf + '<td class="text-right">' + value_func(row, difference) + '<span class="subvalue"> ' + differenceRate + '%</span>' + '</td>'
-      }
-      buf = buf + '</tr>'
-      table.append(buf)
-      previousValue = row.count
-      grandTotalAccumulator += row.count
-    })
+      table.append(buffer)
+    }
+
+    const standardTable = () => {
+      table.empty()
+      let tableHeader = table.parent().find('thead')
+      tableHeader.empty()
+      tableHeader.html(`<tr><th>${x_label}</th><th>${y_label}</th><th></th></tr>`)
+
+      var ctrl = rows[x]
+      var ctrlClass = ''
+      var grandTotalAccumulator = 0
+      var previousValue, difference, differenceRate, i
+      rows.forEach(function (row) {
+        if (!previousValue) previousValue = row.count
+        if (row[x] !== ctrl) {
+          // The ctrl has broken, we need to change grouping
+          if (ctrlClass === 'active') {
+            ctrlClass = ''
+          } else {
+            ctrlClass = 'active'
+          }
+          ctrl = row[x]
+        }
+        var buf = '<tr class="' + ctrlClass + '">'
+        buf = buf + '<td>' + row[x] + '</td>'
+        buf = buf + '<td>' + (row[y] || 'All') + '</td>'
+        buf = buf + '<td class="text-right">' + value_func(row, row.count) + '</td>'
+        if (row.daily_percentage !== undefined) {
+          buf = buf + '<td class="text-right">' + stp(row.daily_percentage / 100) + '</td>'
+        }
+        if (opts.growth_rate) {
+          difference = row.count - previousValue
+          differenceRate = (difference / parseFloat(previousValue) * 100).toFixed(1)
+          buf = buf + '<td class="text-right">' + value_func(row, difference) + '<span class="subvalue"> ' + differenceRate + '%</span>' + '</td>'
+        }
+        buf = buf + '</tr>'
+        table.append(buf)
+        previousValue = row.count
+        grandTotalAccumulator += row.count
+      })
+    }
+
+    if (opts.pivot) {
+      pivot()
+    } else {
+      standardTable()
+    }
 
     if (opts.growth_rate && rows[0]) {
       averageGrowthRate = Math.pow(rows[rows.length - 1].count / rows[0].count, 1 / rows.length) - 1
@@ -719,13 +658,13 @@ const weeklyRetentionHandler = async function (rows) {
     lineColor: '#999999'
   }
 
-  //prepend any warnings about incomplete data
+  // prepend any warnings about incomplete data
   buffer += `<table class="table" id="missingRetentionWarnings">`
   const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD')
   for (let platform in retention_warnings) {
-    retention_warnings[platform] = retention_warnings[platform].filter((p) => { return p !== yesterday})
+    retention_warnings[platform] = retention_warnings[platform].filter((p) => { return p !== yesterday })
     if (retention_warnings[platform].length > 0) {
-      const message_string = `Missing ${ platform } data: ${retention_warnings[platform].sort().reverse().splice(0, 5).join(', ')}`
+      const message_string = `Missing ${platform} data: ${retention_warnings[platform].sort().reverse().splice(0, 5).join(', ')}`
       buffer += `<tr><td style="color: red">${message_string}</td>`
     }
   }
@@ -875,7 +814,9 @@ const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platfor
 
 const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
 
-var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
+var usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
+
+var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
 
 const usageMeasureHandler = (rows) => {
   let CostPerInstall = 0
@@ -964,7 +905,7 @@ var retentionHandler = buildSuccessHandler('ymd', 'woi', 'Date', 'Week of instal
 
 var aggMAUHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', growth_rate: true})
 
-var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index'})
+var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index', pivot: true})
 
 var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
@@ -1016,18 +957,23 @@ var serializeChannelParams = function () {
   var filterChannels = _.filter(channelKeys, function (id) {
     return pageState.channelFilter[id]
   })
+  if (pageState.channelFilter.release) filterChannels.push('stable')
   return filterChannels.join(',')
 }
 
 var standardParams = function () {
-  let referral_codes = VueApp && viewState.showRefFilter ? VueApp.$data.selected_refs.join(',') : null
+  let referral_codes = []
+  const ref_filter = $('#ref-filter')
+  if (ref_filter.hasClass('select2-hidden-accessible')) {
+    referral_codes = ref_filter.select2('data').map(i => i.id)
+  }
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
     channelFilter: serializeChannelParams(),
     showToday: pageState.showToday,
     version: pageState.version,
-    ref: referral_codes
+    ref: referral_codes.join(',')
   })
 }
 
@@ -1130,7 +1076,7 @@ var MAUAggPlatformRetriever = function () {
 
 var MAUAverageAggPlatformRetriever = function () {
   $.ajax('/api/1/dau_monthly_average?' + standardParams(), {
-    success: usagePlatformHandler
+    success: usagePlatformHandlerStandard
   })
 }
 
@@ -1142,7 +1088,7 @@ var MAUAveragePlatformRetriever = function () {
 
 var MAUAverageNewAggPlatformRetriever = function () {
   $.ajax('/api/1/dau_first_monthly_average?' + standardParams(), {
-    success: usagePlatformHandler
+    success: usagePlatformHandlerStandard
   })
 }
 
@@ -1160,7 +1106,7 @@ var DNUPlatformRetriever = function () {
 
 var DAURetriever = function () {
   $.ajax('/api/1/dau?' + standardParams(), {
-    success: usagePlatformHandler
+    success: usagePlatformHandlerStandard
   })
 }
 
@@ -1525,43 +1471,52 @@ var menuItems = {
 }
 
 // Mutable page state
-var pageState = {
-  currentlySelected: null,
-  days: 14,
-  version: null,
-  ref: null,
-  platformFilter: {
-    osx: true,
-    winx64: true,
-    winia32: true,
-    linux: true,
-    ios: true,
-    android: false,
-    androidbrowser: true,
-    'osx-bc': true,
-    'winx64-bc': true,
-    'winia32-bc': true,
-    'linux-bc': true
-  },
-  channelFilter: {
-    dev: true,
-    beta: false,
-    stable: true,
-    release: true
-  },
-  showToday: false
+var pageState
+pageState = window.localStorage.getItem('pageState') ? JSON.parse(window.localStorage.getItem('pageState')) : null
+
+// this is required for now. the control that displays the ref code cannot be programmatically controlled yet.
+// pageState.ref = []
+
+if (!pageState) {
+  pageState = {
+    currentlySelected: null,
+    days: 14,
+    version: null,
+    ref: null,
+    platformFilter: {
+      'osx': true,
+      'winx64': true,
+      'winia32': true,
+      'linux': true,
+      'ios': true,
+      'android': false,
+      'androidbrowser': true,
+      'osx-bc': true,
+      'winx64-bc': true,
+      'winia32-bc': true,
+      'linux-bc': true
+    },
+    channelFilter: {
+      'dev': true,
+      'beta': false,
+      'release': true
+    },
+    showToday: false
+  }
 }
+
+console.log(pageState)
 
 var viewState = {
   showControls: true,
   platformEnabled: {
-    osx: true,
-    winx64: true,
-    winia32: true,
-    linux: true,
-    ios: true,
-    android: true,
-    androidbrowser: true,
+    'osx': true,
+    'winx64': true,
+    'winia32': true,
+    'linux': true,
+    'ios': true,
+    'android': true,
+    'androidbrowser': true,
     'osx-bc': true,
     'winia32-bc': true,
     'winx64-bc': true,
@@ -1662,8 +1617,9 @@ $('#crash-ratio-versions').on('change', function (evt, value) {
 })
 
 // Update page based on current state
-var updatePageUIState = function () {
+const updatePageUIState = () => {
   $('#controls').show()
+
   _.keys(menuItems).forEach(function (id) {
     if (id !== pageState.currentlySelected) {
       $('#' + id).parent().removeClass('active')
@@ -1689,26 +1645,72 @@ var updatePageUIState = function () {
   }
 
   if (viewState.showDaysSelector) {
-    $('#daysSelector').show()
+    $('#controls-days-menu').parent().show()
   } else {
-    $('#daysSelector').hide()
+    $('#controls-days-menu').parent().hide()
+  }
+
+  const days = [10000, 365, 120, 90, 60, 30, 14, 7]
+
+  // highlight currently selected days
+  _.each(days, (d) => {
+    if (pageState.days === d) {
+      $(`#controls`).find(`a[data-days="${d}"] i`).removeClass('fa-blank')
+    } else {
+      $(`#controls`).find(`a[data-days="${d}"] i`).addClass('fa-blank')
+    }
+  })
+
+  // highlight currently selected platforms
+  _.each(pageState.platformFilter, (v, k, lst) => {
+    if (v) {
+      $(`#controls`).find(`a[data-platform="${k}"] i`).removeClass('fa-blank')
+      $(`#controls`).find(`h5.platform-list span.${k}`).show()
+    } else {
+      $(`#controls`).find(`a[data-platform="${k}"] i`).addClass('fa-blank')
+      $(`#controls`).find(`h5.platform-list span.${k}`).hide()
+    }
+  })
+
+  // highlight currently selected channels
+  _.each(pageState.channelFilter, (v, k, lst) => {
+    if (v) {
+      $(`#controls`).find(`a[data-channel="${k}"] i`).removeClass('fa-blank')
+      $(`#controls`).find(`h5.platform-list span.${k}`).show()
+    } else {
+      $(`#controls`).find(`a[data-channel="${k}"] i`).addClass('fa-blank')
+      $(`#controls`).find(`h5.platform-list span.${k}`).hide()
+    }
+  })
+
+  // update menu label for days
+  if (pageState.days === 10000) {
+    $('#controls-selected-days').html('All days')
+  } else {
+    $('#controls-selected-days').html(pageState.days + ' days')
+  }
+
+  if (pageState.showToday) {
+    $(`#controls`).find(`a[data-days="0"] i`).removeClass('fa-blank')
+    $('#controls-selected-days').html($('#controls-selected-days').html() + ' + Now')
+  } else {
+    $(`#controls`).find(`a[data-days="0"] i`).addClass('fa-blank')
   }
 
   if (viewState.showShowToday) {
-    $('#btn-show-today').parent().show()
+    $('#controls-days-menu').find('a[data-days="0"]').parent().show()
   } else {
-    $('#btn-show-today').parent().hide()
-  }
-
-  if (viewState.showPromotions) {
-    $('#controlsPromotionsPanel').show()
-  } else {
-    $('#controlsPromotionsPanel').hide()
+    $('#controls-days-menu').find('a[data-days="0"]').parent().hide()
   }
 }
 
+const persistPageState = () => {
+  window.localStorage.setItem('pageState', JSON.stringify(pageState))
+}
+
 // Load data for the selected item
-var refreshData = function () {
+const refreshData = () => {
+  persistPageState()
   if (menuItems[pageState.currentlySelected]) {
     menuItems[pageState.currentlySelected].retriever()
   }
@@ -1721,7 +1723,6 @@ let initialize_router = () => {
   router.get('search', function (req) {
     pageState.currentlySelected = 'mnSearch'
     viewState.showControls = false
-    viewState.showPromotions = false
     viewState.showShowToday = false
     viewState.showRefFilter = false
     updatePageUIState()
@@ -1731,7 +1732,6 @@ let initialize_router = () => {
   router.get('overview', function (req) {
     pageState.currentlySelected = 'mnOverview'
     viewState.showControls = false
-    viewState.showPromotions = false
     viewState.showShowToday = false
     viewState.showRefFilter = false
     updatePageUIState()
@@ -1742,10 +1742,8 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnVersions'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1754,7 +1752,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnRetention'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = false
     updatePageUIState()
@@ -1765,7 +1762,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnRetentionMonth'
     viewState.showControls = true
     viewState.showDaysSelector = false
-    viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = true
     updatePageUIState()
@@ -1776,10 +1772,8 @@ let initialize_router = () => {
     pageState.currentlySelected = 'weeklyRetention'
     viewState.showControls = true
     viewState.showDaysSelector = false
-    viewState.showPromotions = false
     viewState.showShowToday = false
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1788,10 +1782,8 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsage'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1800,10 +1792,8 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsageReturning'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1812,9 +1802,7 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsageMonth'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1824,9 +1812,7 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsageMonthAgg'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1836,9 +1822,7 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsageMonthAverageAgg'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1848,9 +1832,7 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsageMonthAverage'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1860,9 +1842,7 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsageMonthAverageNewAgg'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1872,9 +1852,7 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsageMonthAverageNew'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
-    VueApp.$data.showRefFilter = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1884,10 +1862,8 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnDailyNew'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1896,10 +1872,8 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnDailyUsageStats'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1908,10 +1882,18 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnUsageAgg'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('dnu_dau_retention', function (req) {
+    pageState.currentlySelected = 'mnDNUDAURetention'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1920,10 +1902,8 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnTopCrashes'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
 
@@ -1937,10 +1917,8 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnCrashRatio'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = false
-    VueApp.$data.showRefFilter = false
     updatePageUIState()
     refreshData()
 
@@ -1965,7 +1943,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnCrashesDetails'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = false
     updatePageUIState()
@@ -1976,7 +1953,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnCrashesVersion'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = false
     updatePageUIState()
@@ -1993,7 +1969,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnEyeshade'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     updatePageUIState()
     refreshData()
@@ -2003,7 +1978,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnFundedEyeshade'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     updatePageUIState()
     refreshData()
@@ -2013,7 +1987,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnFundedPercentageEyeshade'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     updatePageUIState()
     refreshData()
@@ -2023,7 +1996,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnFundedBalanceEyeshade'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     updatePageUIState()
     refreshData()
@@ -2033,7 +2005,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnFundedBalanceAverageEyeshade'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     updatePageUIState()
     refreshData()
@@ -2043,7 +2014,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnTelemetryStandard'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     updatePageUIState()
     refreshData()
@@ -2053,7 +2023,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnDailyPublishers'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = true
     updatePageUIState()
     refreshData()
@@ -2066,7 +2035,6 @@ let initialize_router = () => {
     viewState.showPromotions = false
     viewState.showShowToday = true
     viewState.showRefFilter = true
-    VueApp.$data.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -2075,7 +2043,6 @@ let initialize_router = () => {
   router.get('crash/:id', function (req) {
     pageState.currentlySelected = 'mnTopCrashes'
     viewState.showControls = false
-    viewState.showPromotions = false
     viewState.showShowToday = true
     updatePageUIState()
     // Show and hide sub-sections
@@ -2210,7 +2177,6 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnDownloads'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
     viewState.showShowToday = false
     updatePageUIState()
     refreshData()
@@ -2222,42 +2188,13 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showPromotions = false
     viewState.showShowToday = false
+    viewState.showRefFilter = true
+    viewState.showShowToday = true
     updatePageUIState()
     refreshData()
   })
 
 }
-
-// build platform button handlers
-_.forEach(platformKeys, function (id) {
-  $('#btn-filter-' + id).on('change', function () {
-    pageState.platformFilter[id] = this.checked
-    if (this.checked && $(this).parent().hasClass('active') === false) {
-      $(this).parent().addClass('active')
-    } else if (!this.checked && $(this).parent().hasClass('active')) {
-      $(this).parent().removeClass('active')
-    }
-    refreshData()
-  })
-})
-
-// build channel button handlers
-_.forEach(channelKeys, function (id) {
-  $('#btn-channel-' + id).on('change', function () {
-    pageState.channelFilter[id] = this.checked
-    if (this.checked) {
-      $(this).parent().addClass('active')
-    } else {
-      $(this).parent().removeClass('active')
-    }
-    refreshData()
-  })
-})
-
-$('#btn-show-today').on('change', function () {
-  pageState.showToday = this.checked
-  refreshData()
-})
 
 var searchInputHandler = function (e) {
   var q = this.value
@@ -2323,20 +2260,13 @@ $('[data-toggle="tooltip"]').tooltip()
 
 let publisherPlatforms
 let publisherPlatformsByPlatform
-let referral_codes = []
 
 async function loadInitialData () {
   publisherPlatforms = await $.ajax('/api/1/publishers/platforms')
   publisherPlatformsByPlatform = _.object(publisherPlatforms.map((platform) => { return [platform.platform, platform] }))
-  const response = await $.ajax('/api/1/referral_codes')
-  response.forEach(code => {
-    referral_codes.push(code.code_text)
-  })
-  installPromotionsPopoverHandler()
   $('#clearRef').hide()
 
   await window.REFERRAL.referralSummaryStatsRetriever()
-
 }
 
 function initializeGlobals () {
@@ -2359,25 +2289,121 @@ function initializeGlobals () {
   }
 }
 
-function initialize_components () {
-  Vue.component('v-select', VueSelect.VueSelect)
-  VueApp = new Vue({
-    el: '#ref-filter',
-    components: {VueSelect},
-    data: {
-      showRefFilter: viewState.showRefFilter,
-      selected_refs: [],
-      refcodes: referral_codes
-    },
-    methods: {
-      refresh_data: () => { refreshData() }
+initialize_components = () => {
+  let campaigns = []
+  const addCampaignClickListener = () => {
+    setTimeout(function () {
+      $('li[role=group]').on('click', (obj) => {
+        let campaignName = $(obj.target).html()
+        let campaign = _.find(campaigns, {'name': campaignName})
+        const current = $('#ref-filter').select2('data').map(i => i.text)
+        $('#ref-filter').val(current.concat(campaign.referralCodes.map(r => r.code_text)))
+        $('#ref-filter').trigger('change')
+      })
+    }, 300)
+
+  }
+  $.ajax('/api/1/campaigns', {
+    success: (response) => {
+      campaigns = response
+      let template = ''
+      _.sortBy(response, 'name').map((c) => {
+        let optgroup = `<optgroup label="${c.name}">`
+        c.referralCodes.forEach((r) => { optgroup += `<option id=${r.id}>${r.code_text}</option>` })
+        optgroup += '</optgroup>'
+        template += optgroup
+      })
+
+      const ref_filter = $('#ref-filter')
+      ref_filter.empty()
+      ref_filter.append(template)
+      ref_filter.select2({width: 300, placeholder: 'Campaign / referral codes'})
+      $('body').bind('DOMSubtreeModified', async function () {
+        const select = $('.select2-results__option[role=group]')
+        if (select.length > 0) {
+          if (select.hasClass('bound') === false) {
+            select.addClass('bound')
+            addCampaignClickListener()
+          }
+        }
+      })
+      ref_filter.on('change', function () {
+        refreshData()
+      })
+      $('#clear-ref').on('click', function () {
+        ref_filter.val(null).trigger('change')
+      })
     }
   })
+}
+
+const setupControls = () => {
+  $('#controls-days-menu').on('click', 'a', (evt) => {
+    const target = $(evt.target)
+    const days = parseInt(target.data('days'))
+    if (days !== 0) {
+      pageState.days = days
+    } else {
+      pageState.showToday = !pageState.showToday
+    }
+    updatePageUIState()
+    refreshData()
+  })
+
+  $('#controls-channels-menu').on('click', 'a', (evt) => {
+    const target = $(evt.target)
+    const channel = target.data('channel')
+    pageState.channelFilter[channel] = !pageState.channelFilter[channel]
+    updatePageUIState()
+    refreshData()
+  })
+
+  const productPlatforms = {
+    muon: ['winx64', 'winia32', 'osx', 'linux'],
+    core: ['winx64-bc', 'winia32-bc', 'osx-bc', 'linux-bc'],
+    mobile: ['androidbrowser', 'ios', 'android']
+  }
+
+  let productMenuHandler = (evt) => {
+    const target = $(evt.target)
+    let platform = target.data('platform')
+    if (platform.split(':').length === 1) {
+      pageState.platformFilter[platform] = !pageState.platformFilter[platform]
+    } else {
+      let [product, action] = platform.split(':')
+      if (action === 'all') {
+        for (let plat of productPlatforms[product]) { pageState.platformFilter[plat] = true }
+      }
+      if (action === 'none') {
+        for (let plat of productPlatforms[product]) { pageState.platformFilter[plat] = false }
+      }
+      if (action === 'only') {
+        for (let prod of ['muon', 'core', 'mobile']) {
+          if (prod === product) {
+            for (let plat of productPlatforms[prod]) {
+              pageState.platformFilter[plat] = true
+            }
+          } else {
+            for (let plat of productPlatforms[prod]) {
+              pageState.platformFilter[plat] = false
+            }
+          }
+        }
+      }
+    }
+    updatePageUIState()
+    refreshData()
+  }
+
+  $('#controls-muon-menu').on('click', 'a', productMenuHandler)
+  $('#controls-core-menu').on('click', 'a', productMenuHandler)
+  $('#controls-mobile-menu').on('click', 'a', productMenuHandler)
 }
 
 $(document).ready(function () {
   initializeGlobals()
   loadInitialData()
+  setupControls()
   initialize_components()
   initialize_router()
 })

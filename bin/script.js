@@ -21,6 +21,8 @@ module.exports = class Script {
     this.jobName = jobname || path.basename(__filename)
     this.runInfo = reporter.startup(this.jobName)
     this.commander = commander
+    this.moment = moment
+    this.prequest = require('../src/api/common').prequest
   }
 
   async setup () {
@@ -41,7 +43,6 @@ module.exports = class Script {
 
   async run () {
     _.noop()
-
   }
 
   async shutdown () {

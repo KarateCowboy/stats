@@ -1,0 +1,71 @@
+#!/usr/bin/env node
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const Script = require('./script')
+const ProxyAgent = require('proxy-agent')
+
+class GetCampaignsAndRefs extends Script {
+  constructor () {
+    super()
+  }
+
+  async run () {
+    this.setup()
+    ////////////
+    const options = {
+      method: 'GET',
+      uri: `${process.env.PUBLISHER_URL}/api/v1/stats/promo_campaigns`,
+      headers: {
+        Authorization: 'Bearer ' + process.env.PUBLISHERS_TOKEN
+      }
+    }
+    if (!process.env.LOCAL) {
+      console.log("configuring proxy agent")
+      options.agent = new ProxyAgent(process.env.FIXIE_URL)
+    }
+
+    let response
+    try {
+      response = await this.prequest(options)
+      response = JSON.parse(response)
+    } catch (e) {
+      console.log(e.message)
+      console.dir(response, {colors: true})
+      process.exit(1)
+    }
+    await Promise.all(response.map(async (promo) => {
+      let campaign = (await db.Campaign.query().where('name', promo.name))[0]
+
+      try {
+        if (!!!campaign) {
+          campaign = await db.Campaign.query().insert({name: promo.name})
+        }
+      } catch (e) {
+        if (e.message.includes('unique constraint') === false) {
+          console.log('Error: ' + e.message)
+          process.exit(1)
+        }
+      }
+
+      await Promise.all(promo.promo_registrations.map(async (ref) => {
+        try {
+          let referralCode = await db.ReferralCode.query().insert({campaign_id: campaign.id, code_text: ref.referral_code})
+        } catch (e) {
+          if (e.message.includes('unique constraint') === false) {
+            console.log('Error: ' + e.message)
+            process.exit(1)
+          }
+        }
+      }))
+    }))
+    ////////////////////
+    await this.shutdown()
+  }
+}
+
+const runtime = new GetCampaignsAndRefs()
+runtime.run()
+

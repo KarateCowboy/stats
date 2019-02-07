@@ -6,9 +6,8 @@
 
 const {Given, When, Then} = require('cucumber')
 const {expect} = require('chai')
-const moment = require('moment')
-const _ = require('underscore')
 
-When(/^I clear the ref filter box$/, async function () {
-  await browser.click('.select2-selection__choice__remove')
+Then(/^there is a campaign with referral code "([^"]*)"$/, async function (code_text) {
+  const campaign = await factory.create('campaign')
+  const referralCodes = await factory.create('ref_code_pg', {campaign_id: campaign.id, code_text: code_text})
 })

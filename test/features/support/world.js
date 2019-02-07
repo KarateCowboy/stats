@@ -22,6 +22,34 @@ class CustomWorld {
     this[variable] = value
   }
 
+  get menuHelpers () {
+    return {
+      async addToRefBox (text) {
+        await browser.pause(50)
+        await browser.click('.select2-search__field')
+        await browser.pause(50)
+        await browser.keys(text)
+        await browser.pause(50)
+        await browser.keys('\uE007')
+        await  browser.pause(100)
+        await browser.click('#contentTitle')// remove from focus
+      },
+      async pickDaysBack (days) {
+        await browser.pause(30)
+        await browser.click('#controls-selected-days')
+        await browser.pause(50)
+        await browser.click_when_visible(`#days-${days}`)
+        await browser.click('#contentTitle')// remove from focus
+      },
+      async getDaysBackSelected () {
+        return await browser.getHTML('#controls-selected-days')
+      },
+      async selectedReferralCodes () {
+        return await browser.getAttribute('.select2-selection__choice', 'title')
+      }
+    }
+  }
+
   incrementBy (number) {
     this.variable += number
   }

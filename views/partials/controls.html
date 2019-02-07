@@ -1,87 +1,140 @@
 <div id="controls">
-  <nav class="navbar navbar-default">
+  <nav class="navbar navbar-default navbar-static">
     <div class="container-fluid">
-      <form class="navbar-form navbar-left" role="search">
-        <div class="form-group">
-          <select class="form-control" id="daysSelector">
-            <option value="10000">All</option>
-            <option value="365">365 Days</option>
-            <option value="120">120 Days</option>
-            <option value="90">90 Days</option>
-            <option value="60">60 Days</option>
-            <option value="30">30 Days</option>
-            <option value="14" selected>14 Days</option>
-            <option value="7">7 Days</option>
-          </select>
-        </div>
+      <div class="collapse navbar-collapse">
 
-        <div class="btn-group" data-toggle="buttons">
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-osx"> osx
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-winia32"> winia32
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-winx64"> winx64
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-linux"> linux
-          </label>
-          <label class="btn btn-default">
-            <input type="checkbox" autocomplete="off" id="btn-filter-android"> Link Bubble
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-androidbrowser"> Android Browser
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-ios"> ios
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-osx-bc"> osx bc
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-winia32-bc"> win32 bc
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-winx64-bc"> win64 bc
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" checked id="btn-filter-linux-bc"> linux bc
-          </label>
+        <ul class="nav navbar-nav">
+          <li class="dropdown">
+            <a class="dropdown-toggle" type="button" data-toggle="dropdown"><span
+                id="controls-selected-days">14 days</span><span class="caret"></span></a>
+            <ul class="dropdown-menu" id="controls-days-menu">
+              <li><a data-days="10000" id="days-10000"><i class="fa fa-check fa-blank"></i> All</a></li>
+              <li><a data-days="365" id="days-365"><i class="fa fa-check fa-blank"></i> 365 Days</a></li>
+              <li><a data-days="120" id="days-120"><i class="fa fa-check fa-blank"></i> 120 Days</a></li>
+              <li><a data-days="90" id="days-90"><i class="fa fa-check fa-blank"></i> 90 Days</a></li>
+              <li><a data-days="60" id="days-60"><i class="fa fa-check fa-blank"></i> 60 Days</a></li>
+              <li><a data-days="30" id="days-30"><i class="fa fa-check fa-blank"></i> 30 Days</a></li>
+              <li><a data-days="14" id="days-14"><i class="fa fa-check"></i> 14 Days</a></li>
+              <li><a data-days="7" id="days-7"><i class="fa fa-check fa-blank"></i> 7 Days</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-days="0"><i class="fa fa-check fa-blank"></i> Show today / this month</a></li>
+            </ul>
+          </li>
 
-        </div>
+          <li class="dropdown">
+            <a class="dropdown-toggle" type="button" data-toggle="dropdown">
+              Muon
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" id="controls-muon-menu">
+              <li><a data-platform="muon:all">All</a></li>
+              <li><a data-platform="muon:none">None</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-platform="muon:only">Only Muon</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-platform="winx64"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                      src='/local/img/platform-icons/winx64.png'>
+                Windows x64</a></li>
+              <li><a data-platform="winia32"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                       src='/local/img/platform-icons/winia32.png'>
+                Window ia32</a></li>
+              <li><a data-platform="osx"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                   src='/local/img/platform-icons/osx.png'>
+                OSX</a></li>
+              <li><a data-platform="linux"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                     src='/local/img/platform-icons/linux.png'>
+                Linux</a></li>
+            </ul>
+          </li>
 
-        <div class="btn-group" data-toggle="buttons">
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" id="btn-channel-dev" checked> dev
-          </label>
-          <label class="btn btn-default">
-            <input type="checkbox" autocomplete="off" id="btn-channel-beta"> beta
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" id="btn-channel-stable" checked> stable
-          </label>
-          <label class="btn btn-default active">
-            <input type="checkbox" autocomplete="off" id="btn-channel-release" checked> release
-          </label>
-        </div>
+          <li class="dropdown">
+            <a class="dropdown-toggle" type="button" data-toggle="dropdown">
+              Core
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" id="controls-core-menu">
+              <li><a data-platform="core:all">All</a></li>
+              <li><a data-platform="core:none">None</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-platform="core:only">Only Core</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-platform="winx64-bc"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                         src='/local/img/platform-icons/winx64.png'>
+                Windows x64</a></li>
+              <li><a data-platform="winia32-bc"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                          src='/local/img/platform-icons/winia32.png'>
+                Window ia32</a></li>
+              <li><a data-platform="osx-bc"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                      src='/local/img/platform-icons/osx.png'>
+                OSX</a></li>
+              <li><a data-platform="linux-bc"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                        src='/local/img/platform-icons/linux.png'>
+                Linux</a></li>
+            </ul>
+          </li>
 
-        <div class="btn-group" data-toggle="buttons">
-          <label class="btn btn-default">
-            <input type="checkbox" autocomplete="off" id="btn-show-today"> Today / This Month
-          </label>
-        </div>
-        <div class="btn-group" id="ref-filter" data-toggle="buttons">
-          <v-select v-if="showRefFilter" label="Referral Code" @input="refresh_data" id="ref" :options="refcodes" placeholder="Referral codes"
-                    multiple v-model="selected_refs"></v-select>
-        </div>
+          <li class="dropdown">
+            <a class="dropdown-toggle" type="button" data-toggle="dropdown">
+              Mobile
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" id="controls-mobile-menu">
+              <li><a data-platform="mobile:all">All</a></li>
+              <li><a data-platform="mobile:none">None</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-platform="mobile:only">Only Mobile</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a data-platform="androidbrowser"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                              src='/local/img/platform-icons/android.png'>
+                Android</a></li>
+              <li><a data-platform="ios"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
+                                                                                   src='/local/img/platform-icons/ios.png'>
+                iOS</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a class="dropdown-toggle" type="button" data-toggle="dropdown" id="controls-channels-dropdown">
+              Channels
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" id="controls-channels-menu">
+              <li id="dev"><a data-channel="dev"><i class="fa fa-check fa-blank"></i> Developer</a></li>
+              <li id="beta"><a data-channel="beta"><i class="fa fa-check fa-blank"></i> Beta</a></li>
+              <li id="release"><a data-channel="release"><i class="fa fa-check fa-blank"></i> Release / Stable</a></li>
+            </ul>
+          </li>
+          <li class="navbar-form">
+            <select id="ref-filter" multiple="multiple" name="ref_codes[]" class="form-control"></select>
+            <button id="clear-ref" class="form-control">Clear</button>
+          </li>
+        </ul>
 
-        <div class="form-group">
-          <i class="fa fa-bolt" id="hourglassIndicator"></i>
-        </div>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a class="fa fa-bolt" id="hourglassIndicator"></a></li>
+        </ul>
 
-      </form>
+      </div>
+      <div>
+        <h5 class="platform-list text-center">
+          <span class="osx"><img width="12" height="12" src='/local/img/platform-icons/osx.png'> Muon osx</span>
+          <span class="winx64"><img width="12" height="12" src='/local/img/platform-icons/winx64.png'> Muon Win64</span>
+          <span class="winia32"><img width="12" height="12"
+                                     src='/local/img/platform-icons/winia32.png'> Muon Win32</span>
+          <span class="linux"><img width="12" height="12" src='/local/img/platform-icons/linux.png'> Muon Linux</span>
+          <span class="osx-bc"><img width="12" height="12" src='/local/img/platform-icons/osx.png'> Core osx</span>
+          <span class="winx64-bc"><img width="12" height="12"
+                                       src='/local/img/platform-icons/winx64.png'> Core Win64</span>
+          <span class="winia32-bc"><img width="12" height="12"
+                                        src='/local/img/platform-icons/winia32.png'> Core Win32</span>
+          <span class="linux-bc"><img width="12" height="12"
+                                      src='/local/img/platform-icons/linux.png'> Core Linux</span>
+          <span class="androidbrowser"><img width="12" height="12" src='/local/img/platform-icons/android.png'> Android</span>
+          <span class="ios"><img width="12" height="12" src='/local/img/platform-icons/ios.png'> iOS</span>
+          <span class="dev label label-primary">Developer</span>
+          <span class="beta label label-success">Beta</span>
+          <span class="release label label-info">Release / Stable</span>
+        </h5>
+      </div>
     </div>
   </nav>
 </div>

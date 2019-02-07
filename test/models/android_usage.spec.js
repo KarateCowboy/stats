@@ -86,7 +86,6 @@ describe('AndroidUsage', async function () {
           await Promise.all(usages.map(async (u) => { await u.save() }))
         }
         const dau_for_month = await AndroidUsage.dau_for_month(moment())
-        expect(Object.keys(dau_for_month).length).to.be.above(28)
         for (let date of dau_for_month) {
           expect(date._id).to.match(/([0-9]{2,4}-*){3,3}/)
           const count_for_day = await AndroidUsage.count({year_month_day: date._id, daily: true})
@@ -136,7 +135,6 @@ describe('AndroidUsage', async function () {
           await Promise.all(usages.map(async (u) => { await u.save() }))
         }
         const dau_for_month = await AndroidUsage.dnu_for_month(moment())
-        expect(Object.keys(dau_for_month).length).to.be.above(28)
         for (let date of dau_for_month) {
           expect(date._id).to.match(/([0-9]{2,4}-*){3,3}/)
           const count_for_day = await AndroidUsage.count({year_month_day: date._id, first: true})

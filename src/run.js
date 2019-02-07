@@ -16,8 +16,8 @@ const run = async () => {
   global.mongo_client = mgh
   global.sequelize = new Sequelize(process.env.DATABASE_URL)
   global.db = new DbUtil(process.env.DATABASE_URL)
-  await db.loadModels()
   global.knex = await Knex({client: 'pg', connection: process.env.DATABASE_URL})
+  await db.loadModels()
   await server.setup({pg: pgh, mg: mgh, knex: knex})
   await server.kickoff()
 }

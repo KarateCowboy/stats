@@ -9,14 +9,15 @@ const {expect} = require('chai')
 
 Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
   buttons = buttons.split(',')
+  await browser.click_when_visible('#controls-channels-dropdown')
   for (let button of buttons) {
-    const result = await browser.getAttribute(`#btn-channel-${button}`, 'checked')
-    expect(result, `button ${button} should be checked by default`).to.equal('true')
+    const result = await browser.getAttribute(`#controls-channels-menu > #${button}`, 'class')
+    expect(result).to.equal('active', `button ${button} should be checked by default`)
   }
 })
 Then(/^the ref select should be visible and have no ref entered$/, async function () {
   const ref_filter_html = await browser.get_html_when_visible('#ref-filter')
-  expect(ref_filter_html).to.not.contain('selected-tag')
+  expect(ref_filter_html).to.not.contain('select2-selection__choice')
 })
 Then(/^the this month button should "([^"]*)" be visible$/, async function (visible) {
   const is_visible = await browser.isVisible('#btn-show-today')
@@ -72,4 +73,27 @@ Given(/^I view the Daily New Users report$/, async function () {
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref-filter`)
   expect(result).to.equal(true)
+})
+
+Given(/^I pick "([^"]*)" days for the date range$/, async function (days) {
+  await this.menuHelpers.pickDaysBack(days)
+})
+
+When(/^I refresh the page$/, async function () {
+  await browser.refresh()
+  await browser.pause(1000)
+})
+Then(/^I should see "([^"]*)" days for the date range$/, async function (days) {
+  const selected = await this.menuHelpers.getDaysBackSelected()
+  expect(selected).to.include(days, `the day selection box should have ${days} days selected`)
+})
+
+When(/^I enter in the referal code "([^"]*)"$/, async function (code_text) {
+  this.menuHelpers.addToRefBox(code_text)
+})
+
+Then(/^I should see the code "([^"]*)" in the referal code box$/, async function (code_text) {
+  const codes = await this.menuHelpers.selectedReferralCodes()
+  expect(codes).to.include(code_text)
+
 })
