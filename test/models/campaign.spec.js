@@ -36,6 +36,27 @@ describe('Campaign model', async function () {
       })
     })
   })
+  context('static', async function () {
+    context('properties', async function () {
+      it('has a constant NO_CAMPAIGN_NAME', async function () {
+        expect(db.Campaign).to.have.property('NO_CAMPAIGN_NAME', 'No Campaign')
+      })
+    })
+    context('methods', async function () {
+      describe('noCampaignCampaign', async function () {
+        it('returns the NoCampaign campaign when it already exists', async function () {
+          const noCampaignCampaign = await db.Campaign.query().insert({name: db.Campaign.NO_CAMPAIGN_NAME})
+          const returnedCampaign = await db.Campaign.noCampaignCampaign()
+          expect(returnedCampaign.id).to.equal(noCampaignCampaign.id)
+        })
+        it('creates and returns the NoCampaign campaign when it does not exist', async function(){
+          const returnedCampaign = await db.Campaign.noCampaignCampaign()
+          expect(returnedCampaign.id).to.be.a('number')
+          expect(returnedCampaign).to.have.property('name', db.Campaign.NO_CAMPAIGN_NAME)
+        })
+      })
+    })
+  })
 
   describe('#allWithReferralCodes', async function () {
     it('returns all campaigns, with their referral codes as a nested array of Objects', async function () {

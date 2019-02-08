@@ -12,9 +12,26 @@ class GetCampaignsAndRefs extends Script {
     super()
   }
 
-  async run () {
-    this.setup()
-    ////////////
+  async transferFromMongo () {
+    const ReferralCode = require('../src/models/referral-code.model')()
+    const existing = await db.ReferralCode.query().select('code_text')
+    const newFromMongo = await ReferralCode.find({
+      code_text: {
+        $nin: existing.map(r => r.code_text)
+      }
+    })
+    const noCampaignCampaign = await db.Campaign.noCampaignCampaign()
+    await Promise.all(newFromMongo.map(async (ref) => {
+      try {
+        await db.ReferralCode.query().insert({campaign_id: noCampaignCampaign.id, code_text: ref.code_text})
+      } catch (e) {
+        console.log(`Warning adding referral code: ${e.message}`)
+      }
+    }))
+
+  }
+
+  async transferFromPromotionsAPI () {
     const options = {
       method: 'GET',
       uri: `${process.env.PUBLISHER_URL}/api/v1/stats/promo_campaigns`,
@@ -23,7 +40,7 @@ class GetCampaignsAndRefs extends Script {
       }
     }
     if (!process.env.LOCAL) {
-      console.log("configuring proxy agent")
+      console.log('configuring proxy agent')
       options.agent = new ProxyAgent(process.env.FIXIE_URL)
     }
 
@@ -52,7 +69,10 @@ class GetCampaignsAndRefs extends Script {
 
       await Promise.all(promo.promo_registrations.map(async (ref) => {
         try {
-          let referralCode = await db.ReferralCode.query().insert({campaign_id: campaign.id, code_text: ref.referral_code})
+          let referralCode = await db.ReferralCode.query().insert({
+            campaign_id: campaign.id,
+            code_text: ref.referral_code
+          })
         } catch (e) {
           if (e.message.includes('unique constraint') === false) {
             console.log('Error: ' + e.message)
@@ -61,6 +81,14 @@ class GetCampaignsAndRefs extends Script {
         }
       }))
     }))
+
+  }
+
+  async run () {
+    this.setup()
+    ////////////
+    await this.transferFromPromotionsAPI()
+    await this.transferFromMongo()
     ////////////////////
     await this.shutdown()
   }

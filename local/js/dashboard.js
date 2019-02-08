@@ -2295,10 +2295,12 @@ initialize_components = () => {
     setTimeout(function () {
       $('li[role=group]').on('click', (obj) => {
         let campaignName = $(obj.target).html()
-        let campaign = _.find(campaigns, {'name': campaignName})
-        const current = $('#ref-filter').select2('data').map(i => i.text)
-        $('#ref-filter').val(current.concat(campaign.referralCodes.map(r => r.code_text)))
-        $('#ref-filter').trigger('change')
+        if (campaignName !== 'No Campaign') {
+          let campaign = _.find(campaigns, {'name': campaignName})
+          const current = $('#ref-filter').select2('data').map(i => i.text)
+          $('#ref-filter').val(current.concat(campaign.referralCodes.map(r => r.code_text)))
+          $('#ref-filter').trigger('change')
+        }
       })
     }, 300)
 
