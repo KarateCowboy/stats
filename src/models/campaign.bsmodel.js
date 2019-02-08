@@ -31,6 +31,19 @@ module.exports = function (knex) {
       return campaigns
     }
 
+    static get NO_CAMPAIGN_NAME () {
+      return 'No Campaign'
+    }
+
+    static async noCampaignCampaign () {
+      const existingNoCampaignCampaign = (await this.query().where('name', this.NO_CAMPAIGN_NAME))[0]
+      if (existingNoCampaignCampaign) {
+        return existingNoCampaignCampaign
+      } else {
+        return this.query().insert({name: this.NO_CAMPAIGN_NAME})
+      }
+    }
+
   }
 
   return Campaign
