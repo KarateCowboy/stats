@@ -24,6 +24,7 @@ const mongoose = require('mongoose')
 let telemetry = require('./api/telemetry')
 let referral = require('./api/referral')
 let referral_codes = require('./api/referral_codes')
+let countries = require('./api/countries')
 
 let setGlobalHeader = require('hapi-set-header')
 
@@ -54,7 +55,7 @@ module.exports.setup = async (connections) => {
   })
 
   // Setup the APIs
-  _.each([stats, jobs, crashes, search, eyeshade, campaigns, bat_eyeshade, publishers, meta, telemetry, referral, referral_codes], (api) => { api.setup(server, connections.pg, connections.mg) })
+  _.each([stats, jobs, crashes, search, eyeshade, campaigns, bat_eyeshade, publishers, meta, telemetry, referral, referral_codes, countries], (api) => { api.setup(server, connections.pg, connections.mg) })
 
   // Setup the UI for the dashboard
   ui.setup(server, connections.pg)

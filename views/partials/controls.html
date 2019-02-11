@@ -103,6 +103,26 @@
               <li id="release"><a data-channel="release"><i class="fa fa-check fa-blank"></i> Release / Stable</a></li>
             </ul>
           </li>
+    <li class="dropdown braveMenu" id="woi_menu"
+            data-title="Week of install"
+	    data-placeholder="Search"
+	    data-api="/api/1/wois"
+	    data-show-search="true"
+            data-show-selected-count="true"
+            data-show-id="false"
+	    data-show-none="true"
+	    >
+    </li>
+    <li class="dropdown braveMenu" id="cc_menu"
+	    data-api="/api/1/countries"
+            data-title="Countries / Regions"
+	    data-placeholder="Country or region"
+            data-show-selected-count="true"
+	    data-show-search="true"
+	    data-show-none="true"
+            data-show-id="true"
+	    >
+    </li>
           <li class="navbar-form">
             <select id="ref-filter" multiple="multiple" name="ref_codes[]" class="form-control"></select>
             <button id="clear-ref" class="form-control">Clear</button>
@@ -133,6 +153,8 @@
           <span class="dev label label-primary">Developer</span>
           <span class="beta label label-success">Beta</span>
           <span class="release label label-info">Release / Stable</span>
+          <span class="wois label label-warning"></span>
+          <span class="countries label label-danger"></span>
         </h5>
       </div>
     </div>

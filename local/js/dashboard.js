@@ -1474,10 +1474,12 @@ var menuItems = {
 var pageState
 pageState = window.localStorage.getItem('pageState') ? JSON.parse(window.localStorage.getItem('pageState')) : null
 
-// this is required for now. the control that displays the ref code cannot be programmatically controlled yet.
-// pageState.ref = []
-
-if (!pageState) {
+if (pageState) {
+  // this is required for now. the control that displays the ref code cannot be programmatically controlled yet.
+  pageState.ref = null
+  pageState.countryCodes = null
+  pageState.wois = null
+} else {
   pageState = {
     currentlySelected: null,
     days: 14,
@@ -1501,7 +1503,9 @@ if (!pageState) {
       'beta': false,
       'release': true
     },
-    showToday: false
+    showToday: false,
+    countryCodes: [],
+    wois: []
   }
 }
 
@@ -1683,6 +1687,31 @@ const updatePageUIState = () => {
     }
   })
 
+  // highlight selected country codes
+  if (pageState.countryCodes && pageState.countryCodes.length > 0) {
+    let label = pageState.countryCodes[0]
+    if (pageState.countryCodes.length > 1) {
+      label = pageState.countryCodes.length + ' countries'
+    }
+    $(`#controls`).find(`h5.platform-list span.countries`).text(label).show()
+    $(`#controls`).find(`h5.platform-list span.countries`).tooltip({
+    })
+    $(`#controls`).find(`h5.platform-list span.countries`).attr('data-original-title', pageState.countryCodes.join(', '))
+  } else {
+    $(`#controls`).find(`h5.platform-list span.countries`).hide()
+  }
+
+  // highlight selected weeks of installation
+  if (pageState.wois && pageState.wois.length > 0) {
+    let label = pageState.wois[0]
+    if (pageState.wois.length > 1) {
+      label = pageState.wois.length + ' install weeks'
+    }
+    $(`#controls`).find(`h5.platform-list span.wois`).text(label).show()
+  } else {
+    $(`#controls`).find(`h5.platform-list span.wois`).hide()
+  }
+
   // update menu label for days
   if (pageState.days === 10000) {
     $('#controls-selected-days').html('All days')
@@ -1708,11 +1737,14 @@ const persistPageState = () => {
   window.localStorage.setItem('pageState', JSON.stringify(pageState))
 }
 
-// Load data for the selected item
+let lastPageState = {}
 const refreshData = () => {
-  persistPageState()
-  if (menuItems[pageState.currentlySelected]) {
-    menuItems[pageState.currentlySelected].retriever()
+  if (!_.isEqual(lastPageState, pageState)) {
+    persistPageState()
+    lastPageState = JSON.parse(JSON.stringify(pageState)) // deep clone
+    if (menuItems[pageState.currentlySelected]) {
+      menuItems[pageState.currentlySelected].retriever()
+    }
   }
 }
 
@@ -2401,6 +2433,18 @@ const setupControls = () => {
   $('#controls-core-menu').on('click', 'a', productMenuHandler)
   $('#controls-mobile-menu').on('click', 'a', productMenuHandler)
 }
+
+$("#cc_menu").on("selection", (evt, countryCodes) => {
+  pageState.countryCodes = countryCodes
+  updatePageUIState()
+  refreshData()
+})
+
+$("#woi_menu").on("selection", (evt, wois) => {
+  pageState.wois = wois
+  updatePageUIState()
+  refreshData()
+})
 
 $(document).ready(function () {
   initializeGlobals()
