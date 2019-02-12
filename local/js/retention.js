@@ -18,9 +18,12 @@
   }
 
   const weeklyRetentionHandler = async function (rows) {
+    console.log('weeklyRetentionHandler')
     let i, row, cellColor, weekDelta
     let rowHeadings = []
     let buffer = ''
+
+    console.log(rows)
 
     const baseColor = net.brehaut.Color('#ff5500')
     const baseColorAvg = net.brehaut.Color('#999999')

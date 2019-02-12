@@ -29,7 +29,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/retention_week',
-    handler: async function (request, reply) {
+    handler: async (request, reply) => {
       try {
         let platforms = common.platformPostgresArray(request.query.platformFilter)
         let channels = common.channelPostgresArray(request.query.channelFilter)

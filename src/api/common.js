@@ -134,3 +134,13 @@ module.exports.prequest = function (url) {
     })
   })
 }
+
+exports.retrieveCommonParameters = (request) => {
+  let days = parseInt(request.query.days || 7, 10) + ' days'
+  let platforms = exports.platformPostgresArray(request.query.platformFilter)
+  let channels = exports.channelPostgresArray(request.query.channelFilter)
+  let ref = request.query.ref === undefined ? null : request.query.ref.split(',')
+  let wois = request.query.wois === undefined ? null : request.query.wois.split(',')
+
+  return [days, platforms, channels, ref, wois]
+}

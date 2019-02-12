@@ -539,12 +539,11 @@ const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platfor
 
 const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
 
-var usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
+const usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
-var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
+const usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
 
 const usageMeasureHandler = (rows) => {
-  console.log(rows)
   let CostPerInstall = 0
 
   if (rows.length === 0) return
@@ -714,19 +713,11 @@ var retentionRetriever = function () {
   })
 }
 
-const weeklyRetentionRetriever = async function () {
-  const standard_params = standardParams()
-  return new Promise((resolve, reject) => {
-    $.ajax('/api/1/retention_week?' + standard_params, {
-      success: (rows) => {
-        window.RETENTION.weeklyRetentionHandler(rows)
-        resolve()
-      },
-      error: () => {
-        console.log('failed to communicate with endpoint')
-        reject()
-      }
-    })
+const weeklyRetentionRetriever = async () => {
+  $.ajax('/api/1/retention_week?' + standardParams(), {
+    success: (rows) => {
+      window.RETENTION.weeklyRetentionHandler(rows)
+    }
   })
 }
 

@@ -195,41 +195,6 @@ ORDER BY
   left(ymd::text, 7)
 `
 
-const RETENTION = `
-SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  TO_CHAR(FC.woi, 'YYYY-MM-DD') AS woi,
-  SUM(FC.total) AS count
-FROM dw.fc_retention_woi FC
-WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3)
-GROUP BY FC.ymd, FC.woi
-ORDER BY FC.ymd DESC, FC.woi
-`
-
-const RETENTION_MONTH = `
-SELECT
-  moi,
-  month_delta,
-  sum(current) as current,
-  sum(starting) as starting,
-  sum(current) / sum(starting) as retained_percentage
-FROM dw.fc_retention_month_mv FC
-WHERE
-  FC.platform = ANY ($1) AND
-  FC.channel  = ANY ($2) AND
-  FC.ref      = ANY ($3) AND
-  FC.moi      = ANY ($4)
-GROUP BY
-  moi,
-  month_delta
-ORDER BY
-  moi,
-  month_delta
-`
-
 const DAU_PLATFORM = `
 SELECT
   TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
@@ -240,7 +205,7 @@ FROM dw.fc_usage_platform_mv FC
 WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
   FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) 
+  FC.channel = ANY ($3)
 GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform
 `
@@ -337,58 +302,6 @@ exports.setup = (server, client, mongo) => {
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       reply(results.rows)
-    }
-  })
-
-  // Daily retention (DAU and DNU)
-  server.route({
-    method: 'GET',
-    path: '/api/1/daily_retention',
-    handler: async (request, reply) => {
-      var [days, platforms, channels, ref, wois] = retrieveCommonParameters(request)
-
-      if (ref.length === 1 && ref[0] === '') return reply([])
-
-      let dau = await db.UsageSummary.dailyActiveUsers({
-        daysAgo: parseInt(days.replace(' days', '')),
-        platforms: platforms,
-        channels: channels,
-        ref: ref,
-        wois: wois
-      })
-      dau.rows.forEach((row) => common.formatPGRow(row))
-      dau.rows = common.potentiallyFilterToday(dau.rows, request.query.showToday === 'true')
-
-      let dnu = await db.UsageSummary.dailyNewUsers({
-        daysAgo: parseInt(days.replace(' days', '')),
-        platforms: platforms,
-        channels: channels,
-        ref: ref,
-        wois: wois
-      })
-      dnu.rows.forEach((row) => common.formatPGRow(row))
-      dnu.rows = common.potentiallyFilterToday(dnu.rows, request.query.showToday === 'true')
-
-      let dnuSum = 0
-      let combined = dau.rows.reverse().map((dau) => {
-        let ymd = dau.ymd
-        let dauTotal = dau.count
-        let dnuTotal = 0
-        let dnuRow = dnu.rows.find((row) => { return row.ymd === dau.ymd })
-        if (dnuRow) dnuTotal = dnuRow.count
-        let retained = (dauTotal - dnuTotal) / dnuSum
-        retained = Math.round(retained * 10000) / 10000
-        dnuSum += dnuTotal
-        return {
-          ymd,
-          dau: dauTotal,
-          dnu: dnuTotal,
-          dnuSum,
-          retained
-        }
-      })
-
-      reply(combined)
     }
   })
 
@@ -523,65 +436,6 @@ exports.setup = (server, client, mongo) => {
       reply(results)
     }
   })
-
-  // Retention
-  server.route({
-    method: 'GET',
-    path: '/api/1/retention',
-    handler: function (request, reply) {
-      let days = parseInt(request.query.days || 7, 10) + ' days'
-      let platforms = common.platformPostgresArray(request.query.platformFilter)
-      let channels = common.channelPostgresArray(request.query.channelFilter)
-      client.query(RETENTION, [days, platforms, channels], (err, results) => {
-        if (err) {
-          reply(err.toString()).code(500)
-        } else {
-          results.rows.forEach((row) => common.formatPGRow(row))
-          results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-          results.rows.forEach((row) => common.convertPlatformLabels(row))
-          reply(results.rows)
-        }
-      })
-    }
-  })
-
-  // Retention
-  server.route({
-    method: 'GET',
-    path: '/api/1/retention_month',
-    handler: async function (request, reply) {
-      try {
-        let platforms = common.platformPostgresArray(request.query.platformFilter)
-        let channels = common.channelPostgresArray(request.query.channelFilter)
-        let refs = ['none']
-
-        const last_three_months = [
-          moment().startOf('month').format('YYYY-MM-DD'),
-          moment().startOf('month').subtract(1, 'months').format('YYYY-MM-DD'),
-          moment().startOf('month').subtract(2, 'months').format('YYYY-MM-DD'),
-          moment().startOf('month').subtract(3, 'months').format('YYYY-MM-DD'),
-        ]
-        let rows = (await client.query(RETENTION_MONTH, [platforms, channels, refs, last_three_months])).rows
-        rows.forEach((row) => common.convertPlatformLabels(row))
-        rows = rows.map((row) => {
-          row.current = parseInt(row.current)
-          row.starting = parseInt(row.starting)
-          row.retained_percentage = parseFloat(row.retained_percentage)
-          row.month_delta = parseInt(row.month_delta)
-          if (row.month_delta === 0) {
-            row.retained_percentage = 1.0
-          }
-          return row
-        })
-        reply(rows)
-      } catch (e) {
-        console.log(`There was an error
-        ${e.message}`)
-        reply(e.toString()).code(500)
-      }
-    }
-  })
-
 
   // Daily active users by platform
   server.route({
