@@ -5,26 +5,27 @@ const WEEKLY_RETENTION_START = `
 SELECT SUM(FC.total) AS count
 FROM dw.fc_agg_usage_weekly FC
 WHERE
-  fc.doi = $1 AND
+  fc.woi = $1 AND
   first_time AND
   FC.platform = ANY ($2) AND
   FC.channel = ANY ($3) AND
-  FC.ref = ANY($4)
+  FC.ref = ANY(COALESCE($4, ARRAY[ref])) AND
+  FC.woi = ANY(COALESCE($5, ARRAY[woi]))
 `
 
 const WEEKLY_RETENTION = `
 SELECT SUM(FC.total) AS count
 FROM dw.fc_agg_usage_weekly FC
 WHERE
-  fc.doi = $1 AND
+  fc.woi = $1 AND
   (FC.ymd >= $2 AND FC.ymd < $3) AND
   FC.platform = ANY ($4) AND
   FC.channel = ANY ($5) AND
-  FC.ref = ANY($6)
+  FC.ref = ANY(COALESCE($6, ARRAY[ref])) AND
+  FC.woi = ANY(COALESCE($7, ARRAY[woi]))
 `
 
 exports.setup = (server, client, mongo) => {
-
   server.route({
     method: 'GET',
     path: '/api/1/retention_week',
@@ -32,7 +33,11 @@ exports.setup = (server, client, mongo) => {
       try {
         let platforms = common.platformPostgresArray(request.query.platformFilter)
         let channels = common.channelPostgresArray(request.query.channelFilter)
-        let ref = (request.query.ref ? request.query.ref : '').split(',')
+        let ref = (request.query.ref ? request.query.ref : '').split(',').filter((ref) => {
+          return ref && ref !== ''
+        })
+        if (ref.length === 0) ref = null
+        let wois = request.query.wois ? request.query.wois.split(',') : null
 
         let SIZE = 13
         let data = []
@@ -45,7 +50,8 @@ exports.setup = (server, client, mongo) => {
               monday.format('YYYY-MM-DD'),
               platforms,
               channels,
-              ref
+              ref,
+              wois
             ])).rows[0]
           for (let col = 1; col < currentSize; col += 1) {
             let compMonday = monday.clone().add(col, 'weeks')
@@ -55,7 +61,8 @@ exports.setup = (server, client, mongo) => {
               compMonday.clone().add(7, 'days').format('YYYY-MM-DD'),
               platforms,
               channels,
-              ref
+              ref,
+              wois
             ])).rows[0]
             data.push({
               woi: monday.format('YYYY-MM-DD'),
@@ -70,7 +77,6 @@ exports.setup = (server, client, mongo) => {
           }
           currentSize -= 1
         }
-        //console.log(data)
         reply(data)
       } catch (e) {
         console.log(e.message)
@@ -78,5 +84,4 @@ exports.setup = (server, client, mongo) => {
       }
     }
   })
-
 }

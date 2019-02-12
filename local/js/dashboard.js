@@ -80,8 +80,6 @@ var channels = {
 var platformKeys = _.keys(platforms)
 var channelKeys = _.keys(channels)
 
-var reversePlatforms = _.object(_.map(platforms, function (platform) { return [platform.label, platform] }))
-
 var round = function (x, n) {
   n = n || 0
   return Math.round(x * Math.pow(10, n)) / Math.pow(10, n)
@@ -537,82 +535,6 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   }
 }
 
-const retentionMonthHandler = function (rows) {
-  console.log('executed the retentionMonthHandler')
-  let i, row, cellColor, monthDelta
-  let rowHeadings = []
-  let buffer = ''
-  const baseColor = net.brehaut.Color('#ff5500')
-  const baseColorAvg = net.brehaut.Color('#999999')
-  const sparklineOptions = {
-    width: '60px',
-    height: '25px',
-    disableInteraction: true,
-    fillColor: '#efefef',
-    lineColor: '#999999'
-  }
-
-  // headings
-  buffer += '<table class=\'table\'>'
-  buffer += '<tr class=\'active\'><th colspan=\'2\'>Months from installation</th>'
-  for (i = 0; i < 12; i++) {
-    buffer += '<th class="retentionCell">' + i + '</th>'
-  }
-
-  // heading sparklines
-  buffer += '</tr><tr><td></td><td></td>'
-  for (i = 0; i < 12; i++) {
-    buffer += '<td><span id=\'sparklineDelta' + i + '\'></span></td>'
-  }
-
-  // averages
-  buffer += '</tr><tr><th>Average</th><td></td>'
-  for (i = 0; i < 12; i++) {
-    avg = STATS.STATS.avg(rows.filter((row) => { return row.month_delta === i }).map((row) => { return row.retained_percentage })) || 0
-    cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
-    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(avg * 100) + '</td>'
-  }
-
-  // cell contents
-  buffer += '</tr><tr>'
-  let ctrl = null
-  console.log(`length of rows is ${rows.length}`)
-  for (i = 0; i < rows.length; i++) {
-    row = rows[i]
-    if (row.moi !== ctrl) {
-      buffer += '</tr><tr>'
-      buffer += '<th nowrap>' + moment(row.moi).format('MMM YYYY') + '</th>'
-      buffer += '<td><span id=\'sparklineActual' + row.moi + '\'></span><br>'
-      rowHeadings.push(row.moi)
-      ctrl = row.moi
-      monthDelta = 0
-    }
-    monthDelta += 1
-    cellColor = baseColor.desaturateByAmount(1 - row.retained_percentage).lightenByAmount((1 - row.retained_percentage) / 6.2)
-    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(row.retained_percentage * 100) + '</td>'
-  }
-  buffer += '<td><span id=\'sparklineDelta' + monthDelta + '\'></span><br>'
-  buffer += '</tr>'
-  buffer += '</table>'
-
-  // insert elements
-  const div = $('#retentionMonthTableContainer')
-  div.empty()
-  div.append(buffer)
-
-  // heading sparklines
-  for (i = 0; i < 12; i++) {
-    sparkData = rows.filter((row) => { return row.month_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100) })
-    $('#sparklineDelta' + i).sparkline(sparkData, sparklineOptions)
-  }
-
-  // installation month sparklines
-  rowHeadings.forEach((heading) => {
-    sparkData = rows.filter((row) => { return row.moi === heading }).map((row) => { return parseInt(row.retained_percentage * 100) })
-    $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
-  })
-}
-
 const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
 const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
@@ -622,6 +544,7 @@ var usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date'
 var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
 
 const usageMeasureHandler = (rows) => {
+  console.log(rows)
   let CostPerInstall = 0
 
   if (rows.length === 0) return
@@ -761,7 +684,7 @@ var serializeChannelParams = function () {
   return filterChannels.join(',')
 }
 
-var standardParams = function () {
+let standardParams = () => {
   let referral_codes = []
   const ref_filter = $('#ref-filter')
   if (ref_filter.hasClass('select2-hidden-accessible')) {
@@ -773,7 +696,8 @@ var standardParams = function () {
     channelFilter: serializeChannelParams(),
     showToday: pageState.showToday,
     version: pageState.version,
-    ref: referral_codes.join(',')
+    ref: referral_codes.join(','),
+    wois: pageState.wois.join(',')
   })
 }
 
@@ -786,14 +710,6 @@ var retentionRetriever = function () {
         return row
       })
       retentionHandler(rows)
-    }
-  })
-}
-
-var retentionMonthRetriever = function () {
-  $.ajax('/api/1/retention_month?' + standardParams(), {
-    success: (rows) => {
-      retentionMonthHandler(rows)
     }
   })
 }
@@ -812,7 +728,6 @@ const weeklyRetentionRetriever = async function () {
       }
     })
   })
-
 }
 
 var versionsRetriever = function () {
@@ -1083,11 +998,6 @@ var menuItems = {
     title: 'Retention',
     retriever: retentionRetriever
   },
-  'mnRetentionMonth': {
-    show: 'retentionMonthContent',
-    title: 'Retention Month over Month',
-    retriever: retentionMonthRetriever
-  },
   'weeklyRetention': {
     show: 'weeklyRetentionContent',
     title: 'Weekly Retention',
@@ -1278,26 +1188,36 @@ if (pageState) {
   }
 }
 
-console.log(pageState)
-
 // initialized in globals section
-var viewState = {}
-
-$('#daysSelector').on('change', function (evt, value) {
-  pageState.days = parseInt(this.value, 10)
-  refreshData()
-})
+let viewState = {}
 
 $('#crash-ratio-versions').on('change', function (evt, value) {
   pageState.version = this.value
   refreshData()
 })
 
+// pageState view options to elements selector mappings
+const controlSelectorMappings = {
+  showControls: '#controls',
+  showWOISFilter: '#woi_menu',
+  showCountryCodeFilter: '#cc_menu',
+  showDaysSelector: '#days-menu'
+}
+
 // Update page based on current state
 const updatePageUIState = () => {
-  $('#controls').show()
 
-  _.keys(menuItems).forEach(function (id) {
+  // show / hide controls based on pageState
+  _.each(controlSelectorMappings, (selector, attrib) => {
+    if (viewState[attrib]) {
+      $(selector).show()
+    } else {
+      $(selector).hide()
+    }
+  })
+
+  // setup contents for sidebar item
+  _.keys(menuItems).forEach((id) => {
     if (id !== pageState.currentlySelected) {
       $('#' + id).parent().removeClass('active')
     } else {
@@ -1307,25 +1227,14 @@ const updatePageUIState = () => {
     }
   })
 
-  contents.forEach(function (content) {
+  // show / hide main contents for a sidebar item
+  contents.forEach((content) => {
     if (menuItems[pageState.currentlySelected].show === content) {
       $('#' + menuItems[pageState.currentlySelected].show).show()
     } else {
       $('#' + content).hide()
     }
   })
-
-  if (viewState.showControls) {
-    $('#controls').show()
-  } else {
-    $('#controls').hide()
-  }
-
-  if (viewState.showDaysSelector) {
-    $('#controls-days-menu').parent().show()
-  } else {
-    $('#controls-days-menu').parent().hide()
-  }
 
   const days = [10000, 365, 120, 90, 60, 30, 14, 7]
 
@@ -1463,16 +1372,6 @@ let initialize_router = () => {
     refreshData()
   })
 
-  router.get('retention_month', function (req) {
-    pageState.currentlySelected = 'mnRetentionMonth'
-    viewState.showControls = true
-    viewState.showDaysSelector = false
-    viewState.showShowToday = true
-    viewState.showRefFilter = true
-    updatePageUIState()
-    refreshData()
-  })
-
   router.get('weekly-retention', function (req) {
     pageState.currentlySelected = 'weeklyRetention'
     viewState.showControls = true
@@ -1599,6 +1498,7 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = true
     viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
@@ -1969,22 +1869,10 @@ async function loadInitialData () {
 function initializeGlobals () {
   viewState = {
     showControls: true,
-    platformEnabled: {
-      osx: true,
-      winx64: true,
-      winia32: true,
-      linux: true,
-      ios: true,
-      android: true,
-      androidbrowser: true,
-      'osx-bc': true,
-      'winx64-bc': true,
-      'winia32-bc': true,
-      'linux-bc': true
-    },
+    showDaysSelector: true,
     showRefFilter: false,
-    showWOISFilter: true,
-    showCountryCodeFilter: true
+    showWOISFilter: false,
+    showCountryCodeFilter: false
   }
 }
 
@@ -2101,12 +1989,14 @@ const setupControls = () => {
   $('#controls-mobile-menu').on('click', 'a', productMenuHandler)
 }
 
+// callback from brave-menu
 $("#cc_menu").on("selection", (evt, countryCodes) => {
   pageState.countryCodes = countryCodes
   updatePageUIState()
   refreshData()
 })
 
+// callback from brave-menu
 $("#woi_menu").on("selection", (evt, wois) => {
   pageState.wois = wois
   updatePageUIState()

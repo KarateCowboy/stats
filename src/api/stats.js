@@ -292,8 +292,9 @@ exports.setup = (server, client, mongo) => {
     let days = parseInt(request.query.days || 7, 10) + ' days'
     let platforms = common.platformPostgresArray(request.query.platformFilter)
     let channels = common.channelPostgresArray(request.query.channelFilter)
-    let ref = request.query.ref === undefined ? [] : request.query.ref.split(',')
-    return [days, platforms, channels, ref]
+    let ref = request.query.ref === undefined ? null : request.query.ref.split(',')
+    let wois = request.query.wois === undefined ? null : request.query.wois.split(',')
+    return [days, platforms, channels, ref, wois]
   }
 
   // Version for today's daily active users
@@ -344,16 +345,16 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/daily_retention',
     handler: async (request, reply) => {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      var [days, platforms, channels, ref, wois] = retrieveCommonParameters(request)
 
-      // we must have a ref code
       if (ref.length === 1 && ref[0] === '') return reply([])
 
       let dau = await db.UsageSummary.dailyActiveUsers({
         daysAgo: parseInt(days.replace(' days', '')),
         platforms: platforms,
         channels: channels,
-        ref: ref
+        ref: ref,
+        wois: wois
       })
       dau.rows.forEach((row) => common.formatPGRow(row))
       dau.rows = common.potentiallyFilterToday(dau.rows, request.query.showToday === 'true')
@@ -362,7 +363,8 @@ exports.setup = (server, client, mongo) => {
         daysAgo: parseInt(days.replace(' days', '')),
         platforms: platforms,
         channels: channels,
-        ref: ref
+        ref: ref,
+        wois: wois
       })
       dnu.rows.forEach((row) => common.formatPGRow(row))
       dnu.rows = common.potentiallyFilterToday(dnu.rows, request.query.showToday === 'true')
@@ -580,23 +582,6 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
-  // Retention
-  server.route({
-    method: 'GET',
-    path: '/api/1/retention_week',
-    handler: async function (request, reply) {
-      try {
-        let platforms = common.platformPostgresArray(request.query.platformFilter)
-        let channels = common.channelPostgresArray(request.query.channelFilter)
-        let ref = request.query.ref ? request.query.ref : null
-        const retentions = await RetentionWeek.aggregated(platforms, channels, ref)
-        reply(retentions)
-      } catch (e) {
-        console.log(e.message)
-        reply(e.toString()).code(500)
-      }
-    }
-  })
 
   // Daily active users by platform
   server.route({
