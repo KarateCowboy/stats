@@ -21,8 +21,7 @@ function setup () {
     ['filterDAU', 'DAU'],
     ['filterLedger', 'Ledger'],
     ['filterCrashes', 'Crash'],
-    ['filterPublisher', 'Publisher'],
-    ['filterTelemetry', 'Telemetry']
+    ['filterPublisher', 'Publisher']
   ]
 
   menuFilters.forEach((pair) => {

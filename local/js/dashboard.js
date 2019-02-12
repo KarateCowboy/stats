@@ -277,109 +277,6 @@ var statsHandler = function (rows) {
   var myChart = new Chart.Line(ctx, {data: data, options: window.STATS.COMMON.standardYAxisOptions})
 }
 
-var buildTelemetryChartBuilder = function (opts) {
-  opts = opts || {}
-
-  var grouperLabel = function (row) {
-    return [row.platform, row.version, row.channel, row.machine, row.measure].join('-')
-  }
-
-  return function (rows) {
-    // Build a list of unique labels (ymd)
-    var ymds = _.chain(rows)
-      .map(function (row) { return row.ymd })
-      .uniq()
-      .sort()
-      .value()
-
-    // Build a list of unique data sets (platform)
-    var ys = _.chain(rows)
-      .map(function (row) { return grouperLabel(row) })
-      .uniq()
-      .value()
-
-    var groups = _.groupBy(rows, function (row) {
-      return grouperLabel(row)
-    })
-
-    // Associate the data
-    var product = _.object(_.map(ymds, function (ymd) {
-      return [ymd, {}]
-    }))
-    rows.forEach(function (row) {
-      if (!product[row.ymd][grouperLabel(row)]) product[row.ymd][grouperLabel(row)] = {}
-      product[row.ymd][grouperLabel(row)].average = row.average
-      product[row.ymd][grouperLabel(row)].minimum = row.minimum
-      product[row.ymd][grouperLabel(row)].maximum = row.maximum
-      product[row.ymd][grouperLabel(row)].quant25 = row.quant25
-      product[row.ymd][grouperLabel(row)].quant75 = row.quant75
-    })
-
-    var opacityByIndex = function (idx) {
-      return {
-        0: 0.05,
-        1: 0.2,
-        2: 1,
-        3: 0.2,
-        4: 0.05
-      }[idx]
-    }
-
-    var datasets = []
-    var labels = []
-    var measureCount = 0
-    _.each(groups, function (groupedRows, k) {
-      ['minimum', 'quant25', 'average', 'quant75', 'maximum'].map(function (fld, idx) {
-        labels.push({
-          label: k + '-' + fld,
-          idx: measureCount,
-          opacity: opacityByIndex(idx)
-        })
-        datasets.push(_.map(ymds, function (ymd, idx) {
-          return product[ymd][k][fld]
-        }))
-      })
-      measureCount += 1
-    })
-
-    var regressionData = _.map(datasets[0], function (v, idx) { return [idx, v] })
-    console.log(ss.linearRegression(regressionData))
-
-    var data = {
-      labels: ymds,
-      datasets: _.map(datasets, function (dataset, idx) {
-        return {
-          label: labels[idx].label,
-          data: dataset,
-          borderColor: window.STATS.COLOR.colorForIndex(labels[idx].idx, labels[idx].opacity),
-          fill: false
-        }
-      })
-    }
-
-    var container = $('#telemetryChartContainer')
-    container.empty()
-    container.append('<canvas id=\'telemetryUsageChart\' height=\'350\' width=\'800\'></canvas>')
-
-    var chartOptions = _.extend(_.clone(window.STATS.COMMON.standardYAxisOptions), {
-      onClick: function (evt, points) {
-        if (points.length) {
-          var ymd = points[0]._xScale.ticks[points[0]._index]
-          $.ajax('/api/1/ci/telemetry/' + ymd + '?' + standardTelemetryParams(), {
-            success: function (results) {
-              // detailed telemetry items
-              console.log(results)
-            }
-          })
-        }
-      }
-    })
-
-    var usageChart = document.getElementById('telemetryUsageChart')
-    new Chart.Line(usageChart.getContext('2d'), {data: data, options: chartOptions})
-  }
-}
-
 // Build handler for a single value chart updater
 let buildSingleValueChartHandler = (chartContainerId, x, y, xLabel, yLabel, opts) => {
   opts = opts || {}
@@ -640,100 +537,6 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   }
 }
 
-const weeklyRetentionHandler = async function (rows) {
-  const missingData = await $.ajax('/api/1/retention/missing')
-  const retention_warnings = missingData || []
-
-  console.log('executed the weeklyRetentionHandler')
-  let i, row, cellColor, weekDelta
-  let rowHeadings = []
-  let buffer = ''
-  const baseColor = net.brehaut.Color('#ff5500')
-  const baseColorAvg = net.brehaut.Color('#999999')
-  const sparklineOptions = {
-    width: '60px',
-    height: '25px',
-    disableInteraction: true,
-    fillColor: '#efefef',
-    lineColor: '#999999'
-  }
-
-  // prepend any warnings about incomplete data
-  buffer += `<table class="table" id="missingRetentionWarnings">`
-  const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD')
-  for (let platform in retention_warnings) {
-    retention_warnings[platform] = retention_warnings[platform].filter((p) => { return p !== yesterday })
-    if (retention_warnings[platform].length > 0) {
-      const message_string = `Missing ${platform} data: ${retention_warnings[platform].sort().reverse().splice(0, 5).join(', ')}`
-      buffer += `<tr><td style="color: red">${message_string}</td>`
-    }
-  }
-  buffer += `</table>`
-
-  // headings
-
-  buffer += '<table class=\'table\'>'
-  buffer += '<tr class=\'active\'><th colspan=\'2\'>Weeks since installation</th>'
-  buffer += `<th></th>`
-  for (i = 0; i < 12; i++) {
-    buffer += '<th class="retentionCell">' + i + '</th>'
-  }
-
-  // heading sparklines
-  buffer += '</tr><tr><td></td><td></td><td></td>'
-  for (i = 0; i < 12; i++) {
-    buffer += '<td><span id=\'sparklineDelta' + i + '\'></span></td>'
-  }
-
-  // averages
-  buffer += '</tr><tr><th>Average</th><td></td>'
-  for (i = 0; i < 12; i++) {
-    avg = STATS.STATS.avg(rows.filter((row) => { return row.week_delta === i }).map((row) => { return row.retained_percentage })) || 0
-    cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
-    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(avg * 100) + '</td>'
-  }
-
-  // cell contents
-  buffer += '</tr><tr>'
-  let ctrl = null
-  for (i = 0; i < rows.length; i++) {
-    row = rows[i]
-    if (row.woi !== ctrl) {
-      buffer += '</tr><tr>'
-      buffer += '<th nowrap>' + moment(row.woi).format('MMM DD YYYY') + '</th>'
-      let key = row.woi.substring(0, 10)
-      buffer += '<td><span id=\'sparklineActual' + row.woi + '\'></span><br>'
-      rowHeadings.push(row.woi)
-      ctrl = row.woi
-      weekDelta = 0
-    }
-    weekDelta += 1
-    cellColor = baseColor.desaturateByAmount(1 - row.retained_percentage).lightenByAmount((1 - row.retained_percentage) / 6.2)
-    buffer += `<td style="background-color: ${cellColor}" class="retentionCell">${st(row.retained_percentage * 100)} </td>`
-  }
-  buffer += '<td><span id=\'sparklineDelta' + weekDelta + '\'></span><br>'
-  buffer += '</tr>'
-  buffer += '</table>'
-
-  // insert elements
-  const div = $('#weeklyRetentionTableContainer')
-  div.empty()
-  div.append(buffer)
-
-  // heading sparklines
-  for (i = 0; i < 12; i++) {
-    sparkData = rows.filter((row) => { return row.week_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100) })
-    $('#sparklineDelta' + i).sparkline(sparkData, sparklineOptions)
-  }
-
-  // installation week sparklines
-  rowHeadings.forEach((heading) => {
-    sparkData = rows.filter((row) => { return row.woi === heading }).map((row) => { return parseInt(row.retained_percentage * 100) })
-    $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
-  })
-  console.log('finished the weeklyRetentionHandler')
-}
-
 const retentionMonthHandler = function (rows) {
   console.log('executed the retentionMonthHandler')
   let i, row, cellColor, monthDelta
@@ -909,8 +712,6 @@ var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version
 
 var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
-var telemetryHandler = buildTelemetryChartBuilder('ymd')
-
 var walletsTotalHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {showGrandTotal: true})
 
 var walletsCurrencyHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
@@ -933,7 +734,6 @@ var contents = [
   'usageContent',
   'DNUDAUContent',
   'publisherContent',
-  'usageTelemetry',
   'crashesContent',
   'overviewContent',
   'statsContent',
@@ -977,18 +777,6 @@ var standardParams = function () {
   })
 }
 
-var standardTelemetryParams = function () {
-  return $.param({
-    days: pageState.days,
-    platformFilter: serializePlatformParams(),
-    channelFilter: serializeChannelParams(),
-    showToday: pageState.showToday,
-    version: pageState.version,
-    measure: pageState.measure,
-    machine: pageState.machine
-  })
-}
-
 var retentionRetriever = function () {
   $.ajax('/api/1/retention?' + standardParams(), {
     success: (rows) => {
@@ -1015,7 +803,7 @@ const weeklyRetentionRetriever = async function () {
   return new Promise((resolve, reject) => {
     $.ajax('/api/1/retention_week?' + standard_params, {
       success: (rows) => {
-        weeklyRetentionHandler(rows)
+        window.RETENTION.weeklyRetentionHandler(rows)
         resolve()
       },
       error: () => {
@@ -1251,12 +1039,6 @@ const eyeshadeFundedBalanceAverageRetriever = function () {
   })
 }
 
-var telemetryRetriever = function () {
-  $.ajax('/api/1/ci/telemetry?' + standardTelemetryParams(), {
-    success: telemetryHandler
-  })
-}
-
 var fillOptionsIfNotEmpty = function (url, id) {
   var select = $('#' + id)
   if (select.children().length <= 1) {
@@ -1268,13 +1050,6 @@ var fillOptionsIfNotEmpty = function (url, id) {
       }
     })
   }
-}
-
-var telemetryStandardRetriever = function () {
-  fillOptionsIfNotEmpty('/api/1/ci/measures', 'measures')
-  fillOptionsIfNotEmpty('/api/1/ci/machines', 'machines')
-  fillOptionsIfNotEmpty('/api/1/ci/versions', 'telemetryVersions')
-  telemetryRetriever()
 }
 
 const dailyNewUsersRetriever = function () {
@@ -1444,12 +1219,6 @@ var menuItems = {
     subtitle: 'Average balance of funded wallets per day in USD ($)',
     retriever: eyeshadeFundedBalanceAverageRetriever
   },
-  'mnTelemetryStandard': {
-    show: 'usageTelemetry',
-    title: 'Telemetry Navigator',
-    subtitle: 'Browser telemetry by measure, machine and version',
-    retriever: telemetryStandardRetriever
-  },
   'mnDailyPublishers': {
     show: 'publisherContent',
     title: 'Daily Publisher Status',
@@ -1511,107 +1280,11 @@ if (pageState) {
 
 console.log(pageState)
 
-var viewState = {
-  showControls: true,
-  platformEnabled: {
-    'osx': true,
-    'winx64': true,
-    'winia32': true,
-    'linux': true,
-    'ios': true,
-    'android': true,
-    'androidbrowser': true,
-    'osx-bc': true,
-    'winia32-bc': true,
-    'winx64-bc': true,
-    'linux-bc': true
-  },
-  showRefFilter: false
-}
-
-var enableAllPlatforms = function () {
-  viewState.platformEnabled = {
-    osx: true,
-    winx64: true,
-    winia32: true,
-    linux: true,
-    ios: true,
-    android: true,
-    androidbrowser: true,
-    'osx-bc': true,
-    'winx64-bc': true,
-    'winia32-bc': true,
-    'linux-bc': true
-  }
-}
-
-var disableAllPlatforms = function () {
-  viewState.platformEnabled = {
-    osx: false,
-    winx64: false,
-    winia32: false,
-    linux: false,
-    ios: false,
-    android: false,
-    androidbrowser: false,
-    'osx-bc': false,
-    'winx64-bc': false,
-    'winia32-bc': false,
-    'linux-bc': false
-  }
-}
-
-var enableDesktopPlatforms = function () {
-  viewState.platformEnabled.osx = true
-  viewState.platformEnabled.winia32 = true
-  viewState.platformEnabled.winx64 = true
-  viewState.platformEnabled.linux = true
-  viewState.platformEnabled['osx-bc'] = true
-  viewState.platformEnabled['winx64-bc'] = true
-  viewState.platformEnabled['winia32-bc'] = true
-  viewState.platformEnabled['linux-bc'] = true
-}
-
-var disableDesktopPlatforms = function () {
-  viewState.platformEnabled.osx = false
-  viewState.platformEnabled.winia32 = false
-  viewState.platformEnabled.winx64 = false
-  viewState.platformEnabled.linux = false
-  viewState.platformEnabled['osx-bc'] = false
-  viewState.platformEnabled['winx64-bc'] = false
-  viewState.platformEnabled['winia32-bc'] = false
-  viewState.platformEnabled['linux-bc'] = false
-}
-
-var enableMobilePlatforms = function () {
-  viewState.platformEnabled.ios = true
-  viewState.platformEnabled.android = true
-  viewState.platformEnabled.androidbrowser = true
-}
-
-var disableMobilePlatforms = function () {
-  viewState.platformEnabled.ios = false
-  viewState.platformEnabled.android = false
-  viewState.platformEnabled.androidbrowser = false
-}
+// initialized in globals section
+var viewState = {}
 
 $('#daysSelector').on('change', function (evt, value) {
   pageState.days = parseInt(this.value, 10)
-  refreshData()
-})
-
-$('#machines').on('change', function (evt, value) {
-  pageState.machine = this.value
-  refreshData()
-})
-
-$('#measures').on('change', function (evt, value) {
-  pageState.measure = this.value
-  refreshData()
-})
-
-$('#telemetryVersions').on('change', function (evt, value) {
-  pageState.version = this.value
   refreshData()
 })
 
@@ -1926,6 +1599,7 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -2035,15 +1709,6 @@ let initialize_router = () => {
 
   router.get('eyeshade_funded_balance_average', function (req) {
     pageState.currentlySelected = 'mnFundedBalanceAverageEyeshade'
-    viewState.showControls = true
-    viewState.showDaysSelector = true
-    viewState.showShowToday = true
-    updatePageUIState()
-    refreshData()
-  })
-
-  router.get('telemetry_standard', function (req) {
-    pageState.currentlySelected = 'mnTelemetryStandard'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
@@ -2317,7 +1982,9 @@ function initializeGlobals () {
       'winia32-bc': true,
       'linux-bc': true
     },
-    showRefFilter: false
+    showRefFilter: false,
+    showWOISFilter: true,
+    showCountryCodeFilter: true
   }
 }
 

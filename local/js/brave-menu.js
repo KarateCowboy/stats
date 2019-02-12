@@ -120,7 +120,6 @@
     // this event will contain the complete list of currently selected country codes
     const fireEvents = () => {
       // fire custom event
-      console.log("triggering")
       e.trigger('selection', [selectedSubitems()])
     }
 

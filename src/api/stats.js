@@ -579,6 +579,7 @@ exports.setup = (server, client, mongo) => {
       }
     }
   })
+
   // Retention
   server.route({
     method: 'GET',

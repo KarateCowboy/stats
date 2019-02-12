@@ -21,7 +21,6 @@ let publishers = require('./api/publishers')
 const campaigns = require('./api/campaigns')
 let meta = require('./api/meta')
 const mongoose = require('mongoose')
-let telemetry = require('./api/telemetry')
 let referral = require('./api/referral')
 let referral_codes = require('./api/referral_codes')
 let countries = require('./api/countries')
@@ -45,7 +44,7 @@ module.exports.setup = async (connections) => {
   await mongoose.connect(process.env.MLAB_URI)
   server.register(Inert, function () {})
 
-  // Handle the boom response as well as all other requests (cache control for telemetry)
+  // Handle the boom response as well as all other requests
   setGlobalHeader(server, 'Cache-Control', 'no-cache, no-store, must-revalidate, private, max-age=0')
   setGlobalHeader(server, 'Pragma', 'no-cache')
   setGlobalHeader(server, 'Expires', 0)
@@ -55,7 +54,7 @@ module.exports.setup = async (connections) => {
   })
 
   // Setup the APIs
-  _.each([stats, jobs, crashes, search, eyeshade, campaigns, bat_eyeshade, publishers, meta, telemetry, referral, referral_codes, countries], (api) => { api.setup(server, connections.pg, connections.mg) })
+  _.each([stats, jobs, crashes, search, eyeshade, campaigns, bat_eyeshade, publishers, meta, referral, referral_codes, countries], (api) => { api.setup(server, connections.pg, connections.mg) })
 
   // Setup the UI for the dashboard
   ui.setup(server, connections.pg)
