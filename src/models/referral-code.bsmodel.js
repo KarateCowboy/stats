@@ -18,6 +18,19 @@ module.exports = function (knex) {
     static get tableName () {
       return 'dtl.referral_codes'
     }
+
+    static get relationMappings () {
+      return {
+        campaign: {
+          relation: BaseModel.BelongsToOneRelation,
+          modelClass: db.Campaign,
+          join: {
+            from: 'dtl.referral_codes.campaign_id',
+            to: 'dtl.campaigns.id'
+          }
+        }
+      }
+    }
   }
 
   return ReferralCode

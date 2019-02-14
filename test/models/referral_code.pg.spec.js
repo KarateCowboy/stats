@@ -39,4 +39,12 @@ describe('ReferralCode model', async function () {
       expect(c[0].updated_at).to.be.a('date')
     })
   })
+  describe('associatons', async function () {
+    specify('campaign', async function () {
+      const campaign = await factory.create('campaign')
+      const referralCode = await factory.create('ref_code_pg', { campaign_id: campaign.id })
+      const fetchedCampaign = await referralCode.$relatedQuery('campaign')
+      expect(fetchedCampaign.name).to.equal(campaign.name)
+    })
+  })
 })

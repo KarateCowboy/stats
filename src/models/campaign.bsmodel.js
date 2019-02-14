@@ -22,15 +22,6 @@ module.exports = function (knex) {
       return await db.ReferralCode.query().where('campaign_id', this.id)
     }
 
-    static async allWithReferralCodes () {
-      const campaigns = await this.query()
-      await Promise.all(campaigns.map(async (c) => {
-        const codes = await c.getReferralCodes()
-        c.referralCodes = codes.map(m => m.toJSON())
-      }))
-      return campaigns
-    }
-
     static get NO_CAMPAIGN_NAME () {
       return 'No Campaign'
     }
@@ -42,6 +33,20 @@ module.exports = function (knex) {
       } else {
         return this.query().insert({name: this.NO_CAMPAIGN_NAME})
       }
+    }
+
+    static get relationMappings (){
+      return {
+        referralCodes: {
+          relation: BaseModel.HasManyRelation,
+          modelClass: db.ReferralCode,
+          join: {
+            from: 'dtl.campaigns.id',
+            to: 'dtl.referral_codes.campaign_id'
+          }
+        }
+      }
+
     }
 
   }
