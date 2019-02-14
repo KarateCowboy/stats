@@ -19,6 +19,7 @@ function setup () {
   var menuFilters = [
     ['filterMAU', 'MAU'],
     ['filterDAU', 'DAU'],
+    ['filterDNU', 'DNU'],
     ['filterLedger', 'Ledger'],
     ['filterCrashes', 'Crash'],
     ['filterPublisher', 'Publisher']
