@@ -165,7 +165,7 @@ ORDER BY
  platform
 `
 
-const MAU_REF = `
+const MAU = `
 SELECT
   LEFT(ymd::text, 7) || '-01' AS ymd,
   sum(total) AS count
@@ -173,21 +173,7 @@ FROM dw.fc_usage_month
 WHERE
   platform = ANY ($1) AND
   channel = ANY ($2) AND
-  ymd > '2016-01-31' AND
-  ref = ANY($3)
-GROUP BY
-  left(ymd::text, 7)
-ORDER BY
-  left(ymd::text, 7)
-`
-const MAU_NO_REF = `
-SELECT
-  LEFT(ymd::text, 7) || '-01' AS ymd,
-  sum(total) AS count
-FROM dw.fc_usage_month
-WHERE
-  platform = ANY ($1) AND
-  channel = ANY ($2) AND
+  ref = ANY(COALESCE($3, ARRAY[ref])) AND
   ymd > '2016-01-31'
 GROUP BY
   left(ymd::text, 7)
@@ -257,8 +243,8 @@ exports.setup = (server, client, mongo) => {
     let days = parseInt(request.query.days || 7, 10) + ' days'
     let platforms = common.platformPostgresArray(request.query.platformFilter)
     let channels = common.channelPostgresArray(request.query.channelFilter)
-    let ref = request.query.ref === undefined ? null : request.query.ref.split(',')
-    let wois = request.query.wois === undefined ? null : request.query.wois.split(',')
+    let ref = request.query.ref === '' ? null : request.query.ref.split(',')
+    let wois = request.query.wois === '' ? null : request.query.wois.split(',')
     return [days, platforms, channels, ref, wois]
   }
 
@@ -494,22 +480,15 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
-  // Monthly active u/**/sers
+  // Monthly active users
   server.route({
     method: 'GET',
     path: '/api/1/mau',
     handler: async function (request, reply) {
       let [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      let query, args
-      if (arrayIsTruthy(ref)) {
-        query = MAU_REF
-        args = [platforms, channels, ref]
-      } else {
-        query = MAU_NO_REF
-        args = [platforms, channels]
-      }
-      let results = await client.query(query, args)
-
+      console.log([platforms, channels, ref])
+      let results = await client.query(MAU, [platforms, channels, ref])
+      console.log(results.rows)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       reply(results.rows)

@@ -8,9 +8,9 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/daily_retention',
     handler: async (request, reply) => {
-      var [days, platforms, channels, ref, wois] = common.retrieveCommonParameters(request)
+      let [days, platforms, channels, ref, wois] = common.retrieveCommonParameters(request)
 
-      if (ref.length === 1 && ref[0] === '') return reply([])
+      if (!ref) return reply([])
 
       let dau = await db.UsageSummary.dailyActiveUsers({
         common: true,

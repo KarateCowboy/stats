@@ -684,19 +684,14 @@ var serializeChannelParams = function () {
 }
 
 let standardParams = () => {
-  let referral_codes = []
-  const ref_filter = $('#ref-filter')
-  if (ref_filter.hasClass('select2-hidden-accessible')) {
-    referral_codes = ref_filter.select2('data').map(i => i.id)
-  }
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
     channelFilter: serializeChannelParams(),
     showToday: pageState.showToday,
     version: pageState.version,
-    ref: referral_codes.join(','),
-    wois: pageState.wois.join(',')
+    ref: (pageState.ref || []).join(','),
+    wois: (pageState.wois || []).join(',')
   })
 }
 
@@ -744,7 +739,6 @@ var DNUDAURetriever = function () {
 }
 
 var downloadsRetriever = async function () {
-  console.log('executing the downloads retriever')
   $.ajax('/api/1/daily_downloads?' + standardParams(), {
     success: downloadsHandler
   })
@@ -1322,7 +1316,7 @@ const refreshData = () => {
 }
 
 let initialize_router = () => {
-// Setup menu handler routes
+  // Setup menu handler routes
   const router = new Grapnel()
 
   router.get('search', function (req) {
@@ -1393,12 +1387,14 @@ let initialize_router = () => {
     refreshData()
   })
 
-  router.get('usage_month', function (req) {
+  router.get('usage_month', (req) => {
     pageState.currentlySelected = 'mnUsageMonth'
     viewState.showControls = true
-    viewState.showDaysSelector = true
+    viewState.showDaysSelector = false
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1406,9 +1402,11 @@ let initialize_router = () => {
   router.get('usage_month_agg', function (req) {
     pageState.currentlySelected = 'mnUsageMonthAgg'
     viewState.showControls = true
-    viewState.showDaysSelector = true
+    viewState.showDaysSelector = false
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1908,6 +1906,12 @@ initialize_components = () => {
         }
       })
       ref_filter.on('change', function () {
+        let referral_codes = []
+        const ref_filter = $('#ref-filter')
+        if (ref_filter.hasClass('select2-hidden-accessible')) {
+          referral_codes = ref_filter.select2('data').map(i => i.id)
+        }
+        pageState.ref = referral_codes
         refreshData()
       })
       $('#clear-ref').on('click', function () {
