@@ -3,16 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const _ = require('lodash')
-var assert = require('assert')
-
-var dataset = require('./dataset')
-var common = require('./common')
-const RetentionWeek = require('../models/retention').RetentionWeek
 const moment = require('moment')
 
-const arrayIsTruthy = (a) => {
-  return a !== undefined && _.compact(a).length > 0
-}
+const common = require('./common')
 
 const DELTA = `
 SELECT
@@ -48,53 +41,6 @@ FROM
 ORDER BY USG.ymd DESC
 `
 
-const DAU_PLATFORM = `
-SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  FC.platform,
-  SUM(FC.total) AS count,
-  ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3)), 3) * 100 AS daily_percentage
-FROM dw.fc_usage_platform_mv FC
-WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3)
-GROUP BY FC.ymd, FC.platform
-ORDER BY FC.ymd DESC, FC.platform
-`
-
-const DAU_PLATFORM_FIRST_REF = `
-SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  FC.platform,
-  SUM(FC.total) AS count,
-ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND first_time AND platform = ANY ($2) AND channel = ANY ($3)), 3) * 100 AS daily_percentage
-FROM dw.fc_usage FC
-WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
-  first_time AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND
-  FC.ref = ANY ($4)
-GROUP BY FC.ymd, FC.platform
-ORDER BY FC.ymd DESC, FC.platform
-`
-const DAU_PLATFORM_FIRST_NO_REF = `
-SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  FC.platform,
-  SUM(FC.total) AS count,
-ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND first_time AND platform = ANY ($2) AND channel = ANY ($3)), 3) * 100 AS daily_percentage
-FROM dw.fc_usage FC
-WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
-  first_time AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) 
-
-GROUP BY FC.ymd, FC.platform
-ORDER BY FC.ymd DESC, FC.platform`
-
 const DAU_PLATFORM_FIRST_SUMMARY = `SELECT * FROM dw.fc_platform_downloads_summary_mv ORDER BY mobile, vendor`
 
 const PLATFORM_SUMMARY_GEO = `
@@ -103,58 +49,6 @@ FROM appannie.fc_inception_by_country FC JOIN appannie.dm_countries DM ON FC.cou
 `
 
 exports.setup = (server, client, mongo) => {
-
-  function retrieveCommonParameters (request) {
-    let days = parseInt(request.query.days || 7, 10) + ' days'
-    let platforms = common.platformPostgresArray(request.query.platformFilter)
-    let channels = common.channelPostgresArray(request.query.channelFilter)
-    let ref = request.query.ref === '' ? null : request.query.ref.split(',')
-    let wois = request.query.wois === '' ? null : request.query.wois.split(',')
-    return [days, platforms, channels, ref, wois]
-  }
-
-  // Version for today's daily active users
-  server.route({
-    method: 'GET',
-    path: '/api/1/versions',
-    handler: async function (request, reply) {
-      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      let query, args
-      args = {
-        daysAgo: days,
-        platform: platforms,
-        channel: channels
-      }
-      if (arrayIsTruthy(ref)) {
-        args.ref = ref
-      }
-      let results = await db.UsageSummary.dauVersion(args)
-      results.forEach((row) => common.formatPGRow(row))
-      // condense small version counts to an 'other' category
-      results = dataset.condense(results, 'ymd', 'version')
-      results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
-      reply(results)
-    }
-  })
-
-  // Daily active users
-  server.route({
-    method: 'GET',
-    path: '/api/1/dau',
-    handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      let results = await db.UsageSummary.dailyActiveUsers({
-        daysAgo: parseInt(days.replace(' days', '')),
-        platforms: platforms,
-        channels: channels,
-        ref: ref
-      })
-
-      results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      reply(results.rows)
-    }
-  })
 
   // Monthly average daily stats by platform
   server.route({
@@ -191,102 +85,12 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
-  //missing retention days
-  server.route({
-    method: 'GET',
-    path: '/api/1/retention/missing',
-    handler: async function (request, reply) {
-      const RetentionService = require('../services/retention.service')
-      const service = new RetentionService()
-      const results = await service.missing()
-      reply(results)
-    }
-  })
-
-  // Daily active users by platform
-  server.route({
-    method: 'GET',
-    path: '/api/1/dau_platform',
-    handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      let results = await db.UsageSummary.dailyActiveUsers({
-        daysAgo: parseInt(days.replace(' days', '')),
-        platforms: platforms,
-        channels: channels,
-        ref: ref
-      }, ['platform'])
-
-      results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
-    }
-  })
-
-  // Daily active users by platform minus first time runs
-  server.route({
-    method: 'GET',
-    path: '/api/1/dau_platform_minus_first',
-    handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      const results = await db.UsageSummary.platformMinusFirst(days, platforms, channels, ref)
-      results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
-    }
-  })
-
-  // Daily new users by platform
-  server.route({
-    method: 'GET',
-    path: '/api/1/dau_platform_first',
-    handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      let results
-      if (ref !== undefined && _.compact(ref).length > 0) {
-        results = await client.query(DAU_PLATFORM_FIRST_REF, [days, platforms, channels, ref])
-      } else {
-        results = await client.query(DAU_PLATFORM_FIRST_NO_REF, [days, platforms, channels])
-
-      }
-
-      results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
-    }
-  })
-
-  // Daily new users
-  server.route({
-    method: 'GET',
-    path: '/api/1/daily_new_users',
-    handler: async function (request, reply) {
-      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      const args = {
-        daysAgo: parseInt(days.replace(' days', '')),
-        platforms: platforms,
-        channels: channels,
-        ref: ref
-      }
-      if(_.isEmpty(_.compact(ref))){
-         delete args.ref
-      }
-      let results = await db.UsageSummary.dailyNewUsers(args)
-      results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
-    }
-  })
-
   // daily downloads by platform
   server.route({
     method: 'GET',
     path: '/api/1/daily_downloads',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref] = retrieveCommonParameters(request)
+      var [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let day = days.split(' ')
       let cutoff = moment().subtract(Number(day[0]), 'days').format('YYYY-MM-DD')
       var results = await knex('dw.daily_downloads').where('ymd', '>', cutoff).whereIn('platform', platforms).orderBy('ymd', 'desc').select(['count', 'platform', 'ymd'])

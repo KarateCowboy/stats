@@ -1033,7 +1033,7 @@ var menuItems = {
     title: 'Monthly Average Daily New Users by Platform (MAU/DNU)',
     retriever: MAUAverageNewPlatformRetriever
   },
-  'mnDailyNew': {
+  'mnDailyNewPlatform': {
     show: 'usageContent',
     title: 'Daily New Users by Platform (DNU)',
     retriever: DNUPlatformRetriever
@@ -1343,6 +1343,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1457,12 +1459,14 @@ let initialize_router = () => {
     refreshData()
   })
 
-  router.get('daily_new', function (req) {
-    pageState.currentlySelected = 'mnDailyNew'
+  router.get('daily_new_platform', function (req) {
+    pageState.currentlySelected = 'mnDailyNewPlatform'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1477,17 +1481,19 @@ let initialize_router = () => {
     refreshData()
   })
 
-  router.get('usage_agg', function (req) {
+  router.get('usage_agg', (req) => {
     pageState.currentlySelected = 'mnUsageAgg'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
 
-  router.get('dnu_dau_retention', function (req) {
+  router.get('dnu_dau_retention', (req) => {
     pageState.currentlySelected = 'mnDNUDAURetention'
     viewState.showControls = true
     viewState.showDaysSelector = true
@@ -1778,10 +1784,10 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnDailyNewUsers'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
-    viewState.showShowToday = false
     viewState.showRefFilter = true
     viewState.showShowToday = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
