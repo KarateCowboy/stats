@@ -1015,12 +1015,12 @@ var menuItems = {
   },
   'mnUsageMonthAverageAgg': {
     show: 'usageContent',
-    title: 'Monthly Average Daily Active Users (MAU/DAU)',
+    title: 'Monthly Average Daily Active Users (MAU & DAU)',
     retriever: MAUAverageAggPlatformRetriever
   },
   'mnUsageMonthAverage': {
     show: 'usageContent',
-    title: 'Monthly Average Daily Active Users by Platform (MAU/DAU)',
+    title: 'Monthly Average Daily Active Users by Platform (MAU & DAU)',
     retriever: MAUAveragePlatformRetriever
   },
   'mnUsageMonthAverageNewAgg': {
@@ -1390,7 +1390,7 @@ let initialize_router = () => {
   router.get('usage_month', (req) => {
     pageState.currentlySelected = 'mnUsageMonth'
     viewState.showControls = true
-    viewState.showDaysSelector = false
+    viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
@@ -1402,7 +1402,7 @@ let initialize_router = () => {
   router.get('usage_month_agg', function (req) {
     pageState.currentlySelected = 'mnUsageMonthAgg'
     viewState.showControls = true
-    viewState.showDaysSelector = false
+    viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
@@ -1417,6 +1417,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1427,6 +1429,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1447,6 +1451,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
