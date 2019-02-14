@@ -161,7 +161,8 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
   }
 
   UsageSummary.dailyActiveUsers = async function (args, group = []) {
-    const query = knex('dw.fc_agg_usage_daily').select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
+    const tableName = args.common ? 'dw.fc_agg_usage_daily' : 'dw.fc_usage'
+    const query = knex(tableName).select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
       .where('ymd', '>=', moment().subtract(args.daysAgo, 'days').format('YYYY-MM-DD'))
       .whereIn('channel', args.channels)
       .whereIn('platform', args.platforms)
@@ -190,7 +191,8 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
   }
 
   UsageSummary.dailyNewUsers = async function (args, group = []) {
-    const query = knex('dw.fc_agg_usage_daily').select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
+    const tableName = args.common ? 'dw.fc_agg_usage_daily' : 'dw.fc_usage'
+    const query = knex(tableName).select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
       .where('ymd', '>=', moment().subtract(args.daysAgo, 'days').format('YYYY-MM-DD'))
       .where('first_time', true)
       .whereIn('channel', args.channels)
@@ -211,11 +213,11 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
       if (group.includes('version')) {
         query.select('version').groupBy('version')
       }
-      //ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
       const results = await pg_client.query(query.toString())
       results.rows.forEach(r => { r.daily_percentage = (_.toNumber(r.count) / _.toNumber(_.find(day_totals.rows, {'ymd': r.ymd}).count)) * 100 })
       return results
     } else {
+      console.log(query.toString())
       return await pg_client.query(query.toString())
     }
   }

@@ -560,7 +560,7 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
-  // daily downloads by plaftorm
+  // daily downloads by platform
   server.route({
     method: 'GET',
     path: '/api/1/daily_downloads',

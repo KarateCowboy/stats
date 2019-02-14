@@ -12,6 +12,7 @@ exports.setup = (server, client, mongo) => {
       if (ref.length === 1 && ref[0] === '') return reply([])
 
       let dau = await db.UsageSummary.dailyActiveUsers({
+        common: true,
         daysAgo: parseInt(days.replace(' days', '')),
         platforms: platforms,
         channels: channels,
@@ -22,6 +23,7 @@ exports.setup = (server, client, mongo) => {
       dau.rows = common.potentiallyFilterToday(dau.rows, request.query.showToday === 'true')
 
       let dnu = await db.UsageSummary.dailyNewUsers({
+        common: true,
         daysAgo: parseInt(days.replace(' days', '')),
         platforms: platforms,
         channels: channels,

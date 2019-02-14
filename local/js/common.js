@@ -7,6 +7,10 @@
     },
     scales: {
       yAxes: [{
+        gridLines: {
+          drawBorder: false,
+          drawOnChartArea: true,
+        },
         ticks: {
           beginAtZero: true
         }

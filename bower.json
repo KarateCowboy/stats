@@ -16,7 +16,7 @@
     "tests"
   ],
   "dependencies": {
-    "Chart.js": "~2.4.0",
+    "Chart.js": "~2.7.3",
     "underscore": "~1.8.3",
     "grapnel": "~0.6.3",
     "numeral": "^1.5.3",
