@@ -11,7 +11,7 @@ const factory = require('factory-girl').factory
 const mongoose = require('mongoose')
 const Sequelize = require('sequelize')
 const DbUtil = require('../src/models')
-const MongoSeed = require('../db/mongo/seed')
+const PsqlSeed = require('../db/psql/seed')
 require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
@@ -33,8 +33,9 @@ const fixtures = {
   fc_usage: require('./fixtures/fc_usage'),
   download: require('./fixtures/download'),
   campaigns: require('./fixtures/campaign'),
-  referral_codes: require('./fixtures/referral_code_pg')
-
+  referral_codes: require('./fixtures/referral_code_pg'),
+  platform: require('./fixtures/platform'),
+  channel: require('./fixtures/channel')
 }
 
 class TestHelper {
@@ -75,12 +76,16 @@ class TestHelper {
         'fc_usage_month',
         'downloads',
         'fc_usage_month_exceptions',
+        'fc_usage_exceptions',
         'fc_usage',
-        'fc_wallets'
+        'fc_wallets',
+        'fc_agg_usage_weekly'
       ],
       'dtl': [
         'campaigns',
-        'referral_codes'
+        'referral_codes',
+        'platforms',
+        'channels'
       ]
     }
     this.materialized_views = {
@@ -113,10 +118,6 @@ class TestHelper {
     global.factory = factory
   }
 
-  async load_fixtures () {
-
-  }
-
   async truncate () {
     await Promise.all(this.mongo_collections.map(async (collection) => {
       if ((await mongo_client.collection(collection))) {
@@ -125,16 +126,16 @@ class TestHelper {
         await mongo_client.createCollection(collection)
       }
     }))
-    await MongoSeed.exec()
     for (let schema in this.postgres_tables) {
       let self = this
       await Promise.all(self.postgres_tables[schema].map(async (relation) => {
         if (!relation.toString().includes('undefined')) {
           const sql_string = `${schema}.${relation}`
-          await knex(sql_string).truncate()
+          await knex(sql_string).delete()
         }
       }))
     }
+    await PsqlSeed.exec()
   }
 
   async refresh_views () {
