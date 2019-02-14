@@ -32,7 +32,7 @@ const deleteRecordsForYMD = async (client, ymd, type) => {
 const summarize = async (db, ymd, type, collection) => {
   const matcher = {
     daily: { daily: true },
-    weekly: { weekly: true },
+    weekly: { daily: true, weekly: true },
     monthly: { monthly: true }
   }[type]
 
