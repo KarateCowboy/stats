@@ -1,7 +1,8 @@
 exports.up = async (knex) => {
   await knex.raw(`
 CREATE TABLE dtl.platforms (
-  platform    TEXT NOT NULL PRIMARY KEY,
+  id          SERIAL NOT NULL PRIMARY KEY,
+  platform    TEXT NOT NULL UNIQUE,
   description TEXT NOT NULL,
   label       TEXT NOT NULL
 );
