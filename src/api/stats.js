@@ -129,57 +129,6 @@ GROUP BY ymd, platform
 ORDER BY ymd DESC, platform
 `
 
-const MAU_PLATFORM_REF = `
-SELECT
-  LEFT(ymd::text, 7) || '-01' AS ymd,
-  platform,
-  sum(total) AS count
-FROM dw.fc_usage_month
-WHERE
-  platform = ANY ($1) AND
-  channel = ANY ($2) AND
-  ymd > '2016-01-31' AND
-  ref = ANY($3)
-GROUP BY
-  left(ymd::text, 7),
-  platform
-ORDER BY
-  left(ymd::text, 7),
- platform
-`
-const MAU_PLATFORM_NO_REF = `
-SELECT
-  LEFT(ymd::text, 7) || '-01' AS ymd,
-  platform,
-  sum(total) AS count
-FROM dw.fc_usage_month
-WHERE
-  platform = ANY ($1) AND
-  channel = ANY ($2) AND
-  ymd > '2016-01-31'
-GROUP BY
-  left(ymd::text, 7),
-  platform
-ORDER BY
-  left(ymd::text, 7),
- platform
-`
-
-const MAU = `
-SELECT
-  LEFT(ymd::text, 7) || '-01' AS ymd,
-  sum(total) AS count
-FROM dw.fc_usage_month
-WHERE
-  platform = ANY ($1) AND
-  channel = ANY ($2) AND
-  ref = ANY(COALESCE($3, ARRAY[ref])) AND
-  ymd > '2016-01-31'
-GROUP BY
-  left(ymd::text, 7)
-ORDER BY
-  left(ymd::text, 7)
-`
 
 const DAU_PLATFORM = `
 SELECT
@@ -235,9 +184,7 @@ SELECT 'ios' AS platform, FC.country_code, DM.name, '000' AS dma, FC.downloads
 FROM appannie.fc_inception_by_country FC JOIN appannie.dm_countries DM ON FC.country_code = DM.code
 `
 
-// Data endpoints
 exports.setup = (server, client, mongo) => {
-  assert(mongo, 'mongo configured')
 
   function retrieveCommonParameters (request) {
     let days = parseInt(request.query.days || 7, 10) + ' days'
@@ -453,44 +400,6 @@ exports.setup = (server, client, mongo) => {
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
-    }
-  })
-
-  // Monthly active users by platform
-  server.route({
-    method: 'GET',
-    path: '/api/1/mau_platform',
-    handler: async function (request, reply) {
-      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      let query, args
-      if (arrayIsTruthy(ref)) {
-        query = MAU_PLATFORM_REF
-        args = [platforms, channels, ref]
-      } else {
-        query = MAU_PLATFORM_NO_REF
-        args = [platforms, channels]
-      }
-      let results = await client.query(query, args)
-
-      results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
-      results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
-    }
-  })
-
-  // Monthly active users
-  server.route({
-    method: 'GET',
-    path: '/api/1/mau',
-    handler: async function (request, reply) {
-      let [days, platforms, channels, ref] = retrieveCommonParameters(request)
-      console.log([platforms, channels, ref])
-      let results = await client.query(MAU, [platforms, channels, ref])
-      console.log(results.rows)
-      results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       reply(results.rows)
     }
   })
