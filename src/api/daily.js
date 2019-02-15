@@ -118,6 +118,48 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
+  // Campaign for today's daily new users
+  server.route({
+    method: 'GET',
+    path: '/api/1/dnu_campaign',
+    handler: async (request, reply) => {
+      let [days, platforms, channels] = common.retrieveCommonParameters(request)
+      let args = {
+        daysAgo: days,
+        platform: platforms,
+        channel: channels
+      }
+      let results = await db.UsageSummary.dnuCampaign(args)
+      results.forEach((row) => common.formatPGRow(row))
+      // condense small campaign counts to an 'other' category
+      results = dataset.condense(results, 'ymd', 'campaign', 0.01)
+      results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
+      console.log(results)
+      reply(results)
+    }
+  })
+
+  // Campaign for today's daily active users
+  server.route({
+    method: 'GET',
+    path: '/api/1/dau_campaign',
+    handler: async (request, reply) => {
+      let [days, platforms, channels] = common.retrieveCommonParameters(request)
+      let args = {
+        daysAgo: days,
+        platform: platforms,
+        channel: channels
+      }
+      let results = await db.UsageSummary.dauCampaign(args)
+      results.forEach((row) => common.formatPGRow(row))
+      // condense small campaign counts to an 'other' category
+      results = dataset.condense(results, 'ymd', 'campaign', 0.001)
+      results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
+      console.log(results)
+      reply(results)
+    }
+  })
+
   // Daily new users by platform
   server.route({
     method: 'GET',

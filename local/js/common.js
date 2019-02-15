@@ -18,6 +18,28 @@
     }
   }
 
+  var standardYAxisOptionsBar = {
+    tooltips: {
+      mode: 'x',
+      position: 'nearest'
+    },
+    scales: {
+      xAxes: [{
+        stacked: true
+      }],
+      yAxes: [{
+        stacked: true,
+        gridLines: {
+          drawBorder: false,
+          drawOnChartArea: true,
+        },
+        ticks: {
+          beginAtZero: true
+        }
+      }]
+    }
+  }
+
   var safeDivide = function (n, d, def) {
     def = def || 0
     if (!d || d === 0) return def
@@ -35,6 +57,7 @@
 
   window.STATS.COMMON = {
     standardYAxisOptions: standardYAxisOptions,
+    standardYAxisOptionsBar: standardYAxisOptionsBar,
     safeDivide: safeDivide,
     downloadObjectAs: downloadObjectAs
   }

@@ -172,6 +172,68 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
       return await pg_client.query(query.toString())
     }
   }
+
+  UsageSummary.dauCampaign = async (args) => {
+    const QUERY = `
+    SELECT
+      TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd,
+      COALESCE(CMP.name, 'unknown') AS campaign,
+      SUM(total) AS count
+    FROM
+      dw.fc_usage        FC                            LEFT JOIN
+      dtl.referral_codes REF ON FC.ref = REF.code_text LEFT JOIN
+      dtl.campaigns      CMP ON REF.campaign_id = CMP.id
+    WHERE
+      FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+      FC.platform = ANY ($2) AND
+      FC.channel = ANY ($3)
+    GROUP BY
+      TO_CHAR(ymd, 'YYYY-MM-DD'),
+      cmp.name
+    ORDER BY
+      TO_CHAR(ymd, 'YYYY-MM-DD'),
+      cmp.name
+    `
+    return (await pg_client.query(QUERY,
+      [
+        `${args.daysAgo} days`,
+        args.platform,
+        args.channel
+      ]
+    )).rows
+  }
+
+  UsageSummary.dnuCampaign = async (args) => {
+    const QUERY = `
+    SELECT
+      TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd,
+      COALESCE(CMP.name, 'unknown') AS campaign,
+      SUM(total) AS count
+    FROM
+      dw.fc_usage        FC                            LEFT JOIN
+      dtl.referral_codes REF ON FC.ref = REF.code_text LEFT JOIN
+      dtl.campaigns      CMP ON REF.campaign_id = CMP.id
+    WHERE
+      FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+      FC.platform = ANY ($2) AND
+      FC.channel = ANY ($3) AND
+      first_time
+    GROUP BY
+      TO_CHAR(ymd, 'YYYY-MM-DD'),
+      cmp.name
+    ORDER BY
+      TO_CHAR(ymd, 'YYYY-MM-DD'),
+      cmp.name
+    `
+    return (await pg_client.query(QUERY,
+      [
+        `${args.daysAgo} days`,
+        args.platform,
+        args.channel
+      ]
+    )).rows
+  }
+
   UsageSummary.dauVersion = async function (args) {
     const DAU_VERSION_NO_REF = `
 SELECT
@@ -186,6 +248,7 @@ WHERE
   FC.channel = ANY ($3)
 GROUP BY FC.ymd, FC.version
 ORDER BY FC.ymd DESC, FC.version`
+
     const DAU_VERSION_REF = `
 SELECT
   TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,

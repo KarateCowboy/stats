@@ -272,7 +272,7 @@ var statsHandler = function (rows) {
 
   var statsChart = document.getElementById('statsChart')
   var ctx = statsChart.getContext('2d')
-  var myChart = new Chart.Line(ctx, {data: data, options: window.STATS.COMMON.standardYAxisOptions})
+  var myChart = new Chart(ctx, { type: opts.chartType, data: data, options: window.STATS.COMMON.standardYAxisOptions})
 }
 
 // Build handler for a single value chart updater
@@ -337,6 +337,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   opts = opts || {}
   x_label = x_label || 'Date'
   y_label = y_label || 'Platform'
+  opts.chartType = opts.chartType || 'line'
 
   var value_func = function (row, value) {
     var formatter = st
@@ -521,17 +522,24 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
           data: dataset,
           borderColor: colourer(idx, 1),
           pointColor: colourer(idx, 0.5),
-          backgroundColor: colourer(idx, 0.05)
+          backgroundColor: colourer(idx, opts.chartType === 'line' ? 0.05 : 1)
         }
       })
     }
 
-    var container = $('#usageChartContainer')
+    let container = $('#usageChartContainer')
     container.empty()
     container.append('<canvas id=\'usageChart\' height=\'350\' width=\'800\'></canvas>')
 
-    var usageChart = document.getElementById('usageChart')
-    new Chart.Line(usageChart.getContext('2d'), {data: data, options: window.STATS.COMMON.standardYAxisOptions})
+    let usageChart = document.getElementById('usageChart')
+    new Chart(
+      usageChart.getContext('2d'),
+      {
+        type: opts.chartType,
+        data: data,
+        options: opts.chartType === 'line' ? window.STATS.COMMON.standardYAxisOptions : window.STATS.COMMON.standardYAxisOptionsBar
+      }
+    )
   }
 }
 
@@ -632,6 +640,10 @@ var aggMAUHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
 
 var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index', pivot: true})
 
+var DNUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'index', pivot: true, chartType: 'bar' })
+
+var DAUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'index', pivot: true, chartType: 'bar' })
+
 var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
 var walletsTotalHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {showGrandTotal: true})
@@ -719,6 +731,18 @@ const weeklyRetentionRetriever = async () => {
 var versionsRetriever = function () {
   $.ajax('/api/1/versions?' + standardParams(), {
     success: usageVersionHandler
+  })
+}
+
+var DNUCampaignRetriever = function () {
+  $.ajax('/api/1/dnu_campaign?' + standardParams(), {
+    success: DNUCampaignHandler
+  })
+}
+
+var DAUCampaignRetriever = function () {
+  $.ajax('/api/1/dau_campaign?' + standardParams(), {
+    success: DAUCampaignHandler
   })
 }
 
@@ -1048,6 +1072,16 @@ var menuItems = {
     show: 'usageContent',
     retriever: versionsRetriever
   },
+  'mnDNUCampaign': {
+    title: 'Daily New Users by Campaign (DNU)',
+    show: 'usageContent',
+    retriever: DNUCampaignRetriever
+  },
+  'mnDAUCampaign': {
+    title: 'Daily Active Users by Campaign (DAU)',
+    show: 'usageContent',
+    retriever: DAUCampaignRetriever
+  },
   'mnTopCrashes': {
     title: 'Top Crashes By Platform and Version',
     show: 'topCrashContent',
@@ -1343,6 +1377,30 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('dnuCampaign', (req) => {
+    pageState.currentlySelected = 'mnDNUCampaign'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = false
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('dauCampaign', (req) => {
+    pageState.currentlySelected = 'mnDAUCampaign'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = false
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
     updatePageUIState()
