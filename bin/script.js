@@ -1,12 +1,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
+require('dotenv').config()
 const AWS = require('aws-sdk')
 AWS.config.setPromisesDependency(null)
 const _ = require('lodash')
 const mongoose = require('mongoose')
 const commander = require('commander')
+const yargs = require('yargs')
 const Sequelize = require('sequelize')
 const DbUtil = require('../src/models')
 const moment = require('moment')
@@ -15,6 +16,8 @@ const mongoc = require('../src/mongoc')
 const Knex = require('knex')
 const reporter = require('../src/reporter')
 const path = require('path')
+const common = require('../src/common')
+const logger = common.logger
 
 module.exports = class Script {
   constructor (jobname) {
@@ -23,6 +26,9 @@ module.exports = class Script {
     this.commander = commander
     this.moment = moment
     this.prequest = require('../src/api/common').prequest
+    this.yargs = yargs
+    this.common = common
+    this.logger = common.logger
   }
 
   async setup () {

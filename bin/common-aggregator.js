@@ -1,40 +1,41 @@
-require('dotenv').config()
-
-const moment = require('moment')
-const common = require('../src/common')
-const logger = common.logger
+const Script = require('./script')
 const CommonAggregation = require('../src/services/common-aggregation.service')
 
-const commonAggregation = new CommonAggregation()
+class AggregationScript extends Script {
+  constructor () {
+    super('common-aggregator')
+  }
 
-const args = require('yargs')
-  .default('days', 1, 'Number of days to aggregate')
-  .choices('type', ['daily', 'weekly', 'monthly'])
-  .default('type', 'daily')
-  .default('delete', false)
-  .describe('latest', 'Date to start aggregation from working backwards')
-  .argv
+  async run () {
+    await this.setup()
+    const args = this.yargs
+      .default('days', 1, 'Number of days to aggregate')
+      .choices('type', ['daily', 'weekly', 'monthly'])
+      .default('type', 'daily')
+      .default('delete', false)
+      .describe('latest', 'Date to start aggregation from working backwards')
+      .argv
+    this.logger.info(JSON.stringify(args))
+    if (args.latest) {
+      args.latest = this.moment(args.latest)
+    } else {
+      args.latest = this.moment()
+    }
+    args.collections = ['brave_core_usage', 'usage', 'android_usage', 'ios_usage']
 
-args.collections = ['brave_core_usage', 'usage', 'android_usage', 'ios_usage']
+    const commonAggregation = new CommonAggregation()
+    await commonAggregation.main(
+      args.latest,
+      args.days,
+      args.delete,
+      args.type,
+      args.collections
+    )
 
-if (args.latest) {
-  args.latest = moment(args.latest)
-} else {
-  args.latest = moment()
+    await this.shutdown()
+  }
+
 }
 
-const main = async () => {
-  logger.info(JSON.stringify(args))
-
-  await commonAggregation.connectToDatabases()
-  await commonAggregation.main(
-    args.latest,
-    args.days,
-    args.delete,
-    args.type,
-    args.collections
-  )
-  await commonAggregation.disconnectFromDatabases()
-}
-
-main(args)
+const aggregationScript = new AggregationScript()
+aggregationScript.run()
