@@ -1,20 +1,24 @@
 const _ = require('lodash')
-const Channel = require('../../src/models/channel.model')()
 const moment = require('moment')
 const Util = require('../../src/models/util').Util
 require('../test_helper')
 
 describe('Channel', async function () {
-  describe('schema', async function () {
-    specify(' name: {type: String},', async function () {
-      const channel = new Channel()
-      let thrown = false
-      try{
-        await channel.save() 
-      }catch(e){
-        thrown = true
-      }
-      expect(thrown).to.equal(true)
+  context('properties', async function () {
+    let channelAttrs, channel
+    beforeEach(async function () {
+      channelAttrs = await factory.attrs('channel', {channel: 'funimation'})
+      channel = await db.Channel.query().insert(channelAttrs)
+    })
+    specify('channel', async function () {
+      expect(channel).to.have.property('channel', channelAttrs.channel)
+    })
+    specify('label', async function () {
+      expect(channel).to.have.property('label', channelAttrs.label)
+    })
+    specify('description', async function () {
+      expect(channel).to.have.property('description', channelAttrs.description)
     })
   })
+
 })

@@ -6,8 +6,6 @@
 require('../test_helper')
 const moment = require('moment')
 const _ = require('lodash')
-const Platform = require('../../src/models/platform.model')()
-const Channel = require('../../src/models/channel.model')()
 
 describe('UsageSummary model', async function () {
   describe('attributes', async function () {
@@ -54,7 +52,7 @@ describe('UsageSummary model', async function () {
         let refs = _.range(1, 101).map((u) => {
           return _.random(100000, 999999).toString()
         })
-        fixture_params = fixture_params.concat(_.uniq(refs).map((u) => { return {ymd: ymd, ref: u, version: version } }))
+        fixture_params = fixture_params.concat(_.uniq(refs).map((u) => { return {ymd: ymd, ref: u, version: version} }))
       })
       const usage_summaries = await factory.createMany('fc_usage', fixture_params)
       const DAU_VERSION = `SELECT
@@ -72,8 +70,8 @@ GROUP BY FC.ymd, FC.version
 ORDER BY FC.ymd DESC, FC.version`
       const args = {
         daysAgo: 20,
-        channel: (await Channel.find()).map(c => c.name),
-        platform: (await Platform.find()).map(p => p.name)
+        channel: (await db.Channel.query()).map(c => c.channel),
+        platform: (await db.Platform.query()).map(p => p.platform)
       }
       const oldResults = (await pg_client.query(DAU_VERSION, [`${args.daysAgo} days`, args.platform, args.channel, null])).rows
       expect(_.gt(oldResults.length, 0)).to.equal(true, 'should return some results')

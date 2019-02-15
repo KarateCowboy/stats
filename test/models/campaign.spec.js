@@ -4,7 +4,7 @@ describe('Campaign model', async function () {
   context('properties', async function () {
     it('has a name', async function () {
       const new_campaign = await db.Campaign.query().insert({name: 'James Promo'})
-      const c = await db.Campaign.query().where('id', 1)
+      const c = await db.Campaign.query().where('id', new_campaign.id)
       expect(c[0].name).to.equal('James Promo')
     })
     it('requires the name', async function () {
@@ -19,7 +19,7 @@ describe('Campaign model', async function () {
     })
     it('has timestamps', async function () {
       const new_campaign = await db.Campaign.query().insert({name: 'James promo'})
-      const c = await db.Campaign.query().where('id', 1)
+      const c = await db.Campaign.query().where('id', new_campaign.id)
       expect(c[0].created_at).to.be.a('date')
       expect(c[0].updated_at).to.be.a('date')
     })
@@ -68,7 +68,7 @@ describe('Campaign model', async function () {
       //returns all campaigns
       expect(campaigns.map(c => c.id)).to.have.members([campaignOne.id, campaignTwo.id])
       //nested array of referralCodes
-      expect(_.find(campaigns, {'id': 1})).to.have.property('referralCodes')
+      expect(_.find(campaigns, {'id': campaignOne.id })).to.have.property('referralCodes')
       //as objects `i.code_text` insures they are plain objects, not bookshelf objects
       expect(_.find(campaigns, {id: campaignOne.id}).referralCodes.map(i => i.code_text)).to.have.members(referralCodesOne.map(r => r.code_text))
     })

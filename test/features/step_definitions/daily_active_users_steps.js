@@ -10,7 +10,6 @@ const moment = require('moment')
 const _ = require('underscore')
 const UpdatePostgresDay = require('../../../src/services/update-postgres-day.service')
 const CoreUsage = require('../../../src/models/core-usage.model')()
-const Platform = require('../../../src/models/platform.model')()
 const Util = require('../../../src/models/util').Util
 let sample_codes, testing_ymd
 
@@ -97,13 +96,13 @@ Then(/^I should see the DNU numbers for all referral codes$/, async function () 
 })
 
 Given(/^there are usages for all platforms and multiple versions for the last week$/, async function () {
-  const platforms = await Platform.find()
+  const platforms = await db.Platform.query()
   const working_day = moment()
   const dates = _.range(1, 11).map(d => { return {ymd: working_day.clone().subtract(d, 'days').format('YYYY-MM-DD')} })
   let version = 1
   for (let platform of platforms) {
     const attributes = dates.map(o => {
-      o.platform = platform.name
+      o.platform = platform.platform
       o.total = Util.random_int(400) + 1
       o.version = version.toString() + '.0.0'
       return o
