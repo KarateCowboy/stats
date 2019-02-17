@@ -843,7 +843,6 @@ var crashRatioRetriever = function () {
 var recentCrashesRetriever = function () {
   $.ajax('/api/1/recent_crash_report_details?' + standardParams(), {
     success: function (crashes) {
-      $('#contentTitle').html('Recent Crash Reports')
       var table = $('#recent-crash-list-table tbody')
       table.empty()
       _.each(crashes, function (crash) {
@@ -868,7 +867,6 @@ var recentCrashesRetriever = function () {
 var developmentCrashesRetriever = function () {
   $.ajax('/api/1/development_crash_report_details?' + standardParams(), {
     success: function (crashes) {
-      $('#contentTitle').html('Development Crash Reports')
       var table = $('#development-crash-list-table tbody')
       table.empty()
       _.each(crashes, function (crash) {
@@ -1009,7 +1007,7 @@ var menuItems = {
   },
   'weeklyRetention': {
     show: 'weeklyRetentionContent',
-    title: 'Weekly Retention',
+    title: ' Retention Week / Week',
     retriever: weeklyRetentionRetriever
   },
   'mnUsage': {
@@ -1093,12 +1091,12 @@ var menuItems = {
     retriever: crashRatioRetriever
   },
   'mnRecentCrashes': {
-    title: 'Recent Crashes',
+    title: 'Recent Crash Reports',
     show: 'recentCrashContent',
     retriever: recentCrashesRetriever
   },
   'mnDevelopmentCrashes': {
-    title: 'Development Crashes',
+    title: 'Development Crash Reports',
     show: 'developmentCrashContent',
     subtitle: 'Most recent development crashes',
     retriever: developmentCrashesRetriever

@@ -134,7 +134,6 @@ exports.setup = (server, client, mongo) => {
       // condense small campaign counts to an 'other' category
       results = dataset.condense(results, 'ymd', 'campaign', 0.01)
       results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
-      console.log(results)
       reply(results)
     }
   })
@@ -155,7 +154,6 @@ exports.setup = (server, client, mongo) => {
       // condense small campaign counts to an 'other' category
       results = dataset.condense(results, 'ymd', 'campaign', 0.001)
       results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
-      console.log(results)
       reply(results)
     }
   })

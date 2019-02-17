@@ -5,7 +5,6 @@
  */
 
 const {setWorldConstructor} = require('cucumber')
-const webdriver = require('webdriverio')
 
 class CustomWorld {
   constructor () {
@@ -14,8 +13,6 @@ class CustomWorld {
     this.sessionSecret = 'SUPER_SECRET_SESSION_SALT_THAT_IS_LONG'
     process.env.SESSION_SECRET = this.sessionSecret
     process.env.ADMIN_PASSWORD = this.adminPassword
-    const options = {desiredCapabilities: {browserName: 'chrome', chromeOptions: {args: ['--headless']}}}
-    global.browser = webdriver.remote(options)
   }
 
   setTo (variable, value) {
@@ -46,6 +43,9 @@ class CustomWorld {
       },
       async selectedReferralCodes () {
         return await browser.getAttribute('.select2-selection__choice', 'title')
+      },
+      async getContentTitle(){
+        return await browser.getText('#contentTitle')
       }
     }
   }

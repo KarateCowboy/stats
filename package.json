@@ -12,7 +12,7 @@
     "start": "webpack-cli && node src/run.js",
     "selenium": "java -jar -Dwebdriver.chrome.driver=./test/features/support/chromedriver  ./test/features/support/selenium-server-standalone-3.12.0.jar",
     "phantom": "phantomjs --webdriver=4444",
-    "firefox": "java -jar -Dwebdriver.gecko.driver=./test/features/support/geckodriver ./test/features/support/selenium-server-standalone-3.12.0.jar",
+    "selenium-ff": "java -jar -Dwebdriver.gecko.driver=./test/features/support/geckodriver ./test/features/support/selenium-server-standalone-3.12.0.jar",
     "cucumber": "./node_modules/.bin/cucumber-js ./test",
     "lint": "standard",
     "postinstall": "bower cache clean && bower install",
@@ -90,6 +90,7 @@
     "webdriverio": "4.14.1"
   },
   "precommit": [
-    "test"
+    "test",
+    "mocha"
   ]
 }
