@@ -1,0 +1,13 @@
+[
+  "linux",
+  "osx-bc",
+  "androidbrowser",
+  "winia32",
+  "osx",
+  "winx64",
+  "winx64-bc",
+  "ios",
+  "winia32-bc",
+  "unknown",
+  "linux-bc"
+]

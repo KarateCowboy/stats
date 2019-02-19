@@ -13,7 +13,7 @@ const path = require('path')
 class FetchPublishers extends Script {
 
   async run () {
-    await this.setup()
+    await this.setup('fetch-publisher-totals')
     const channel_options = {
       method: 'GET',
       url: 'https://publishers.basicattentiontoken.org/api/v1/public/channels/totals',

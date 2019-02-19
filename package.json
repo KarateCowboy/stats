@@ -32,6 +32,7 @@
     "bower": "1.8.4",
     "cheerio": "1.0.0-rc.2",
     "commander": "2.15.1",
+    "dotenv": "^6.2.0",
     "elasticsearch": "11.0.1",
     "factory-girl-objection-adapter": "1.0.0",
     "fs-extra": "5.0.0",
@@ -73,6 +74,7 @@
     "vision": "4.0.1",
     "webpack": "^4.20.1",
     "webpack-cli": "^3.1.1",
+    "winston": "^3.2.1",
     "yargs": "3.31.0"
   },
   "devDependencies": {
