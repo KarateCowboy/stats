@@ -13,7 +13,7 @@ let blipp = require('blipp')
 let ui = require('./ui')
 const mongoose = require('mongoose')
 
-const controllers = fs.readdirSync(path.join(__dirname, 'api'), {} )
+const controllers = fs.readdirSync(path.join(__dirname, 'api'), {})
   .filter((filename) => { return filename.match(/.js$/g) })
   .map((filename) => { return require(path.join(__dirname, './api', filename)) })
 
@@ -31,7 +31,9 @@ module.exports.setup = async (connections) => {
   })
   await mongoose.connect(process.env.MLAB_URI)
   server.register(Inert, function () {})
-  server.register(blipp, function () {})
+  if (!process.env.TEST) {
+    server.register(blipp, function () {})
+  }
 
   // Setup the APIs
   _.each(controllers, (api) => {
@@ -46,4 +48,8 @@ module.exports.setup = async (connections) => {
 
 module.exports.kickoff = async () => {
   await server.start()
+}
+
+module.exports.shutdown = async () => {
+  await server.stop()
 }

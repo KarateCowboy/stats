@@ -168,7 +168,6 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
       results.rows.forEach(r => { r.daily_percentage = (_.toNumber(r.count) / _.toNumber(_.find(day_totals.rows, {'ymd': r.ymd}).count)) * 100 })
       return results
     } else {
-      console.log(query.toString())
       return await pg_client.query(query.toString())
     }
   }

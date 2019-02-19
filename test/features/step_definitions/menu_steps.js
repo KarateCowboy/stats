@@ -6,6 +6,7 @@
 
 const {Given, When, Then} = require('cucumber')
 const {expect} = require('chai')
+const _ = require('lodash')
 
 Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
   buttons = buttons.split(',')
@@ -42,7 +43,7 @@ Given(/^I view the Daily Active Users by Version report$/, async function () {
 })
 
 Given(/^I view the Daily New Users by Platform report$/, async function () {
-  await browser.url('http://localhost:8193/dashboard#daily_new')
+  await browser.url('http://localhost:8193/dashboard#daily_new_users')
 })
 
 Given(/^I view the Monthly Average Daily Active Users report$/, async function () {
@@ -96,4 +97,28 @@ Then(/^I should see the code "([^"]*)" in the referal code box$/, async function
   const codes = await this.menuHelpers.selectedReferralCodes()
   expect(codes).to.include(code_text)
 
+})
+
+Given(/^I search the sidebar filter for (.*)$/, async function (menuSearchItem) {
+  await browser.waitForVisible('#searchLinks', 3000)
+  await browser.setValue('#searchLinks', menuSearchItem)
+  await browser.pause(100)
+})
+Then(/^I should see (.*) at the top of the sidebar list$/, async function (menuSearchItem) {
+  await browser.waitForVisible(`#${menuSearchItem}`)
+  let isVisible = await browser.isVisible(`#${menuSearchItem}`)
+  expect(isVisible).to.equal(true, `${menuSearchItem} should be visible, but is not`)
+  const allLi = await browser.getHTML('.sidebar > ul > li')
+  const visibleLi = allLi.filter((li) => { return li.includes('display: none') === false})
+  expect(visibleLi).to.have.property('length', 1)
+  expect(visibleLi.toString()).to.contain(menuSearchItem)
+})
+When(/^I click the sidebar item (.*)$/, async function (menuSearchItem) {
+  await browser.click(`#${menuSearchItem}`)
+})
+Then(/^I should see (.*) in the url bar and the report title (.*)$/, async function (path, title) {
+  const url = await browser.getUrl()
+  expect(url).to.contain(path)
+  const contentTitle = await this.menuHelpers.getContentTitle()
+  expect(contentTitle).to.contain(title)
 })

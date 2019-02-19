@@ -100,9 +100,7 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/mau',
     handler: async function (request, reply) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
-      console.log([platforms, channels, ref])
       let results = await client.query(MAU, [platforms, channels, ref])
-      console.log(results.rows)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       reply(results.rows)

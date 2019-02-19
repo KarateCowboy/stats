@@ -1,4 +1,4 @@
-Feature: Weekly Retention Report
+Feature:  Retention Week / Week Report
 
   Scenario: View downloads over last week
     Given I am logged in to the system
