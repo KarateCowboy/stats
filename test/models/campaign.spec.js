@@ -57,20 +57,13 @@ describe('Campaign model', async function () {
       })
     })
   })
+  describe('associations', async function(){
+    specify('referralCodes', async function(){
+      const campaign = await factory.create('campaign')
+      const referralCodes = await factory.createMany('ref_code_pg', 3, {campaign_id: campaign.id})
+      const fetchedCodes = await campaign.$relatedQuery('referralCodes')
+      expect(fetchedCodes.map( c => c.code_text ).sort()).to.have.members(referralCodes.map( c => c.code_text ).sort())
 
-  describe('#allWithReferralCodes', async function () {
-    it('returns all campaigns, with their referral codes as a nested array of Objects', async function () {
-      const campaignOne = await factory.create('campaign')
-      const referralCodesOne = await factory.createMany('ref_code_pg', 3, {campaign_id: campaignOne.id})
-      const campaignTwo = await factory.create('campaign')
-      const campaigns = await db.Campaign.allWithReferralCodes()
-      _.noop()
-      //returns all campaigns
-      expect(campaigns.map(c => c.id)).to.have.members([campaignOne.id, campaignTwo.id])
-      //nested array of referralCodes
-      expect(_.find(campaigns, {'id': 1})).to.have.property('referralCodes')
-      //as objects `i.code_text` insures they are plain objects, not bookshelf objects
-      expect(_.find(campaigns, {id: campaignOne.id}).referralCodes.map(i => i.code_text)).to.have.members(referralCodesOne.map(r => r.code_text))
     })
   })
 })
