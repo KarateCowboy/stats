@@ -5,7 +5,9 @@
  */
 const moment = require('moment')
 const mongooseClient = require('mongoose')
+const countries = require('../../src/isomorphic/countries')
 const {AttachCommonMethods} = require('./usage_schema')
+const _ = require('lodash')
 module.exports = function () {
   const {Schema} = mongooseClient
   let CoreUsage = new Schema({
@@ -61,12 +63,33 @@ module.exports = function () {
         }
       }
     },
+    doi: {
+      type: Schema.Types.String,
+      required: true,
+      default: moment().startOf('week').add(1, 'days').format('YYYY-MM-DD'),
+      validate: {
+        validator: function (v) {
+          return /^[\d]{4,4}-[\d]{2,2}-[\d]{2,2}/.test(v)
+        }
+      }
+    },
     ref: {
       type: Schema.Types.String,
       default: 'none',
       validate: {
         validator: function (v) {
-          return /^[A-Z0-9]{5,7}/.test(v) || ['none','others'].includes(v)
+          return /^[A-Z0-9]{5,7}/.test(v) || ['none', 'others'].includes(v)
+        }
+      }
+    },
+    country_code: {
+      type: Schema.Types.String,
+      default: 'unknown',
+      validate: {
+        validator: function (v) {
+          const allCodes = _.flatten(countries.map(r => r.subitems)).map(i => i.id)
+          allCodes.push('unknown')
+          return _.includes(allCodes, v)
         }
       }
     },

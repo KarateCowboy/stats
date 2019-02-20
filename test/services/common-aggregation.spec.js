@@ -18,29 +18,59 @@ describe('CommonAggregation', async function () {
   })
   describe('summarize', async function () {
     context('returns an array of objects with properties', async function () {
-      let coreUsages, twoMonthsAgo, summary
+      let coreUsages, twoMonthsAgo, summary, service, attrs
       beforeEach(async function () {
         twoMonthsAgo = moment().subtract(2, 'months')
-        const ymds = _.range(0, 60).map((i) => { return {ymd: moment().subtract(i, 'days').format('YYYY-MM-DD')}})
-        coreUsages = await factory.createMany('core_winx64_usage', ymds)
-        summary = await CommonAggregationService.summarize(global.mongo_client, twoMonthsAgo.format('YYYY-MM-DD'), 'daily', 'brave_core_usage')
-      })
-      context('_id', async function () {
-        specify('ymd', async function(){
-          const sample = _.first(summary)
-          expect(sample._id.ymd).to.match(/^[\d]{4,4}-[\d]{2,2}-[\d]{2,2}$/)
+        const attrs = _.range(0, 100).map((i) => {
+          return {
+            year_month_day: moment().subtract(i, 'days').format('YYYY-MM-DD')
+          }
         })
-        specify('platform')
-        specify('version')
-        specify('first_time')
-        specify('channel')
-        specify('ref')
-        specify('woi')
-        specify('doi')
-        specify('country_code')
+        coreUsages = await factory.createMany('core_winx64_usage', attrs)
+        service = new CommonAggregationService()
+        summary = await service.summarize(twoMonthsAgo.format('YYYY-MM-DD'), 'daily', 'brave_core_usage')
+      })
+      specify('ymd', async function () {
+        const sample = _.first(summary)
+        expect(sample.ymd).to.equal(twoMonthsAgo.format('YYYY-MM-DD'))
+      })
+      specify('platform', async function () {
+        const sample = _.first(summary)
+        expect(sample.platform).to.equal(coreUsages[0].platform)
+      })
+      specify('version', async function () {
+        const aggVersions = _.uniq(summary.map((i) => { return i.version })).sort()
+        expect(aggVersions).to.have.members(_.uniq(coreUsages.map(i => i.version)).sort())
+      })
+      specify('first_time', async function () {
+        expect(_.every(summary, 'first_time')).to.equal(true)
+      })
+      specify('channel', async function () {
+        expect(_.every(summary, (i) => { return _.isString(i.channel)})).to.equal(true)
+      })
+      specify('ref', async function () {
+        expect(_.every(summary, (i) => { return _.isString(i.ref)})).to.equal(true)
+      })
+      specify('woi', async function () {
+        const aggWois = _.uniq(summary.map(i => i.woi)).sort()
+        expect(_.uniq(coreUsages.map(i => i.woi)).sort()).to.have.members(aggWois)
+      })
+      specify('doi', async function () {
+        const aggDois = _.uniq(summary.map(i => i.doi)).sort()
+        const coreDois = _.uniq(coreUsages.map(i => i.doi)).sort()
+        expect(coreDois).to.have.members(aggDois)
+      })
+      specify('country_code', async function () {
+        const aggCountries = _.uniq(summary.map(i => i.country_code)).sort()
+        const coreUsageCountries = coreUsages.map(i => i.country_code)
+        expect(coreUsageCountries).to.contain(aggCountries[0])
+      })
+      specify('count', async function () {
+        for (let s of summary) {
+          expect(s.count).to.be.a('number')
+        }
       })
     })
-    specify('count')
 
   })
   describe('main', async function () {
