@@ -484,11 +484,14 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
       .sort()
       .value()
 
-    // Build a list of unique data sets (platform)
+    // Build a list of unique data sets (i.e. platform)
     var ys = _.chain(rows)
       .map(function (row) { return row[y] })
       .uniq()
       .value()
+
+    // force ordering
+    if (opts.datasetOrdering) ys = ys.sort(opts.datasetOrdering)
 
     // Associate the data
     var product = _.object(_.map(labels, function (label) {
@@ -512,6 +515,9 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
     var colourer = function (idx, opacity) { return window.STATS.COLOR.colorForLabel(ys[idx], opacity) }
     if (opts.colourBy === 'index') {
       colourer = function (idx, opacity) { return window.STATS.COLOR.colorForIndex(idx, opacity) }
+    }
+    if (opts.colourBy === 'hashedLabel') {
+      colourer = (idx, opacity) => { return window.STATS.COLOR.colorForHashedLabel(ys[idx], opacity) }
     }
 
     var data = {
@@ -583,6 +589,10 @@ const usageMeasureHandler = (rows) => {
   })
   retainedHandler(rows)
 
+  const retained = rows.map((row) => { return row.retained })
+  const secondOrder = window.STATS.STATS.secondOrder(retained)
+  const thirdOrder = window.STATS.STATS.secondOrder(secondOrder)
+
   let tbl = $('#DNUDAUDataTable tbody')
   tbl.empty()
   rows.reverse().forEach((row) => {
@@ -640,9 +650,28 @@ var aggMAUHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
 
 var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index', pivot: true})
 
-var DNUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'index', pivot: true, chartType: 'bar' })
+let forceOrganicOrdering = (a, b) => {
+  if (a === 'Organic') return -1
+  if (b === 'Organic') return 1
+  return a.localeCompare(b)
+}
 
-var DAUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'index', pivot: true, chartType: 'bar' })
+var DNUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'hashedLabel', pivot: true, chartType: 'bar', datasetOrdering: forceOrganicOrdering })
+
+var DAUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'hashedLabel', pivot: true, chartType: 'bar', datasetOrdering: forceOrganicOrdering })
+
+var DRUCampaignHandler = (results, correlations) => {
+  // show the chart and table
+  buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', {
+    colourBy: 'hashedLabel',
+    pivot: true,
+    chartType: 'bar',
+    datasetOrdering: forceOrganicOrdering
+  })(results)
+
+  // build the correlation table (this will be released in a later deploy)
+  // window.STATS.CORRELATION.table(() => { return $('#usageDataTable').parent() }, correlations, {})
+}
 
 var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
@@ -743,6 +772,15 @@ var DNUCampaignRetriever = function () {
 var DAUCampaignRetriever = function () {
   $.ajax('/api/1/dau_campaign?' + standardParams(), {
     success: DAUCampaignHandler
+  })
+}
+
+var DRUCampaignRetriever = function () {
+  $.ajax('/api/1/dru_campaign?' + standardParams(), {
+    success: (payload) => {
+      console.log(payload)
+      DRUCampaignHandler(payload.results, payload.correlations)
+    }
   })
 }
 
@@ -1080,6 +1118,11 @@ var menuItems = {
     show: 'usageContent',
     retriever: DAUCampaignRetriever
   },
+  'mnDRUCampaign': {
+    title: 'Daily Returning Users by Campaign (DRU)',
+    show: 'usageContent',
+    retriever: DRUCampaignRetriever
+  },
   'mnTopCrashes': {
     title: 'Top Crashes By Platform and Version',
     show: 'topCrashContent',
@@ -1395,6 +1438,18 @@ let initialize_router = () => {
 
   router.get('dauCampaign', (req) => {
     pageState.currentlySelected = 'mnDAUCampaign'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = false
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('druCampaign', (req) => {
+    pageState.currentlySelected = 'mnDRUCampaign'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true

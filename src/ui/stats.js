@@ -48,6 +48,7 @@ window.STATS = {};
     }
     return points
   }
+
   window.STATS.STATS = {
     secondOrder: secondOrder,
     perc: perc,

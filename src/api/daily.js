@@ -4,6 +4,9 @@
 
 const common = require('./common')
 const dataset = require('./dataset')
+const _ = require('lodash')
+const ml = require('ml-distance')
+const moment = require('moment')
 
 const DAU_PLATFORM_FIRST = `
 SELECT
@@ -118,6 +121,63 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
+  const correlate = (results, fld, valueFld='count') => {
+    const sorted = _.sortBy(results, 'ymd')
+    const maxLabel = sorted[sorted.length - 1].ymd
+    const minLabel = sorted[0].ymd
+
+    const grouped = _.groupBy(results, (result) => { return result[fld] })
+    const labels = []
+    const values = []
+
+    _.each(grouped, (lst, k) => {
+      labels.push(k)
+      let vs = []
+      for (let d = moment(minLabel); d.isBefore(moment(maxLabel)); d.add(1, 'day')) {
+        let found = lst.find((row) => {
+          return row.ymd == d.format('YYYY-MM-DD')
+        })
+        if (found) {
+          vs.push(found.count)
+        } else {
+          vs.push(0)
+        }
+      }
+      values.push(vs)
+    })
+    const correlations = {}
+    _.each(labels, (v1, i) => {
+      _.each(labels, (v2, j) => {
+        correlations[`${labels[i]}:${labels[j]}`] = ml.similarity.pearson(values[i], values[j])
+      })
+    })
+    return correlations
+  }
+
+  // Campaign for today's daily returning users
+  server.route({
+    method: 'GET',
+    path: '/api/1/dru_campaign',
+    handler: async (request, reply) => {
+      let [days, platforms, channels] = common.retrieveCommonParameters(request)
+      let args = {
+        daysAgo: days,
+        platform: platforms,
+        channel: channels
+      }
+      let results = await db.UsageSummary.druCampaign(args)
+      results.forEach((row) => common.formatPGRow(row))
+      // condense small campaign counts to an 'other' category
+      results = dataset.condense(results, 'ymd', 'campaign', 0.001)
+      results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
+      const correlations = correlate(results, 'campaign')
+      reply({
+        results,
+        correlations
+      })
+    }
+  })
+
   // Campaign for today's daily new users
   server.route({
     method: 'GET',
@@ -132,8 +192,9 @@ exports.setup = (server, client, mongo) => {
       let results = await db.UsageSummary.dnuCampaign(args)
       results.forEach((row) => common.formatPGRow(row))
       // condense small campaign counts to an 'other' category
-      results = dataset.condense(results, 'ymd', 'campaign', 0.01)
+      results = dataset.condense(results, 'ymd', 'campaign', 0.001)
       results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
+      correlate(results, 'campaign')
       reply(results)
     }
   })
@@ -154,6 +215,7 @@ exports.setup = (server, client, mongo) => {
       // condense small campaign counts to an 'other' category
       results = dataset.condense(results, 'ymd', 'campaign', 0.001)
       results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
+      correlate(results, 'campaign')
       reply(results)
     }
   })

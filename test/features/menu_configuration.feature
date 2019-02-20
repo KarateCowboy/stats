@@ -45,4 +45,5 @@ Feature: Intelligent menu
       | crashes_platform            | mnCrashes                 | Daily Crashes by Platform                      | Daily Crashes by Platform                                  |
       | crashes_platform_version    | mnCrashesVersion          | Daily Crashes by Version                       | Daily Crashes by Version                                   |
       | downloads                   | mnDownloads               | Downloads                                      | Downloads                                                  |
+      | druCampaign                 | mnDRUCampaign             | Daily Returning Users by Campaign - DRU        | Daily Returning Users by Campaign (DRU)                    |
 

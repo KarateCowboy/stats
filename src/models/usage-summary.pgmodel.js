@@ -233,6 +233,56 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
     )).rows
   }
 
+  UsageSummary.druCampaign = async (args) => {
+    const QUERY = `
+    SELECT
+      DAU.ymd,
+      DAU.campaign,
+      DAU.count - DNU.count AS count
+    FROM (
+    SELECT
+      TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd,
+      COALESCE(CMP.name, 'unknown') AS campaign,
+      SUM(total) AS count
+    FROM
+      dw.fc_usage        FC                            LEFT JOIN
+      dtl.referral_codes REF ON FC.ref = REF.code_text LEFT JOIN
+      dtl.campaigns      CMP ON REF.campaign_id = CMP.id
+    WHERE
+      FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+      FC.platform = ANY ($2) AND
+      FC.channel = ANY ($3)
+    GROUP BY
+      TO_CHAR(ymd, 'YYYY-MM-DD'),
+      cmp.name
+    ) DAU JOIN (
+    SELECT
+      TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd,
+      COALESCE(CMP.name, 'unknown') AS campaign,
+      SUM(total) AS count
+    FROM
+      dw.fc_usage        FC                            LEFT JOIN
+      dtl.referral_codes REF ON FC.ref = REF.code_text LEFT JOIN
+      dtl.campaigns      CMP ON REF.campaign_id = CMP.id
+    WHERE
+      FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+      FC.platform = ANY ($2) AND
+      FC.channel = ANY ($3) AND
+      first_time
+    GROUP BY
+      TO_CHAR(ymd, 'YYYY-MM-DD'),
+      cmp.name
+    ) DNU ON DAU.ymd = DNU.ymd AND DAU.campaign = DNU.campaign
+    `
+    return (await pg_client.query(QUERY,
+      [
+        `${args.daysAgo} days`,
+        args.platform,
+        args.channel
+      ]
+    )).rows
+  }
+
   UsageSummary.dauVersion = async function (args) {
     const DAU_VERSION_NO_REF = `
 SELECT
