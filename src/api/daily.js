@@ -4,7 +4,7 @@
 
 const common = require('./common')
 const dataset = require('./dataset')
-const _ = require('underscore')
+const _ = require('lodash')
 const ml = require('ml-distance')
 const moment = require('moment')
 
