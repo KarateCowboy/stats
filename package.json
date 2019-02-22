@@ -60,6 +60,7 @@
     "pg": "^6.1.6",
     "pg-hstore": "^2.3.2",
     "pg-promise": "8.2.2",
+    "pg-query-stream": "^2.0.0",
     "phantomjs": "2.1.7",
     "progress": "2.0.0",
     "proxy-agent": "3.0.1",

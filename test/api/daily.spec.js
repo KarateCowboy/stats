@@ -15,7 +15,7 @@ describe('Daily aggregate stats endpoints and sub-endpoints', async function () 
     ymds = _.range(0, 20).map((i) => {
       return {
         ymd: (moment().subtract(i, 'days').format('YYYY-MM-DD')),
-        woi: (moment().subtract(i, 'days').startOf('week').add(1, 'days').format('YYYY-MM-DD')),
+        ref: 'none'
       }
     })
     platforms = ['winx64']
@@ -38,28 +38,4 @@ describe('Daily aggregate stats endpoints and sub-endpoints', async function () 
       expect(_.every(payload, (i) => { return moment(i.ymd).isSameOrAfter(cutoffWoi)})).to.equal(true)
     })
   })
-  describe('1/daily_new_users', async function () {
-    it.skip('returns filtered dnu information as a JSON', async function () {
-      await factory.createMany('fc_usage', ymds)
-      const server = await main.setup({pg: pg_client, mg: mongo_client})
-      const dnuResults = await db.UsageSummary.dailyNewUsers()
-      // execution
-      let params = {
-        method: 'GET',
-        url: `/api/1/dau?platformFilter=${platforms.join(',')}&channelFilter=${channels.join(',')}&ref=${ref.join(',')}&wois=${cutoffWoi.format('YYYY-MM-DD')})}`
-      }
-      //validation
-      let response = await server.inject(params)
-      let payload = JSON.parse(response.payload)
-      expect(_.every(payload, (i) => { return moment(i.ymd).isSameOrAfter(cutoffWoi)})).to.equal(true)
-
-    })
-  })
-  // describe('1/dau_platform')
-  // describe('1/dau_platform_minus_first')
-  // describe('1/versions')
-  // describe('1/dnu_campaign')
-  // describe('1/dau_campaign')
-  // describe('1/dau_platform_first')
-
 })
