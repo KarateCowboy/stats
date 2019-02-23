@@ -5,7 +5,7 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/campaigns',
     handler: async function (request, reply) {
-      const campaigns = await db.Campaign.allWithReferralCodes()
+      const campaigns = await db.Campaign.query().orderBy('name').eager('referralCodes')
       reply(campaigns)
     }
   })
