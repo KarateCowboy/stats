@@ -4,8 +4,14 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const {Given, When, Then} = require('cucumber')
-const {expect} = require('chai')
+const {
+  Given,
+  When,
+  Then
+} = require('cucumber')
+const {
+  expect
+} = require('chai')
 const _ = require('lodash')
 
 Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
@@ -54,7 +60,9 @@ Given(/^I view the Monthly Average Daily Active Users by Platform report$/, asyn
   await browser.url('http://localhost:8193/dashboard#usage_month_average')
 })
 
-Given(/^I view the Monthly Average Daily New Users report$/, {timeout: 90000}, async function () {
+Given(/^I view the Monthly Average Daily New Users report$/, {
+  timeout: 90000
+}, async function () {
   await browser.url('http://localhost:8193/dashboard#usage_month_average_new_agg')
 })
 
@@ -104,12 +112,20 @@ Given(/^I search the sidebar filter for (.*)$/, async function (menuSearchItem) 
   await browser.setValue('#searchLinks', menuSearchItem)
   await browser.pause(100)
 })
-Then(/^I should see (.*) at the top of the sidebar list$/, async function (menuSearchItem) {
-  await browser.waitForVisible(`#${menuSearchItem}`)
-  let isVisible = await browser.isVisible(`#${menuSearchItem}`)
-  expect(isVisible).to.equal(true, `${menuSearchItem} should be visible, but is not`)
+Then(/^I should see (.*) at the top of the sidebar list$/, {
+  timeout: 90000
+}, async function (menuSearchItem) {
+  // await browser.waitForVisible(`#${menuSearchItem}`)
+  // let isVisible = await browser.isVisible(`#${menuSearchItem}`)
+  await browser.waitUntil(async function () {
+    let isVisible = await browser.isVisible(`#${menuSearchItem}`)
+    return isVisible === true
+  }, 20000, 'broke the wait')
+  // expect(isVisible).to.equal(true, `${menuSearchItem} should be visible, but is not`)
   const allLi = await browser.getHTML('.sidebar > ul > li')
-  const visibleLi = allLi.filter((li) => { return li.includes('display: none') === false})
+  const visibleLi = allLi.filter((li) => {
+    return li.includes('display: none') === false
+  })
   expect(visibleLi).to.have.property('length', 1)
   expect(visibleLi.toString()).to.contain(menuSearchItem)
 })
@@ -119,8 +135,15 @@ When(/^I click the sidebar item (.*)$/, async function (menuSearchItem) {
 Then(/^I should see (.*) in the url bar and the report title (.*)$/, async function (path, title) {
   const url = await browser.getUrl()
   expect(url).to.contain(path)
-  const contentTitle = await this.menuHelpers.getContentTitle()
-  expect(contentTitle).to.contain(title)
+  await browser.waitUntil(async function () {
+    let text = await browser.getText('#page-load-status')
+    return text === 'loaded'
+  }, 10000, 'Page failed to finish loading')
+  let contentTitle
+  await browser.waitUntil(async () => {
+    contentTitle = await this.menuHelpers.getContentTitle()
+    return contentTitle.includes(title)
+  }, 10000, `expected ${contentTitle} to contain ${title}`)
 })
 
 When(/^I filter by channel (.*)$/, async function (channel) {

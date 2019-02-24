@@ -1,15 +1,84 @@
+$ = require('jquery')
 global.menu = {
   COUNTRIES: require('../isomorphic/countries'),
   WOIS: require('../isomorphic/wois')
 }
-
-require('./stats')
 require('./color')
-require('./common')
+require('./brave-menu')
+require('./referral')
+const Application = require('./application')
+
+const OverviewReport = require('./reports/overview')
+const DailyRetention = require('./reports/daily-retention')
+const WeeklyRetention = require('./reports/weekly-retention')
+const ThirtyDayRetention = require('./reports/thirty-day-retention')
+const MonthlyActiveUsers = require('./reports/monthly-active-users')
+const MonthlyActiveUsersByPlatform = require('./reports/monthly-active-users-by-platform')
+const MonthlyAverageDailyActiveUsers = require('./reports/monthly-average-daily-active-users')
+const MonthlyAverageDailyActiveUsersByPlatform = require('./reports/monthly-average-daily-active-users-by-platform')
+const MonthlyAverageDailyNewUsers = require('./reports/monthly-average-daily-new-users')
+const MonthlyAverageDailyNewUsersByPlatform = require('./reports/monthly-average-daily-new-users-by-platform')
+const DailyActiveUsers = require('./reports/daily-active-users')
+const DailyActiveUsersByPlatform = require('./reports/daily-active-users-by-platform')
+const DailyActiveUsersByCountry = require('./reports/daily-active-users-by-country')
+const DailyActiveUsersByCampaign = require('./reports/daily-active-users-by-campaign')
+const DailyReturningUsersByCampaign = require('./reports/daily-returning-users-by-campaign')
+const DailyReturningActiveUsersByPlatform = require('./reports/daily-returning-active-users-by-platform')
+const DailyActiveUsersByVersion = require('./reports/daily-active-users-by-version')
+const DailyNewUsers = require('./reports/daily-new-users')
+const DailyNewUsersByPlatform = require('./reports/daily-new-users-by-platform')
+const DailyNewUsersByCampaign = require('./reports/daily-new-users-by-campaign')
+const SearchCrashes = require('./reports/search-crashes')
+const TopCrashReasons = require('./reports/top-crash-reasons')
+const RecentCrashes = require('./reports/recent-crashes')
+const DevelopmentCrashes = require('./reports/development-crashes')
+const CrashRatios = require('./reports/crash-ratios')
+const DailyCrashesByPlatform = require('./reports/daily-crashes-by-platform')
+const DailyCrashesByVersion = require('./reports/daily-crashes-by-version')
+const Downloads = require('./reports/downloads')
+
+global.init = async function () {
+  let priorState  = null
+  if (await window.localStorage.getItem('pageState')) {
+    priorState = JSON.parse(await window.localStorage.getItem('pageState'))
+  }
+  global.app = new Application([
+    (new OverviewReport()),
+    (new DailyRetention()),
+    (new WeeklyRetention()),
+    (new ThirtyDayRetention()),
+    (new MonthlyActiveUsers()),
+    (new MonthlyActiveUsersByPlatform()),
+    (new MonthlyAverageDailyActiveUsers()),
+    (new MonthlyAverageDailyActiveUsersByPlatform()),
+    (new MonthlyAverageDailyNewUsers()),
+    (new MonthlyAverageDailyNewUsersByPlatform()),
+    (new DailyActiveUsers()),
+    (new DailyActiveUsersByPlatform()),
+    (new DailyActiveUsersByCountry()),
+    (new DailyActiveUsersByCampaign()),
+    (new DailyReturningUsersByCampaign()),
+    (new DailyReturningActiveUsersByPlatform()),
+    (new DailyActiveUsersByVersion()),
+    (new DailyNewUsers()),
+    (new DailyNewUsersByPlatform()),
+    (new DailyNewUsersByCampaign()),
+    (new SearchCrashes()),
+    (new TopCrashReasons()),
+    (new RecentCrashes()),
+    (new DevelopmentCrashes()),
+    (new CrashRatios()),
+    (new DailyCrashesByPlatform()),
+    (new DailyCrashesByVersion()),
+    (new Downloads())
+  ], priorState)
+
+}
+
+/*
+require('./stats')
 require('./publishers')
 require('./overview')
 require('./searchLinks')
-require('./referral')
-require('./retention')
-require('./brave-menu')
 require('./correlation')
+*/

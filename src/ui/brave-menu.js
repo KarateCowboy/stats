@@ -1,5 +1,6 @@
 (() => {
-  const menus = $(".braveMenu")
+  const _ = require('underscore')
+  const menus = $('.braveMenu')
   menus.each((menu, elem) => {
     const e = $(elem)
 
@@ -35,35 +36,35 @@
 
     // update the menu check marks
     const updateMenuUI = () => {
-      items.find("a").each((item, elem) => {
-        const elemId = $(elem).data("id")
+      items.find('a').each((item, elem) => {
+        const elemId = $(elem).data('id')
         if (selectedIds[elemId]) {
-          if ($(elem).find("i").hasClass("fa-blank")) $(elem).find("i").removeClass("fa-blank")
+          if ($(elem).find('i').hasClass('fa-blank')) $(elem).find('i').removeClass('fa-blank')
         } else {
-          if (!$(elem).find("i").hasClass("fa-blank")) $(elem).find("i").addClass("fa-blank")
+          if (!$(elem).find('i').hasClass('fa-blank')) $(elem).find('i').addClass('fa-blank')
         }
       })
       if (config.showSelectedCount) {
-        e.find("a.dropdown-toggle span.title").text(`${title} (${selectedSubitems().length})`)
+        e.find('a.dropdown-toggle span.title').text(`${title} (${selectedSubitems().length})`)
       }
       if (selectedSubitems().length > 0) {
-        items.find("a.none").show()
-        items.find("li[role=separator]").show()
+        items.find('a.none').show()
+        items.find('li[role=separator]').show()
       } else {
-        items.find("a.none").hide()
-        items.find("li[role=separator]").hide()
+        items.find('a.none').hide()
+        items.find('li[role=separator]').hide()
       }
     }
 
     // return selected list of subitems
-    const selectedSubitems= () => {
+    const selectedSubitems = () => {
       return _.keys(selectedIds).filter((id) => {
         return selectedIds[id] && !subitemsByItem[id]
       })
     }
 
     const isChecked = (elem) => {
-      return !$(elem).find("i").hasClass("fa-blank")
+      return !$(elem).find('i').hasClass('fa-blank')
     }
 
     const none = () => {
@@ -75,12 +76,12 @@
     }
 
     // clear all selections
-    items.on("click", "a.none", (evt) => {
+    items.on('click', 'a.none', (evt) => {
       none()
     })
 
     const hideAllNotSelected = () => {
-      items.find("li.choice").find("a").each((item, elem) => {
+      items.find('li.choice').find('a').each((item, elem) => {
         if (!isChecked(elem)) {
           $(elem).hide()
         }
@@ -89,7 +90,7 @@
 
     const showOrHideOnTerm = (term) => {
       terms = term.replace(/,/g, ' ').split(' ').map((t) => { return t.toLowerCase().trim() })
-      items.find("li.choice").find("a").each((item, elem) => {
+      items.find('li.choice').find('a').each((item, elem) => {
         const label = $(elem).text().trim().toLowerCase()
         if (terms.find((t) => {
           return label.match(t)
@@ -104,11 +105,11 @@
     }
 
     const clearSearchTerm = () => {
-      items.find("input.search").val("")
+      items.find('input.search').val('')
     }
 
     // show only items matching a search term
-    items.on("keyup", "input.search", (evt) => {
+    items.on('keyup', 'input.search', (evt) => {
       let term = $(evt.target).val()
       if (term === '') {
         hideAllNotSelected()
@@ -141,9 +142,9 @@
 
       // setup handlers
       items.on('click', 'li.choice', (evt) => {
-        const target = $(evt.target).closest("a")
-        const type = target.data("type")
-        const id = target.data("id")
+        const target = $(evt.target).closest('a')
+        const type = target.data('type')
+        const id = target.data('id')
         if (type === 'item') {
           subitemsByItem[id].forEach((subitem) => {
             selectedIds[subitem.id] = !selectedIds[id]

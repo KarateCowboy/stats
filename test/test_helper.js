@@ -79,10 +79,19 @@ class TestHelper {
         'fc_usage_exceptions',
         'fc_usage',
         'fc_wallets',
-        'fc_agg_usage_weekly'
+        'fc_crashes',
+        'fc_ios_usage',
+        'fc_ios_usage_month',
+        'fc_fastly_calendar_month_usage',
+        'fc_fastly_usage',
+        'fc_agg_usage_weekly',
+        'fc_agg_usage_daily',
+        'fc_agg_usage_monthly'
       ],
       'dtl': [
         'campaigns',
+        'promotions',
+        'publishers',
         'referral_codes',
         'platforms',
         'channels',

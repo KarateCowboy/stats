@@ -1,4 +1,4 @@
-(function () {
+ function colors () {
   // High contrast color palette
   // (https://github.com/mbostock/d3/wiki/Ordinal-Scales#categorical-colors)
   var colors = [
@@ -67,9 +67,11 @@
     return 'rgba(' + colors[idx][0] + ', ' + colors[idx][1] + ', ' + colors[idx][2] + ', ' + opacity + ')'
   }
 
-  window.STATS.COLOR = {
+  return {
     colorForIndex: colorForIndex,
     colorForLabel: colorForLabel,
     colorForHashedLabel: colorForHashedLabel
   }
-})()
+}
+
+module.exports = colors()

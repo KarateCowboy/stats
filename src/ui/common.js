@@ -1,4 +1,3 @@
-(function () {
   // Standard configuration object for line graphs
   var standardYAxisOptions = {
     tooltips: {
@@ -55,10 +54,7 @@
     downloadAnchorNode.remove()
   }
 
-  window.STATS.COMMON = {
-    standardYAxisOptions: standardYAxisOptions,
-    standardYAxisOptionsBar: standardYAxisOptionsBar,
-    safeDivide: safeDivide,
-    downloadObjectAs: downloadObjectAs
-  }
-})()
+module.exports.standardYAxisOptions = standardYAxisOptions
+module.exports.standardYAxisOptionsBar =  standardYAxisOptionsBar
+module.exports.safeDivide = safeDivide
+module.exports.downloadObjectAs =  downloadObjectAs

@@ -15,7 +15,7 @@ Given(/there are "([^"]*)" weeks of "([^"]*)" downloads/, async function (weeks,
 })
 
 Given(/I view the Downloads page/, async function () {
-  await browser.click('#mnDownloads')
+  await browser.click('#downloads')
 })
 
 Then(/I should see a column and count for each type and week/, async function () {
