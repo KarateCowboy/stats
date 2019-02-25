@@ -210,3 +210,8 @@ h5.platform-list span {
     max-height: 20px;
     overflow: auto;
 }
+
+.dropdown-menu li input[type="text"] {
+  margin-left: 4px;
+  width: 95%;
+}

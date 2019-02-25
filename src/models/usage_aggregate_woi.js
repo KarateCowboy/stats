@@ -12,7 +12,7 @@ const schema = joi.object().keys({
   _id: joi.object({
     woi: joi.string().regex(/^[\d]{4,4}-[\d]{2,2}-[\d]{2,2}$/).required(),
     ymd: joi.string().regex(/^[\d]{4,4}-[\d]{2,2}-[\d]{2,2}$/).required(),
-    platform: joi.string().valid('ios', 'android', 'androidbrowser', 'osx', 'winia32', 'winx64', 'linux', 'unknown','osx-bc','linux-bc','winx64-bc','winia32-bc').required(),
+    platform: joi.string().valid('ios', 'android', 'androidbrowser', 'osx', 'winia32', 'winx64', 'linux', 'unknown', 'osx-bc', 'linux-bc', 'winx64-bc', 'winia32-bc').required(),
     version: joi.string().regex(/[\d]{1,2}\.[\d]{1,2}\.[\d]{1,2}/).required(),
     first_time: joi.boolean().required(),
     channel: joi.any().valid('beta', 'stable', 'developer', 'nightly', 'dev').required(),
@@ -89,7 +89,7 @@ class UsageAggregateUtil {
             woi: record._id.woi,
             ref: record._id.ref
           })
-      }else{
+      } else {
         console.log(record._id)
         throw e
       }

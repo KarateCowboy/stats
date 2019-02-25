@@ -80,8 +80,6 @@ var channels = {
 var platformKeys = _.keys(platforms)
 var channelKeys = _.keys(channels)
 
-var reversePlatforms = _.object(_.map(platforms, function (platform) { return [platform.label, platform] }))
-
 var round = function (x, n) {
   n = n || 0
   return Math.round(x * Math.pow(10, n)) / Math.pow(10, n)
@@ -274,110 +272,7 @@ var statsHandler = function (rows) {
 
   var statsChart = document.getElementById('statsChart')
   var ctx = statsChart.getContext('2d')
-  var myChart = new Chart.Line(ctx, {data: data, options: window.STATS.COMMON.standardYAxisOptions})
-}
-
-var buildTelemetryChartBuilder = function (opts) {
-  opts = opts || {}
-
-  var grouperLabel = function (row) {
-    return [row.platform, row.version, row.channel, row.machine, row.measure].join('-')
-  }
-
-  return function (rows) {
-    // Build a list of unique labels (ymd)
-    var ymds = _.chain(rows)
-      .map(function (row) { return row.ymd })
-      .uniq()
-      .sort()
-      .value()
-
-    // Build a list of unique data sets (platform)
-    var ys = _.chain(rows)
-      .map(function (row) { return grouperLabel(row) })
-      .uniq()
-      .value()
-
-    var groups = _.groupBy(rows, function (row) {
-      return grouperLabel(row)
-    })
-
-    // Associate the data
-    var product = _.object(_.map(ymds, function (ymd) {
-      return [ymd, {}]
-    }))
-    rows.forEach(function (row) {
-      if (!product[row.ymd][grouperLabel(row)]) product[row.ymd][grouperLabel(row)] = {}
-      product[row.ymd][grouperLabel(row)].average = row.average
-      product[row.ymd][grouperLabel(row)].minimum = row.minimum
-      product[row.ymd][grouperLabel(row)].maximum = row.maximum
-      product[row.ymd][grouperLabel(row)].quant25 = row.quant25
-      product[row.ymd][grouperLabel(row)].quant75 = row.quant75
-    })
-
-    var opacityByIndex = function (idx) {
-      return {
-        0: 0.05,
-        1: 0.2,
-        2: 1,
-        3: 0.2,
-        4: 0.05
-      }[idx]
-    }
-
-    var datasets = []
-    var labels = []
-    var measureCount = 0
-    _.each(groups, function (groupedRows, k) {
-      ['minimum', 'quant25', 'average', 'quant75', 'maximum'].map(function (fld, idx) {
-        labels.push({
-          label: k + '-' + fld,
-          idx: measureCount,
-          opacity: opacityByIndex(idx)
-        })
-        datasets.push(_.map(ymds, function (ymd, idx) {
-          return product[ymd][k][fld]
-        }))
-      })
-      measureCount += 1
-    })
-
-    var regressionData = _.map(datasets[0], function (v, idx) { return [idx, v] })
-    console.log(ss.linearRegression(regressionData))
-
-    var data = {
-      labels: ymds,
-      datasets: _.map(datasets, function (dataset, idx) {
-        return {
-          label: labels[idx].label,
-          data: dataset,
-          borderColor: window.STATS.COLOR.colorForIndex(labels[idx].idx, labels[idx].opacity),
-          fill: false
-        }
-      })
-    }
-
-    var container = $('#telemetryChartContainer')
-    container.empty()
-    container.append('<canvas id=\'telemetryUsageChart\' height=\'350\' width=\'800\'></canvas>')
-
-    var chartOptions = _.extend(_.clone(window.STATS.COMMON.standardYAxisOptions), {
-      onClick: function (evt, points) {
-        if (points.length) {
-          var ymd = points[0]._xScale.ticks[points[0]._index]
-          $.ajax('/api/1/ci/telemetry/' + ymd + '?' + standardTelemetryParams(), {
-            success: function (results) {
-              // detailed telemetry items
-              console.log(results)
-            }
-          })
-        }
-      }
-    })
-
-    var usageChart = document.getElementById('telemetryUsageChart')
-    new Chart.Line(usageChart.getContext('2d'), {data: data, options: chartOptions})
-  }
+  var myChart = new Chart(ctx, { type: opts.chartType, data: data, options: window.STATS.COMMON.standardYAxisOptions})
 }
 
 // Build handler for a single value chart updater
@@ -442,6 +337,7 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
   opts = opts || {}
   x_label = x_label || 'Date'
   y_label = y_label || 'Platform'
+  opts.chartType = opts.chartType || 'line'
 
   var value_func = function (row, value) {
     var formatter = st
@@ -588,11 +484,14 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
       .sort()
       .value()
 
-    // Build a list of unique data sets (platform)
+    // Build a list of unique data sets (i.e. platform)
     var ys = _.chain(rows)
       .map(function (row) { return row[y] })
       .uniq()
       .value()
+
+    // force ordering
+    if (opts.datasetOrdering) ys = ys.sort(opts.datasetOrdering)
 
     // Associate the data
     var product = _.object(_.map(labels, function (label) {
@@ -617,6 +516,9 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
     if (opts.colourBy === 'index') {
       colourer = function (idx, opacity) { return window.STATS.COLOR.colorForIndex(idx, opacity) }
     }
+    if (opts.colourBy === 'hashedLabel') {
+      colourer = (idx, opacity) => { return window.STATS.COLOR.colorForHashedLabel(ys[idx], opacity) }
+    }
 
     var data = {
       labels: labels,
@@ -626,197 +528,34 @@ var buildSuccessHandler = function (x, y, x_label, y_label, opts) {
           data: dataset,
           borderColor: colourer(idx, 1),
           pointColor: colourer(idx, 0.5),
-          backgroundColor: colourer(idx, 0.05)
+          backgroundColor: colourer(idx, opts.chartType === 'line' ? 0.05 : 1)
         }
       })
     }
 
-    var container = $('#usageChartContainer')
+    let container = $('#usageChartContainer')
     container.empty()
     container.append('<canvas id=\'usageChart\' height=\'350\' width=\'800\'></canvas>')
 
-    var usageChart = document.getElementById('usageChart')
-    new Chart.Line(usageChart.getContext('2d'), {data: data, options: window.STATS.COMMON.standardYAxisOptions})
+    let usageChart = document.getElementById('usageChart')
+    new Chart(
+      usageChart.getContext('2d'),
+      {
+        type: opts.chartType,
+        data: data,
+        options: opts.chartType === 'line' ? window.STATS.COMMON.standardYAxisOptions : window.STATS.COMMON.standardYAxisOptionsBar
+      }
+    )
   }
-}
-
-const weeklyRetentionHandler = async function (rows) {
-  const missingData = await $.ajax('/api/1/retention/missing')
-  const retention_warnings = missingData || []
-
-  console.log('executed the weeklyRetentionHandler')
-  let i, row, cellColor, weekDelta
-  let rowHeadings = []
-  let buffer = ''
-  const baseColor = net.brehaut.Color('#ff5500')
-  const baseColorAvg = net.brehaut.Color('#999999')
-  const sparklineOptions = {
-    width: '60px',
-    height: '25px',
-    disableInteraction: true,
-    fillColor: '#efefef',
-    lineColor: '#999999'
-  }
-
-  // prepend any warnings about incomplete data
-  buffer += `<table class="table" id="missingRetentionWarnings">`
-  const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD')
-  for (let platform in retention_warnings) {
-    retention_warnings[platform] = retention_warnings[platform].filter((p) => { return p !== yesterday })
-    if (retention_warnings[platform].length > 0) {
-      const message_string = `Missing ${platform} data: ${retention_warnings[platform].sort().reverse().splice(0, 5).join(', ')}`
-      buffer += `<tr><td style="color: red">${message_string}</td>`
-    }
-  }
-  buffer += `</table>`
-
-  // headings
-
-  buffer += '<table class=\'table\'>'
-  buffer += '<tr class=\'active\'><th colspan=\'2\'>Weeks since installation</th>'
-  buffer += `<th></th>`
-  for (i = 0; i < 12; i++) {
-    buffer += '<th class="retentionCell">' + i + '</th>'
-  }
-
-  // heading sparklines
-  buffer += '</tr><tr><td></td><td></td><td></td>'
-  for (i = 0; i < 12; i++) {
-    buffer += '<td><span id=\'sparklineDelta' + i + '\'></span></td>'
-  }
-
-  // averages
-  buffer += '</tr><tr><th>Average</th><td></td>'
-  for (i = 0; i < 12; i++) {
-    avg = STATS.STATS.avg(rows.filter((row) => { return row.week_delta === i }).map((row) => { return row.retained_percentage })) || 0
-    cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
-    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(avg * 100) + '</td>'
-  }
-
-  // cell contents
-  buffer += '</tr><tr>'
-  let ctrl = null
-  for (i = 0; i < rows.length; i++) {
-    row = rows[i]
-    if (row.woi !== ctrl) {
-      buffer += '</tr><tr>'
-      buffer += '<th nowrap>' + moment(row.woi).format('MMM DD YYYY') + '</th>'
-      let key = row.woi.substring(0, 10)
-      buffer += '<td><span id=\'sparklineActual' + row.woi + '\'></span><br>'
-      rowHeadings.push(row.woi)
-      ctrl = row.woi
-      weekDelta = 0
-    }
-    weekDelta += 1
-    cellColor = baseColor.desaturateByAmount(1 - row.retained_percentage).lightenByAmount((1 - row.retained_percentage) / 6.2)
-    buffer += `<td style="background-color: ${cellColor}" class="retentionCell">${st(row.retained_percentage * 100)} </td>`
-  }
-  buffer += '<td><span id=\'sparklineDelta' + weekDelta + '\'></span><br>'
-  buffer += '</tr>'
-  buffer += '</table>'
-
-  // insert elements
-  const div = $('#weeklyRetentionTableContainer')
-  div.empty()
-  div.append(buffer)
-
-  // heading sparklines
-  for (i = 0; i < 12; i++) {
-    sparkData = rows.filter((row) => { return row.week_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100) })
-    $('#sparklineDelta' + i).sparkline(sparkData, sparklineOptions)
-  }
-
-  // installation week sparklines
-  rowHeadings.forEach((heading) => {
-    sparkData = rows.filter((row) => { return row.woi === heading }).map((row) => { return parseInt(row.retained_percentage * 100) })
-    $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
-  })
-  console.log('finished the weeklyRetentionHandler')
-}
-
-const retentionMonthHandler = function (rows) {
-  console.log('executed the retentionMonthHandler')
-  let i, row, cellColor, monthDelta
-  let rowHeadings = []
-  let buffer = ''
-  const baseColor = net.brehaut.Color('#ff5500')
-  const baseColorAvg = net.brehaut.Color('#999999')
-  const sparklineOptions = {
-    width: '60px',
-    height: '25px',
-    disableInteraction: true,
-    fillColor: '#efefef',
-    lineColor: '#999999'
-  }
-
-  // headings
-  buffer += '<table class=\'table\'>'
-  buffer += '<tr class=\'active\'><th colspan=\'2\'>Months from installation</th>'
-  for (i = 0; i < 12; i++) {
-    buffer += '<th class="retentionCell">' + i + '</th>'
-  }
-
-  // heading sparklines
-  buffer += '</tr><tr><td></td><td></td>'
-  for (i = 0; i < 12; i++) {
-    buffer += '<td><span id=\'sparklineDelta' + i + '\'></span></td>'
-  }
-
-  // averages
-  buffer += '</tr><tr><th>Average</th><td></td>'
-  for (i = 0; i < 12; i++) {
-    avg = STATS.STATS.avg(rows.filter((row) => { return row.month_delta === i }).map((row) => { return row.retained_percentage })) || 0
-    cellColor = baseColorAvg.desaturateByAmount(1 - avg).lightenByAmount((1 - avg) / 2.2)
-    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(avg * 100) + '</td>'
-  }
-
-  // cell contents
-  buffer += '</tr><tr>'
-  let ctrl = null
-  console.log(`length of rows is ${rows.length}`)
-  for (i = 0; i < rows.length; i++) {
-    row = rows[i]
-    if (row.moi !== ctrl) {
-      buffer += '</tr><tr>'
-      buffer += '<th nowrap>' + moment(row.moi).format('MMM YYYY') + '</th>'
-      buffer += '<td><span id=\'sparklineActual' + row.moi + '\'></span><br>'
-      rowHeadings.push(row.moi)
-      ctrl = row.moi
-      monthDelta = 0
-    }
-    monthDelta += 1
-    cellColor = baseColor.desaturateByAmount(1 - row.retained_percentage).lightenByAmount((1 - row.retained_percentage) / 6.2)
-    buffer += '<td style=\'background-color: ' + cellColor + '\' class=\'retentionCell\'>' + st(row.retained_percentage * 100) + '</td>'
-  }
-  buffer += '<td><span id=\'sparklineDelta' + monthDelta + '\'></span><br>'
-  buffer += '</tr>'
-  buffer += '</table>'
-
-  // insert elements
-  const div = $('#retentionMonthTableContainer')
-  div.empty()
-  div.append(buffer)
-
-  // heading sparklines
-  for (i = 0; i < 12; i++) {
-    sparkData = rows.filter((row) => { return row.month_delta === i }).map((row) => { return parseInt(row.retained_percentage * 100) })
-    $('#sparklineDelta' + i).sparkline(sparkData, sparklineOptions)
-  }
-
-  // installation month sparklines
-  rowHeadings.forEach((heading) => {
-    sparkData = rows.filter((row) => { return row.moi === heading }).map((row) => { return parseInt(row.retained_percentage * 100) })
-    $('#sparklineActual' + heading).sparkline(sparkData, sparklineOptions)
-  })
 }
 
 const downloadsHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
 const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
 
-var usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
+const usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
-var usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
+const usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
 
 const usageMeasureHandler = (rows) => {
   let CostPerInstall = 0
@@ -849,6 +588,10 @@ const usageMeasureHandler = (rows) => {
     }
   })
   retainedHandler(rows)
+
+  const retained = rows.map((row) => { return row.retained })
+  const secondOrder = window.STATS.STATS.secondOrder(retained)
+  const thirdOrder = window.STATS.STATS.secondOrder(secondOrder)
 
   let tbl = $('#DNUDAUDataTable tbody')
   tbl.empty()
@@ -907,9 +650,30 @@ var aggMAUHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
 
 var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index', pivot: true})
 
-var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
+let forceOrganicOrdering = (a, b) => {
+  if (a === 'Organic') return -1
+  if (b === 'Organic') return 1
+  return a.localeCompare(b)
+}
 
-var telemetryHandler = buildTelemetryChartBuilder('ymd')
+var DNUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'hashedLabel', pivot: true, chartType: 'bar', datasetOrdering: forceOrganicOrdering })
+
+var DAUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'hashedLabel', pivot: true, chartType: 'bar', datasetOrdering: forceOrganicOrdering })
+
+var DRUCampaignHandler = (results, correlations) => {
+  // show the chart and table
+  buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', {
+    colourBy: 'hashedLabel',
+    pivot: true,
+    chartType: 'bar',
+    datasetOrdering: forceOrganicOrdering
+  })(results)
+
+  // build the correlation table (this will be released in a later deploy)
+  // window.STATS.CORRELATION.table(() => { return $('#usageDataTable').parent() }, correlations, {})
+}
+
+var usageCrashesHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
 var walletsTotalHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {showGrandTotal: true})
 
@@ -933,7 +697,6 @@ var contents = [
   'usageContent',
   'DNUDAUContent',
   'publisherContent',
-  'usageTelemetry',
   'crashesContent',
   'overviewContent',
   'statsContent',
@@ -961,31 +724,15 @@ var serializeChannelParams = function () {
   return filterChannels.join(',')
 }
 
-var standardParams = function () {
-  let referral_codes = []
-  const ref_filter = $('#ref-filter')
-  if (ref_filter.hasClass('select2-hidden-accessible')) {
-    referral_codes = ref_filter.select2('data').map(i => i.id)
-  }
+let standardParams = () => {
   return $.param({
     days: pageState.days,
     platformFilter: serializePlatformParams(),
     channelFilter: serializeChannelParams(),
     showToday: pageState.showToday,
     version: pageState.version,
-    ref: referral_codes.join(',')
-  })
-}
-
-var standardTelemetryParams = function () {
-  return $.param({
-    days: pageState.days,
-    platformFilter: serializePlatformParams(),
-    channelFilter: serializeChannelParams(),
-    showToday: pageState.showToday,
-    version: pageState.version,
-    measure: pageState.measure,
-    machine: pageState.machine
+    ref: (pageState.ref || []).join(','),
+    wois: (pageState.wois || []).join(',')
   })
 }
 
@@ -1002,34 +749,38 @@ var retentionRetriever = function () {
   })
 }
 
-var retentionMonthRetriever = function () {
-  $.ajax('/api/1/retention_month?' + standardParams(), {
+const weeklyRetentionRetriever = async () => {
+  $.ajax('/api/1/retention_week?' + standardParams(), {
     success: (rows) => {
-      retentionMonthHandler(rows)
+      window.RETENTION.weeklyRetentionHandler(rows)
     }
   })
-}
-
-const weeklyRetentionRetriever = async function () {
-  const standard_params = standardParams()
-  return new Promise((resolve, reject) => {
-    $.ajax('/api/1/retention_week?' + standard_params, {
-      success: (rows) => {
-        weeklyRetentionHandler(rows)
-        resolve()
-      },
-      error: () => {
-        console.log('failed to communicate with endpoint')
-        reject()
-      }
-    })
-  })
-
 }
 
 var versionsRetriever = function () {
   $.ajax('/api/1/versions?' + standardParams(), {
     success: usageVersionHandler
+  })
+}
+
+var DNUCampaignRetriever = function () {
+  $.ajax('/api/1/dnu_campaign?' + standardParams(), {
+    success: DNUCampaignHandler
+  })
+}
+
+var DAUCampaignRetriever = function () {
+  $.ajax('/api/1/dau_campaign?' + standardParams(), {
+    success: DAUCampaignHandler
+  })
+}
+
+var DRUCampaignRetriever = function () {
+  $.ajax('/api/1/dru_campaign?' + standardParams(), {
+    success: (payload) => {
+      console.log(payload)
+      DRUCampaignHandler(payload.results, payload.correlations)
+    }
   })
 }
 
@@ -1050,7 +801,6 @@ var DNUDAURetriever = function () {
 }
 
 var downloadsRetriever = async function () {
-  console.log('executing the downloads retriever')
   $.ajax('/api/1/daily_downloads?' + standardParams(), {
     success: downloadsHandler
   })
@@ -1131,7 +881,6 @@ var crashRatioRetriever = function () {
 var recentCrashesRetriever = function () {
   $.ajax('/api/1/recent_crash_report_details?' + standardParams(), {
     success: function (crashes) {
-      $('#contentTitle').html('Recent Crash Reports')
       var table = $('#recent-crash-list-table tbody')
       table.empty()
       _.each(crashes, function (crash) {
@@ -1156,7 +905,6 @@ var recentCrashesRetriever = function () {
 var developmentCrashesRetriever = function () {
   $.ajax('/api/1/development_crash_report_details?' + standardParams(), {
     success: function (crashes) {
-      $('#contentTitle').html('Development Crash Reports')
       var table = $('#development-crash-list-table tbody')
       table.empty()
       _.each(crashes, function (crash) {
@@ -1251,12 +999,6 @@ const eyeshadeFundedBalanceAverageRetriever = function () {
   })
 }
 
-var telemetryRetriever = function () {
-  $.ajax('/api/1/ci/telemetry?' + standardTelemetryParams(), {
-    success: telemetryHandler
-  })
-}
-
 var fillOptionsIfNotEmpty = function (url, id) {
   var select = $('#' + id)
   if (select.children().length <= 1) {
@@ -1268,13 +1010,6 @@ var fillOptionsIfNotEmpty = function (url, id) {
       }
     })
   }
-}
-
-var telemetryStandardRetriever = function () {
-  fillOptionsIfNotEmpty('/api/1/ci/measures', 'measures')
-  fillOptionsIfNotEmpty('/api/1/ci/machines', 'machines')
-  fillOptionsIfNotEmpty('/api/1/ci/versions', 'telemetryVersions')
-  telemetryRetriever()
 }
 
 const dailyNewUsersRetriever = function () {
@@ -1308,14 +1043,9 @@ var menuItems = {
     title: 'Retention',
     retriever: retentionRetriever
   },
-  'mnRetentionMonth': {
-    show: 'retentionMonthContent',
-    title: 'Retention Month over Month',
-    retriever: retentionMonthRetriever
-  },
   'weeklyRetention': {
     show: 'weeklyRetentionContent',
-    title: 'Weekly Retention',
+    title: ' Retention Week / Week',
     retriever: weeklyRetentionRetriever
   },
   'mnUsage': {
@@ -1345,12 +1075,12 @@ var menuItems = {
   },
   'mnUsageMonthAverageAgg': {
     show: 'usageContent',
-    title: 'Monthly Average Daily Active Users (MAU/DAU)',
+    title: 'Monthly Average Daily Active Users (MAU & DAU)',
     retriever: MAUAverageAggPlatformRetriever
   },
   'mnUsageMonthAverage': {
     show: 'usageContent',
-    title: 'Monthly Average Daily Active Users by Platform (MAU/DAU)',
+    title: 'Monthly Average Daily Active Users by Platform (MAU & DAU)',
     retriever: MAUAveragePlatformRetriever
   },
   'mnUsageMonthAverageNewAgg': {
@@ -1363,7 +1093,7 @@ var menuItems = {
     title: 'Monthly Average Daily New Users by Platform (MAU/DNU)',
     retriever: MAUAverageNewPlatformRetriever
   },
-  'mnDailyNew': {
+  'mnDailyNewPlatform': {
     show: 'usageContent',
     title: 'Daily New Users by Platform (DNU)',
     retriever: DNUPlatformRetriever
@@ -1378,6 +1108,21 @@ var menuItems = {
     show: 'usageContent',
     retriever: versionsRetriever
   },
+  'mnDNUCampaign': {
+    title: 'Daily New Users by Campaign (DNU)',
+    show: 'usageContent',
+    retriever: DNUCampaignRetriever
+  },
+  'mnDAUCampaign': {
+    title: 'Daily Active Users by Campaign (DAU)',
+    show: 'usageContent',
+    retriever: DAUCampaignRetriever
+  },
+  'mnDRUCampaign': {
+    title: 'Daily Returning Users by Campaign (DRU)',
+    show: 'usageContent',
+    retriever: DRUCampaignRetriever
+  },
   'mnTopCrashes': {
     title: 'Top Crashes By Platform and Version',
     show: 'topCrashContent',
@@ -1389,12 +1134,12 @@ var menuItems = {
     retriever: crashRatioRetriever
   },
   'mnRecentCrashes': {
-    title: 'Recent Crashes',
+    title: 'Recent Crash Reports',
     show: 'recentCrashContent',
     retriever: recentCrashesRetriever
   },
   'mnDevelopmentCrashes': {
-    title: 'Development Crashes',
+    title: 'Development Crash Reports',
     show: 'developmentCrashContent',
     subtitle: 'Most recent development crashes',
     retriever: developmentCrashesRetriever
@@ -1444,12 +1189,6 @@ var menuItems = {
     subtitle: 'Average balance of funded wallets per day in USD ($)',
     retriever: eyeshadeFundedBalanceAverageRetriever
   },
-  'mnTelemetryStandard': {
-    show: 'usageTelemetry',
-    title: 'Telemetry Navigator',
-    subtitle: 'Browser telemetry by measure, machine and version',
-    retriever: telemetryStandardRetriever
-  },
   'mnDailyPublishers': {
     show: 'publisherContent',
     title: 'Daily Publisher Status',
@@ -1474,10 +1213,12 @@ var menuItems = {
 var pageState
 pageState = window.localStorage.getItem('pageState') ? JSON.parse(window.localStorage.getItem('pageState')) : null
 
-// this is required for now. the control that displays the ref code cannot be programmatically controlled yet.
-// pageState.ref = []
-
-if (!pageState) {
+if (pageState) {
+  // this is required for now. the control that displays the ref code cannot be programmatically controlled yet.
+  pageState.ref = null
+  pageState.countryCodes = null
+  pageState.wois = null
+} else {
   pageState = {
     currentlySelected: null,
     days: 14,
@@ -1501,126 +1242,42 @@ if (!pageState) {
       'beta': false,
       'release': true
     },
-    showToday: false
+    showToday: false,
+    countryCodes: [],
+    wois: []
   }
 }
 
-console.log(pageState)
-
-var viewState = {
-  showControls: true,
-  platformEnabled: {
-    'osx': true,
-    'winx64': true,
-    'winia32': true,
-    'linux': true,
-    'ios': true,
-    'android': true,
-    'androidbrowser': true,
-    'osx-bc': true,
-    'winia32-bc': true,
-    'winx64-bc': true,
-    'linux-bc': true
-  },
-  showRefFilter: false
-}
-
-var enableAllPlatforms = function () {
-  viewState.platformEnabled = {
-    osx: true,
-    winx64: true,
-    winia32: true,
-    linux: true,
-    ios: true,
-    android: true,
-    androidbrowser: true,
-    'osx-bc': true,
-    'winx64-bc': true,
-    'winia32-bc': true,
-    'linux-bc': true
-  }
-}
-
-var disableAllPlatforms = function () {
-  viewState.platformEnabled = {
-    osx: false,
-    winx64: false,
-    winia32: false,
-    linux: false,
-    ios: false,
-    android: false,
-    androidbrowser: false,
-    'osx-bc': false,
-    'winx64-bc': false,
-    'winia32-bc': false,
-    'linux-bc': false
-  }
-}
-
-var enableDesktopPlatforms = function () {
-  viewState.platformEnabled.osx = true
-  viewState.platformEnabled.winia32 = true
-  viewState.platformEnabled.winx64 = true
-  viewState.platformEnabled.linux = true
-  viewState.platformEnabled['osx-bc'] = true
-  viewState.platformEnabled['winx64-bc'] = true
-  viewState.platformEnabled['winia32-bc'] = true
-  viewState.platformEnabled['linux-bc'] = true
-}
-
-var disableDesktopPlatforms = function () {
-  viewState.platformEnabled.osx = false
-  viewState.platformEnabled.winia32 = false
-  viewState.platformEnabled.winx64 = false
-  viewState.platformEnabled.linux = false
-  viewState.platformEnabled['osx-bc'] = false
-  viewState.platformEnabled['winx64-bc'] = false
-  viewState.platformEnabled['winia32-bc'] = false
-  viewState.platformEnabled['linux-bc'] = false
-}
-
-var enableMobilePlatforms = function () {
-  viewState.platformEnabled.ios = true
-  viewState.platformEnabled.android = true
-  viewState.platformEnabled.androidbrowser = true
-}
-
-var disableMobilePlatforms = function () {
-  viewState.platformEnabled.ios = false
-  viewState.platformEnabled.android = false
-  viewState.platformEnabled.androidbrowser = false
-}
-
-$('#daysSelector').on('change', function (evt, value) {
-  pageState.days = parseInt(this.value, 10)
-  refreshData()
-})
-
-$('#machines').on('change', function (evt, value) {
-  pageState.machine = this.value
-  refreshData()
-})
-
-$('#measures').on('change', function (evt, value) {
-  pageState.measure = this.value
-  refreshData()
-})
-
-$('#telemetryVersions').on('change', function (evt, value) {
-  pageState.version = this.value
-  refreshData()
-})
+// initialized in globals section
+let viewState = {}
 
 $('#crash-ratio-versions').on('change', function (evt, value) {
   pageState.version = this.value
   refreshData()
 })
 
+// pageState view options to elements selector mappings
+const controlSelectorMappings = {
+  showControls: '#controls',
+  showWOISFilter: '#woi_menu',
+  showCountryCodeFilter: '#cc_menu',
+  showDaysSelector: '#days-menu'
+}
+
 // Update page based on current state
 const updatePageUIState = () => {
-  $('#controls').show()
 
-  _.keys(menuItems).forEach(function (id) {
+  // show / hide controls based on pageState
+  _.each(controlSelectorMappings, (selector, attrib) => {
+    if (viewState[attrib]) {
+      $(selector).show()
+    } else {
+      $(selector).hide()
+    }
+  })
+
+  // setup contents for sidebar item
+  _.keys(menuItems).forEach((id) => {
     if (id !== pageState.currentlySelected) {
       $('#' + id).parent().removeClass('active')
     } else {
@@ -1630,25 +1287,14 @@ const updatePageUIState = () => {
     }
   })
 
-  contents.forEach(function (content) {
+  // show / hide main contents for a sidebar item
+  contents.forEach((content) => {
     if (menuItems[pageState.currentlySelected].show === content) {
       $('#' + menuItems[pageState.currentlySelected].show).show()
     } else {
       $('#' + content).hide()
     }
   })
-
-  if (viewState.showControls) {
-    $('#controls').show()
-  } else {
-    $('#controls').hide()
-  }
-
-  if (viewState.showDaysSelector) {
-    $('#controls-days-menu').parent().show()
-  } else {
-    $('#controls-days-menu').parent().hide()
-  }
 
   const days = [10000, 365, 120, 90, 60, 30, 14, 7]
 
@@ -1683,6 +1329,31 @@ const updatePageUIState = () => {
     }
   })
 
+  // highlight selected country codes
+  if (pageState.countryCodes && pageState.countryCodes.length > 0) {
+    let label = pageState.countryCodes[0]
+    if (pageState.countryCodes.length > 1) {
+      label = pageState.countryCodes.length + ' countries'
+    }
+    $(`#controls`).find(`h5.platform-list span.countries`).text(label).show()
+    $(`#controls`).find(`h5.platform-list span.countries`).tooltip({
+    })
+    $(`#controls`).find(`h5.platform-list span.countries`).attr('data-original-title', pageState.countryCodes.join(', '))
+  } else {
+    $(`#controls`).find(`h5.platform-list span.countries`).hide()
+  }
+
+  // highlight selected weeks of installation
+  if (pageState.wois && pageState.wois.length > 0) {
+    let label = pageState.wois[0]
+    if (pageState.wois.length > 1) {
+      label = pageState.wois.length + ' install weeks'
+    }
+    $(`#controls`).find(`h5.platform-list span.wois`).text(label).show()
+  } else {
+    $(`#controls`).find(`h5.platform-list span.wois`).hide()
+  }
+
   // update menu label for days
   if (pageState.days === 10000) {
     $('#controls-selected-days').html('All days')
@@ -1708,16 +1379,19 @@ const persistPageState = () => {
   window.localStorage.setItem('pageState', JSON.stringify(pageState))
 }
 
-// Load data for the selected item
+let lastPageState = {}
 const refreshData = () => {
-  persistPageState()
-  if (menuItems[pageState.currentlySelected]) {
-    menuItems[pageState.currentlySelected].retriever()
+  if (!_.isEqual(lastPageState, pageState)) {
+    persistPageState()
+    lastPageState = JSON.parse(JSON.stringify(pageState)) // deep clone
+    if (menuItems[pageState.currentlySelected]) {
+      menuItems[pageState.currentlySelected].retriever()
+    }
   }
 }
 
 let initialize_router = () => {
-// Setup menu handler routes
+  // Setup menu handler routes
   const router = new Grapnel()
 
   router.get('search', function (req) {
@@ -1744,6 +1418,44 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('dnuCampaign', (req) => {
+    pageState.currentlySelected = 'mnDNUCampaign'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = false
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('dauCampaign', (req) => {
+    pageState.currentlySelected = 'mnDAUCampaign'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = false
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('druCampaign', (req) => {
+    pageState.currentlySelected = 'mnDRUCampaign'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = false
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1754,16 +1466,6 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = false
-    updatePageUIState()
-    refreshData()
-  })
-
-  router.get('retention_month', function (req) {
-    pageState.currentlySelected = 'mnRetentionMonth'
-    viewState.showControls = true
-    viewState.showDaysSelector = false
-    viewState.showShowToday = true
-    viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
   })
@@ -1798,12 +1500,14 @@ let initialize_router = () => {
     refreshData()
   })
 
-  router.get('usage_month', function (req) {
+  router.get('usage_month', (req) => {
     pageState.currentlySelected = 'mnUsageMonth'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1814,6 +1518,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1824,6 +1530,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1834,6 +1542,8 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1854,16 +1564,20 @@ let initialize_router = () => {
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
 
-  router.get('daily_new', function (req) {
-    pageState.currentlySelected = 'mnDailyNew'
+  router.get('daily_new_platform', function (req) {
+    pageState.currentlySelected = 'mnDailyNewPlatform'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1878,22 +1592,26 @@ let initialize_router = () => {
     refreshData()
   })
 
-  router.get('usage_agg', function (req) {
+  router.get('usage_agg', (req) => {
     pageState.currentlySelected = 'mnUsageAgg'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
 
-  router.get('dnu_dau_retention', function (req) {
+  router.get('dnu_dau_retention', (req) => {
     pageState.currentlySelected = 'mnDNUDAURetention'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
     viewState.showRefFilter = true
+    viewState.showWOISFilter = true
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -2003,15 +1721,6 @@ let initialize_router = () => {
 
   router.get('eyeshade_funded_balance_average', function (req) {
     pageState.currentlySelected = 'mnFundedBalanceAverageEyeshade'
-    viewState.showControls = true
-    viewState.showDaysSelector = true
-    viewState.showShowToday = true
-    updatePageUIState()
-    refreshData()
-  })
-
-  router.get('telemetry_standard', function (req) {
-    pageState.currentlySelected = 'mnTelemetryStandard'
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
@@ -2186,10 +1895,10 @@ let initialize_router = () => {
     pageState.currentlySelected = 'mnDailyNewUsers'
     viewState.showControls = true
     viewState.showDaysSelector = true
-    viewState.showPromotions = false
-    viewState.showShowToday = false
     viewState.showRefFilter = true
     viewState.showShowToday = true
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -2272,20 +1981,10 @@ async function loadInitialData () {
 function initializeGlobals () {
   viewState = {
     showControls: true,
-    platformEnabled: {
-      osx: true,
-      winx64: true,
-      winia32: true,
-      linux: true,
-      ios: true,
-      android: true,
-      androidbrowser: true,
-      'osx-bc': true,
-      'winx64-bc': true,
-      'winia32-bc': true,
-      'linux-bc': true
-    },
-    showRefFilter: false
+    showDaysSelector: true,
+    showRefFilter: false,
+    showWOISFilter: false,
+    showCountryCodeFilter: false
   }
 }
 
@@ -2330,6 +2029,12 @@ initialize_components = () => {
         }
       })
       ref_filter.on('change', function () {
+        let referral_codes = []
+        const ref_filter = $('#ref-filter')
+        if (ref_filter.hasClass('select2-hidden-accessible')) {
+          referral_codes = ref_filter.select2('data').map(i => i.id)
+        }
+        pageState.ref = referral_codes
         refreshData()
       })
       $('#clear-ref').on('click', function () {
@@ -2401,6 +2106,20 @@ const setupControls = () => {
   $('#controls-core-menu').on('click', 'a', productMenuHandler)
   $('#controls-mobile-menu').on('click', 'a', productMenuHandler)
 }
+
+// callback from brave-menu
+$("#cc_menu").on("selection", (evt, countryCodes) => {
+  pageState.countryCodes = countryCodes
+  updatePageUIState()
+  refreshData()
+})
+
+// callback from brave-menu
+$("#woi_menu").on("selection", (evt, wois) => {
+  pageState.wois = wois
+  updatePageUIState()
+  refreshData()
+})
 
 $(document).ready(function () {
   initializeGlobals()

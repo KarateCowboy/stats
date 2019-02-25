@@ -4,7 +4,7 @@ describe('Campaign model', async function () {
   context('properties', async function () {
     it('has a name', async function () {
       const new_campaign = await db.Campaign.query().insert({name: 'James Promo'})
-      const c = await db.Campaign.query().where('id', 1)
+      const c = await db.Campaign.query().where('id', new_campaign.id)
       expect(c[0].name).to.equal('James Promo')
     })
     it('requires the name', async function () {
@@ -19,7 +19,7 @@ describe('Campaign model', async function () {
     })
     it('has timestamps', async function () {
       const new_campaign = await db.Campaign.query().insert({name: 'James promo'})
-      const c = await db.Campaign.query().where('id', 1)
+      const c = await db.Campaign.query().where('id', new_campaign.id)
       expect(c[0].created_at).to.be.a('date')
       expect(c[0].updated_at).to.be.a('date')
     })
@@ -63,7 +63,6 @@ describe('Campaign model', async function () {
       const referralCodes = await factory.createMany('ref_code_pg', 3, {campaign_id: campaign.id})
       const fetchedCodes = await campaign.$relatedQuery('referralCodes')
       expect(fetchedCodes.map( c => c.code_text ).sort()).to.have.members(referralCodes.map( c => c.code_text ).sort())
-
     })
   })
 })

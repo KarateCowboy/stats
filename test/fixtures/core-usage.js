@@ -10,6 +10,7 @@ const moment = require('moment')
 const ObjectID = require('mongodb').ObjectID
 const CoreUsage = require('../../src/models/core-usage.model.js')()
 const _ = require('underscore')
+const countries = require('../../src/isomorphic/countries')
 
 const define = () => {
 
@@ -24,10 +25,12 @@ const define = () => {
     'version': '67.1.2',
     'first': true,
     'channel': 'dev',
+    'doi': () => moment().subtract(2, 'months').startOf('week').add(3, 'days').format('YYYY-MM-DD'),
     'woi': () => moment().subtract(2, 'months').startOf('week').add(1, 'days').format('YYYY-MM-DD'),
     'ref': () => _.shuffle((new ObjectID()).toString().split('')).join('').toUpperCase().slice(0, 6),
     'ts': () => moment().subtract(2, 'months').startOf('week').add(5, 'days').toDate().getTime(),
-    'year_month_day': () => moment().subtract(2, 'months').startOf('week').add(5, 'days').format('YYYY-MM-DD')
+    'year_month_day': () => moment().subtract(2, 'months').startOf('week').add(5, 'days').format('YYYY-MM-DD'),
+    'country_code': () => { return _.sample(_.flatten(countries.map(r => r.subitems)).map(c => c.id)) }
   })
 }
 

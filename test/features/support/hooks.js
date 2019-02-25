@@ -5,6 +5,7 @@
  */
 
 global.server = require(process.cwd() + '/src/index')
+const webdriver = require('webdriverio')
 const {After, AfterAll, Before, BeforeAll} = require('cucumber')
 require('../../../test/test_helper')
 
@@ -37,6 +38,11 @@ const bindHelpers = function () {
 Before(async function () {
   await test_helper.truncate()
   await server.setup({pg: global.pg_client, mg: global.mongo_client})
+  //for chrome
+  const options = {desiredCapabilities: {browserName: 'chrome', 'chromeOptions': {args: ['--headless']}}}
+  //keep around for testing with firefox
+  // const options = {desiredCapabilities: {browserName: 'firefox', 'moz:firefoxOptions': {args: ['-headless']}}}
+  global.browser = webdriver.remote(options)
   try {
     await server.kickoff()
   } catch (e) {

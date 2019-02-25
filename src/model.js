@@ -68,12 +68,6 @@ exports.moveFastlyMonthlyToUsageForDay = function (pg, ymd, cb) {
   pg.query(MOVE_FASTLY_MONTH_SQL, [ymd], cb)
 }
 
-exports.telemetryUpserter = function (client, row) {
-  return function (cb) {
-    client.query('INSERT INTO dw.fc_daily_telemetry (ymd, platform, version, channel, measure, machine, average, stddev, minimum, maximum, quant25, quant75, samples) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) ON CONFLICT (ymd, platform, version, channel, measure, machine) DO UPDATE SET average = $7, stddev = $8, minimum = $9, maximum = $10, samples = $11', [row.ymd, row.platform, row.version, row.channel, row.measure, row.machine, row.average, row.stddev, row.minimum, row.maximum, row.quant25, row.quant75, row.samples], cb)
-  }
-}
-
 const MOVE_IOS_DAILY_SQL = `
 INSERT INTO dw.fc_usage ( ymd, platform, version, channel, first_time, ref, total )
 SELECT ymd, platform, version, channel, first_time, ref, SUM(total) as ftotal
