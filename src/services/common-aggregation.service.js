@@ -39,12 +39,14 @@ module.exports = class CommonAggregation {
       if (row.ref === '') row.ref = 'none'
       if (row.platform === 'android') row.platform = 'androidbrowser'
       let woi = moment(row.woi)
-      if (!woi.isValid()) {
-        row.woi = '2016-02-10'
+      if (!woi.isValid() || woi.isBefore(moment('2016-01-04'))) {
+        if (process.env.DEBUG) console.log(`reseting bad woi ${row.woi}`)
+        row.woi = '2016-01-04'
       }
       let doi = moment(row.doi)
-      if (!doi.isValid()) {
-        row.doi = '2016-02-10'
+      if (!doi.isValid() || doi.isBefore(moment('2016-01-04'))) {
+        if (process.env.DEBUG) console.log(`reseting bad doi ${row.doi}`)
+        row.doi = '2016-01-04'
       }
     })
   }
