@@ -18,7 +18,7 @@ const define = () => {
     channel: 'dev',
     first_time: true,
     total: 200,
-    ref: () =>  { return db.ReferralCode.randomCodeText() }
+    ref: () => { return db.ReferralCode.randomCodeText() }
   })
 }
 
