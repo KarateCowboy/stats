@@ -31,12 +31,45 @@ class CustomWorld {
         await  browser.pause(100)
         await browser.click('#contentTitle')// remove from focus
       },
-      async pickDaysBack (days) {
+      async setDaysBack (days) {
         await browser.pause(30)
         await browser.click('#controls-selected-days')
         await browser.pause(50)
         await browser.click_when_visible(`#days-${days}`)
         await browser.click('#contentTitle')// remove from focus
+      },
+      async getDaysBack () {
+        await browser.pause(30)
+        const text = await browser.getText('#controls-selected-days')
+        return text.replace(' days', '')
+      },
+      async setChannel (channel) {
+        await browser.pause(30)
+        await browser.click('#controls-channels-dropdown')
+        await browser.pause(10)
+        await browser.click(`a[data-channel=${channel}]`)
+        await browser.click('#contentTitle')// remove from focus
+        await browser.pause(10)
+      },
+      async unsetAllChannels () {
+        const selectors = [
+          'dev',
+          'beta',
+          'nightly',
+          'release'
+        ]
+        for (let selector of selectors) {
+          let cssClass = await browser.getAttribute(`#${selector} > a > i`, 'class')
+          if (cssClass.match('fa-blank') === null) {
+            await browser.click('#controls-channels-dropdown')
+            await browser.pause(10)
+            await browser.click(`a[data-channel=${selector}]`)
+            await browser.pause(10)
+            await browser.click('#contentTitle')// remove from focus
+            await browser.pause(10)
+          }
+          let newCssClass = await browser.getAttribute(`#${selector} > a > i`, 'class')
+        }
       },
       async getDaysBackSelected () {
         return await browser.getHTML('#controls-selected-days')
@@ -44,8 +77,17 @@ class CustomWorld {
       async selectedReferralCodes () {
         return await browser.getAttribute('.select2-selection__choice', 'title')
       },
-      async getContentTitle(){
+      async getContentTitle () {
         return await browser.getText('#contentTitle')
+      }
+    }
+  }
+
+  get tableHelpers () {
+    return {
+      async tableRows () {
+        await browser.pause(100)
+        return await browser.getHTML('#usageDataTable > tbody > tr')
       }
     }
   }

@@ -8,11 +8,17 @@ Feature: Daily New Users Aggregate Report
     Then I should see the Daily New Users report
     And I should see the Daily New Users chart
 
-#    @dev
-#  Scenario: Filter by campaign
-#    Given I am logged in to the system
-#    And there are new user records for the last two months, across several campaigns
-#    And I view the Daily New Users report
-#    When I filter Daily New Users by an existing campaign
-#    Then I should see data in the Daily New Users table updated to match the campaign filter
+  @dev
+  Scenario Outline: Filter by channel
+    Given I am logged in to the system
+    And there are new user records for the last two months, across all channels
+    And I view the Daily New Users report
+    When I filter by channel <channel>
+    Then I should see data in the Daily New Users table updated to match the <channel> channel
+
+    Examples:
+      | channel |
+      | nightly |
+      | dev     |
+      | beta    |
 
