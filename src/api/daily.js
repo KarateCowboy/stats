@@ -121,7 +121,10 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
-  const correlate = (results, fld, valueFld='count') => {
+  const correlate = (results, fld, valueFld = 'count') => {
+    if (_.isEmpty(results)) {
+      return {}
+    }
     const sorted = _.sortBy(results, 'ymd')
     const maxLabel = sorted[sorted.length - 1].ymd
     const minLabel = sorted[0].ymd
