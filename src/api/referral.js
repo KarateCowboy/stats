@@ -20,7 +20,7 @@ const buildProxyRouteWithAuthorizationInsertion = (line) => {
     config: {
       tags: ['api'],
       description: line[3],
-      handler: async (request, reply) => {
+      handler: async (request, h) => {
         let url = proxyHosts[line[4]].url
         let token = proxyHosts[line[4]].token
         try {
@@ -44,10 +44,10 @@ const buildProxyRouteWithAuthorizationInsertion = (line) => {
             console.log("Error: results could not be retrieved from " + url)
             results = {}
           }
-          reply(results)
+          return (results)
         } catch (e) {
           console.log(e)
-          reply(null)
+          return (null)
         }
       }
     }

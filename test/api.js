@@ -61,14 +61,14 @@ var mockReply = function (contents) {
 var requestHandler = apiCommon.buildQueryReponseHandler(
   mockClient,
   'SELECT',
-  function (reply, results, request) {
+  function ( results, request) {
     results.rows = results.rows.map(function (row) {
       return {
         a: row.a * 2,
         b: row.b / 2
       }
     })
-    reply(results.rows)
+    return (results.rows)
   },
   function (request) {
     return [request.params.age]

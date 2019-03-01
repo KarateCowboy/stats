@@ -54,7 +54,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/monthly_average_stats_platform',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
       const query = knex('dw.fc_average_monthly_usage_mv').select('ymd', 'platform')
@@ -67,9 +67,9 @@ exports.setup = (server, client, mongo) => {
         .orderBy('platform')
         .orderBy('ymd')
       const query_string = query.toString()
-      client.query(query_string, (err, results) => {
+      return client.query(query_string, (err, results) => {
         if (err) {
-          reply(err.toString())
+          return err.toString()
         } else {
           results.rows.forEach((row) => common.formatPGRow(row))
           results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
@@ -79,7 +79,7 @@ exports.setup = (server, client, mongo) => {
             row.mau = parseInt(row.mau)
             row.first_time = parseInt(row.first_time)
           })
-          reply(results.rows)
+          return results.rows
         }
       })
     }
@@ -89,12 +89,12 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/daily_downloads',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       var [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let day = days.split(' ')
       let cutoff = moment().subtract(Number(day[0]), 'days').format('YYYY-MM-DD')
       var results = await knex('dw.daily_downloads').where('ymd', '>', cutoff).whereIn('platform', platforms).orderBy('ymd', 'desc').select(['count', 'platform', 'ymd'])
-      reply(results)
+      return results
     }
   })
 
@@ -102,11 +102,11 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_platform_first_summary',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let results = await client.query(DAU_PLATFORM_FIRST_SUMMARY, [])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
+      return results.rows
     }
   })
 
@@ -114,12 +114,12 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_platform_first_summary_geo',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       // default to all time
       let days = parseInt(request.query.days || 10000, 10) + ' days'
       client.query(PLATFORM_SUMMARY_GEO, [], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => { row.downloads = parseInt(row.downloads, 10) })
           var grouped = _.groupBy(results.rows, (row) => { return row.platform })
@@ -127,7 +127,7 @@ exports.setup = (server, client, mongo) => {
             var sum = _.reduce(records, (memo, record) => { return memo + record.downloads }, 0)
             _.each(records, (record) => { record.percentage = common.round(record.downloads / sum * 100, 1) })
           })
-          reply(grouped)
+          return (grouped)
         }
       })
     }
@@ -137,13 +137,13 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dus',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10) + ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
       client.query(DELTA, [days, platforms, channels], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           const columns = ['count', 'prev', 'delta', 'change', 'first_count', 'retention']
           results.rows.forEach((row) => {
@@ -152,7 +152,7 @@ exports.setup = (server, client, mongo) => {
             })
           })
           results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -161,7 +161,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/wois',
-    handler: (request, reply) => {
+    handler: (request, h) => {
       const now = moment().startOf('isoWeek')
       let currentMonth = now.format('MMMM YYYY')
       let results = []
@@ -187,7 +187,7 @@ exports.setup = (server, client, mongo) => {
         now.subtract(7, 'days')
       }
       results.push(current)
-      reply(results)
+      return h.response(results)
     }
   })
 }

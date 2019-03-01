@@ -15,7 +15,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/search',
-    handler: async (request, reply) => {
+    handler: async (request, h) => {
       // make request to ElasticSearch
       let results = await es.search({
         index: 'crashes',
@@ -44,7 +44,7 @@ exports.setup = (server, client, mongo) => {
         crashes: crashes
       }
 
-      reply(payload)
+      return (payload)
     }
   })
 }

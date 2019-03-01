@@ -204,18 +204,18 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dc_platform',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
-      client.query(CRASHES_PLATFORM, [days, platforms, channels], (err, results) => {
+      return client.query(CRASHES_PLATFORM, [days, platforms, channels], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => common.formatPGRow(row))
           results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -225,12 +225,12 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dc_platform_detail',
-    handler: function (request, reply) {
-      retriever.crashesForYMDPlatform(mongo, request.query.ymd, request.query.platform, (err, results) => {
+    handler: function (request, h) {
+      return retriever.crashesForYMDPlatform(mongo, request.query.ymd, request.query.platform, (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
-          reply(results)
+          return (results)
         }
       })
     }
@@ -240,7 +240,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/download/crash_report/{id}',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       mini.readAndStore(request.params.id, (filename) => {
         console.log("Downloading " + request.params.id + ', ' + filename)
         reply.file(filename)
@@ -251,17 +251,17 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_reports',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
-      client.query(CRASH_REPORTS_SIGNATURE, [days], (err, results) => {
+      return client.query(CRASH_REPORTS_SIGNATURE, [days], (err, results) => {
         if (err) {
           console.log(err)
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -270,23 +270,23 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_ratios',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
       let version = request.query.version || null
-      client.query(CRASH_RATIO, [days, platforms, version], (err, results) => {
+      return client.query(CRASH_RATIO, [days, platforms, version], (err, results) => {
         if (err) {
           console.log(err)
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => {
             row.crashes = parseInt(row.crashes)
             row.total = parseInt(row.total)
             row.crash_rate = parseFloat(row.crash_rate)
           })
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -295,15 +295,15 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_report_details',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
-      client.query(CRASH_REPORT_DETAILS, [request.query.platform, request.query.version, days, request.query.crash_reason, request.query.cpu, request.query.signature], (err, results) => {
+      return client.query(CRASH_REPORT_DETAILS, [request.query.platform, request.query.version, days, request.query.crash_reason, request.query.cpu, request.query.signature], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => common.formatPGRow(row))
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -312,15 +312,15 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_report_platform_version_details',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
-      client.query(CRASH_REPORT_DETAILS_PLATFORM_VERSION, [request.query.platform, request.query.version, days], (err, results) => {
+      return client.query(CRASH_REPORT_DETAILS_PLATFORM_VERSION, [request.query.platform, request.query.version, days], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => common.formatPGRow(row))
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -329,26 +329,26 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/recent_crash_report_details',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
-      client.query(RECENT_CRASH_REPORT_DETAILS, [days], (err, results) => {
+      return client.query(RECENT_CRASH_REPORT_DETAILS, [days], (err, results) => {
         if (err) {
           console.log(err)
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => common.formatPGRow(row))
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
   })
 
   // Default crash success handler
-  const commonSuccessHandler = (reply, results, request) => {
+  const commonSuccessHandler = ( results, request) => {
     results.rows.forEach((row) => common.formatPGRow(row))
-    reply(results.rows)
+    return (results.rows)
   }
 
   // Return an array containing a day offset i.e. ['3 days'] and a set of platforms
@@ -363,9 +363,9 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       DEVELOPMENT_CRASH_REPORT_DETAILS,
-      (reply, results, request) => {
+      ( results, request) => {
         results.rows.forEach((row) => common.formatPGRow(row))
-        reply(results.rows)
+        return (results.rows)
       },
       (request) => { return [parseInt(request.query.days || 7) + ' days'] }
     )
@@ -374,13 +374,13 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_report',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       var id = request.query.id
-      crash.storedCrash(client, id, (err, results) => {
+      return crash.storedCrash(client, id, (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
-          reply(results)
+          return (results)
         }
       })
     }
@@ -390,18 +390,18 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dc_platform_version',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
-      client.query(CRASHES_PLATFORM_VERSION, [days, platforms, channels], (err, results) => {
+      return client.query(CRASHES_PLATFORM_VERSION, [days, platforms, channels], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => common.formatPGRow(row))
           results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -410,15 +410,15 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_versions',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 14, 10)
       days += ' days'
-      client.query(CRASH_VERSIONS, [days], (err, results) => {
+      return client.query(CRASH_VERSIONS, [days], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => common.formatPGRow(row))
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -427,15 +427,15 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_electron_versions',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       let days = parseInt(request.query.days || 14, 10)
       days += ' days'
-      client.query(CRASH_ELECTRON_VERSIONS, [days], (err, results) => {
+      return client.query(CRASH_ELECTRON_VERSIONS, [days], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           results.rows.forEach((row) => common.formatPGRow(row))
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -463,11 +463,11 @@ exports.setup = (server, client, mongo) => {
         }
       }
     },
-    handler: function (request, reply) {
+    handler: function (request, h) {
       client.query(POST_TAG, [request.params.id, request.params.tag], (err, results) => {
         if (err) {
           console.log(err)
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           reindexCrash(client, request.params.id, (err, results) => {
             reply('OK').code(200)
@@ -492,11 +492,11 @@ exports.setup = (server, client, mongo) => {
         }
       }
     },
-    handler: function (request, reply) {
+    handler: function (request, h) {
       client.query(DELETE_TAG, [request.params.id, request.params.tag], (err, results) => {
         console.log(results)
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           reindexCrash(client, request.params.id, (err, results) => {
             reply('OK').code(200)
@@ -511,12 +511,12 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crashes/{id}/tags',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       client.query(CRASH_TAGS, [request.params.id], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }
@@ -527,12 +527,12 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/available_crash_tags',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       client.query(AVAILABLE_CRASH_TAGS, [], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
-          reply(results.rows)
+          return (results.rows)
         }
       })
     }

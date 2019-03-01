@@ -65,12 +65,12 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_OVERVIEW,
-      (reply, results, request) => {
+      ( results, request) => {
         var row = results.rows[0]
         _.keys(row).forEach((k) => {
           row[k] = parseFloat(row[k])
         })
-        reply(row)
+        return (row)
       },
       (request) => { return [] }
     )
@@ -82,7 +82,7 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_DAILY,
-      (reply, results, request) => {
+      ( results, request) => {
         var rows = _.map(results.rows, (row) => {
           _.keys(row).forEach((k) => {
             if (k !== 'ymd') {
@@ -91,7 +91,7 @@ exports.setup = (server, client, mongo) => {
           })
           return row
         })
-        reply(rows)
+        return (rows)
       },
       commonDaysParamsBuilder
     )
@@ -103,14 +103,14 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_BUCKETED,
-      (reply, results, request) => {
+      ( results, request) => {
         var rows = _.map(results.rows, (row) => {
           _.keys(row).forEach((k) => {
             row[k] = parseFloat(row[k])
           })
           return row
         })
-        reply(rows)
+        return (rows)
       },
       emptyParamsBuilder
     )
@@ -122,8 +122,8 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_DETAILS,
-      (reply, results, request) => {
-        reply(results.rows)
+      ( results, request) => {
+        return (results.rows)
       },
       emptyParamsBuilder
     )
@@ -132,32 +132,27 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/publishers/platforms',
-    handler: common.buildQueryReponseHandler(
-      client,
-      PUBLISHER_PLATFORMS,
-      (reply, results, request) => {
-        reply(results.rows)
-      },
-      emptyParamsBuilder
-    )
+    handler: async ()=> {
+      return await knex('dtl.publisher_platforms').select('*').orderBy('ord','asc')
+    }
   })
 
   server.route({
     method: 'GET',
     path: '/api/1/publishers/channel_totals',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       const result = await ChannelTotal.find({}).sort({createdAt: -1}).limit(1)
       const channel_total = result !== undefined && result.length > 0 ? _.first(result) : (new ChannelTotal())
-      reply(channel_total.toObject())
+      return (channel_total.toObject())
     }
   })
   server.route({
     method: 'GET',
     path: '/api/1/publishers/publisher_totals',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       const result = await PublisherTotal.find({}).sort({createdAt: -1}).limit(1)
       const publisher_total = result !== null && result.length > 0 ? _.first(result) : (new PublisherTotal())
-      reply(publisher_total.toObject())
+      return (publisher_total.toObject())
 
     }
   })

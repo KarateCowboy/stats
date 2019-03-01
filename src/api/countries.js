@@ -4,8 +4,8 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/countries',
-    handler: async function (request, reply) {
-      reply(countries)
+    handler: async function (request, h) {
+      return (countries)
     }
   })
 }
