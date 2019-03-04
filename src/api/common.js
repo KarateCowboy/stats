@@ -135,6 +135,21 @@ module.exports.prequest = function (url) {
   })
 }
 
+module.exports.requestWithAuth = (url, token) => {
+  return new Promise((resolve, reject) => {
+    const options = {
+      url: url,
+      headers: {
+        Authorization: 'Bearer ' + token
+      }
+    }
+    r(options, (err, results, body) => {
+      if (err) return reject(err)
+      else return resolve(body)
+    })
+  })
+}
+
 exports.retrieveCommonParameters = (request) => {
   let days = parseInt(request.query.days || 7, 10) + ' days'
   let platforms = exports.platformPostgresArray(request.query.platformFilter)
