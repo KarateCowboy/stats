@@ -54,7 +54,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/monthly_average_stats_platform',
-    handler: function (request, h) {
+    handler: async function (request, h) {
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
       const query = knex('dw.fc_average_monthly_usage_mv').select('ymd', 'platform')
@@ -67,21 +67,16 @@ exports.setup = (server, client, mongo) => {
         .orderBy('platform')
         .orderBy('ymd')
       const query_string = query.toString()
-      return client.query(query_string, (err, results) => {
-        if (err) {
-          return err.toString()
-        } else {
-          results.rows.forEach((row) => common.formatPGRow(row))
-          results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-          results.rows.forEach((row) => common.convertPlatformLabels(row))
-          results.rows.forEach((row) => {
-            row.dau = parseInt(row.dau)
-            row.mau = parseInt(row.mau)
-            row.first_time = parseInt(row.first_time)
-          })
-          return results.rows
-        }
+      let results = await client.query(query_string)
+      results.rows.forEach((row) => common.formatPGRow(row))
+      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
+      results.rows.forEach((row) => common.convertPlatformLabels(row))
+      results.rows.forEach((row) => {
+        row.dau = parseInt(row.dau)
+        row.mau = parseInt(row.mau)
+        row.first_time = parseInt(row.first_time)
       })
+      return results.rows
     }
   })
 

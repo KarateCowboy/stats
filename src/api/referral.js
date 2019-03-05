@@ -1,5 +1,6 @@
 const common = require('./common')
 const URL = require('url').URL
+const _ = require('lodash')
 
 const proxyHosts = {
   PROMO_SERVICES: {
@@ -17,38 +18,34 @@ const buildProxyRouteWithAuthorizationInsertion = (line) => {
   return {
     method: line[0],
     path: line[1],
-    config: {
-      tags: ['api'],
-      description: line[3],
-      handler: async (request, h) => {
-        let url = proxyHosts[line[4]].url
-        let token = proxyHosts[line[4]].token
-        try {
-          const originalUrl = request.connection.info.protocol
-            + '://'
-            + request.info.host
-            + request.url.path
-          let urlObject = new URL(originalUrl)
-          var options = {
-            method: 'GET',
-            url: url + line[2] + '?' + urlObject.searchParams.toString(),
-            headers: {
-              Authorization: 'Bearer ' + token
-            }
+    handler: async (request, h) => {
+      let url = proxyHosts[line[4]].url
+      let token = proxyHosts[line[4]].token
+      try {
+        const originalUrl = 'https'
+          + '://'
+          + request.info.host
+          + request.path
+        let urlObject = new URL(originalUrl)
+        var options = {
+          method: 'GET',
+          url: url + line[2] + '?' + urlObject.searchParams.toString(),
+          headers: {
+            Authorization: 'Bearer ' + token
           }
-          let json = await common.prequest(options)
-          let results
-          try {
-            results = JSON.parse(json)
-          } catch (e) {
-            console.log("Error: results could not be retrieved from " + url)
-            results = {}
-          }
-          return (results)
-        } catch (e) {
-          console.log(e)
-          return (null)
         }
+        let json = await common.prequest(options)
+        let results
+        try {
+          results = JSON.parse(json)
+        } catch (e) {
+          console.log('Error: results could not be retrieved from ' + url)
+          results = {}
+        }
+        return (results)
+      } catch (e) {
+        console.log(e)
+        return (null)
       }
     }
   }
