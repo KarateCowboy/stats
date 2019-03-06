@@ -174,7 +174,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/retention_30day',
-    handler: async (request, reply) => {
+    handler: async (request, h) => {
       let [days, platforms, channels, ref, wois] = common.retrieveCommonParameters(request)
       try {
         let results = await client.query(RETENTION_30_DAY, [days, platforms, ref])
@@ -185,10 +185,10 @@ exports.setup = (server, client, mongo) => {
         })
         results.rows.forEach((row) => common.formatPGRow(row))
         results.rows.forEach((row) => common.convertPlatformLabels(row))
-        reply(results.rows)
+        return (results.rows)
       } catch (e) {
         console.log(e.toString())
-        reply([])
+        return []
       }
     }
   })
