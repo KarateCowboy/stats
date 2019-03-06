@@ -107,16 +107,10 @@ module.exports.round = function (v, n) {
 module.exports.buildQueryReponseHandler = function (client, query, successHandler, paramsBuilder) {
   paramsBuilder = paramsBuilder || ((request) => { return [] })
   successHandler = successHandler || ((results) => { return (results.rows) })
-  return (request, h) => {
+  return async (request, h) => {
     const params = paramsBuilder(request)
-    return client.query(query, params, (err, results) => {
-      if (err) {
-        console.log(err)
-        return h.response(err.toString()).code(500)
-      } else {
-        return successHandler(results, request)
-      }
-    })
+    const results = await client.query(query, params)
+    return successHandler(results, request)
   }
 }
 
