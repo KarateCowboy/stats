@@ -153,6 +153,46 @@ exports.setup = (server, client, mongo) => {
     }
   })
 
+  const RETENTION_30_DAY = `
+  SELECT
+    TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
+    SUM(downloads) AS downloads,
+    SUM(installs) AS installs,
+    SUM(confirmations) AS confirmations
+  FROM
+    dw.fc_thirty_day_referral_stats FC
+  WHERE
+    FC.ymd >= current_date - CAST($1 as INTERVAL) AND
+    FC.platform = ANY ($2) AND
+    FC.ref = ANY (COALESCE($3, ARRAY[FC.ref]))
+  GROUP BY
+    ymd
+  ORDER BY
+    ymd
+  `
+
+  server.route({
+    method: 'GET',
+    path: '/api/1/retention_30day',
+    handler: async (request, reply) => {
+      let [days, platforms, channels, ref, wois] = common.retrieveCommonParameters(request)
+      try {
+        let results = await client.query(RETENTION_30_DAY, [days, platforms, ref])
+        results.rows.forEach((row) => {
+          row.downloads = parseInt(row.downloads)
+          row.installs = parseInt(row.installs)
+          row.confirmations = parseInt(row.confirmations)
+        })
+        results.rows.forEach((row) => common.formatPGRow(row))
+        results.rows.forEach((row) => common.convertPlatformLabels(row))
+        reply(results.rows)
+      } catch (e) {
+        console.log(e.toString())
+        reply([])
+      }
+    }
+  })
+
   server.route({
     method: 'GET',
     path: '/api/1/dau_average_region',

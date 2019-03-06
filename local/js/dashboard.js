@@ -279,6 +279,144 @@ var statsHandler = function (rows) {
   var myChart = new Chart(ctx, {type: opts.chartType, data: data, options: window.STATS.COMMON.standardYAxisOptions})
 }
 
+let build30DayRetentionChartHandler = (chartContainerId, opts) => {
+  chartContainerId = chartContainerId || 'usageChartContainer'
+  opts = opts || {}
+
+  return (rows) => {
+    // Build a list of unique x-axis labels (mostly ymd)
+    var labels = _.chain(rows)
+      .map((row) => { return row.ymd })
+      .uniq()
+      .sort()
+      .value()
+
+    let colourer = (idx, opacity) => {
+      return window.STATS.COLOR.colorForIndex(idx, opacity)
+    }
+
+    const downloadsDataset = {
+      label: 'Downloads',
+      data: rows.map((row) => { return row.downloads }),
+      borderColor: colourer(0, 1),
+      pointColor: colourer(0, 0.5),
+      backgroundColor: colourer(0, 0.05),
+      type: 'line',
+      yAxisID: 'A'
+    }
+
+    const installsDataset = {
+      label: 'Installs',
+      data: rows.map((row) => { return row.installs }),
+      borderColor: colourer(1, 1),
+      pointColor: colourer(1, 0.5),
+      backgroundColor: colourer(1, 0.05),
+      type: 'line',
+      yAxisID: 'A'
+    }
+
+    const confirmationsDataset = {
+      label: 'Confirmation %',
+      data: rows.map((row) => { return row.confirmations ? row.confirmations / row.installs * 100 : 0 }),
+      borderColor: colourer(2, 1),
+      pointColor: colourer(2, 0.5),
+      backgroundColor: colourer(2, 0.55),
+      type: 'bar',
+      yAxisID: 'B'
+    }
+
+    var data = {
+      labels: labels,
+      datasets: [
+        downloadsDataset,
+        installsDataset,
+        confirmationsDataset
+      ]
+    }
+
+    let container = $('#' + chartContainerId)
+    let chartId = chartContainerId + 'Chart'
+    container.empty()
+    container.append(`<canvas id='${chartId}' height='300' width='800'></canvas>`)
+
+    const axes = {
+      tooltips: {
+        mode: 'x',
+        position: 'nearest'
+      },
+      scales: {
+        yAxes: [{
+          id: 'A',
+          scaleLabel: {
+            display: true,
+            fontColor: colourer(0, 1),
+            labelString: 'Downloads / Installs'
+          },
+          gridLines: {
+            drawBorder: false,
+            drawOnChartArea: true,
+          },
+          position: "right",
+          ticks: {
+            fontColor: colourer(0, 1),
+            beginAtZero: true
+          }
+        },
+          {
+            id: 'B',
+            scaleLabel: {
+              display: true,
+              fontColor: colourer(2, 1),
+              labelString: 'Confirmation %'
+            },
+            gridLines: {
+              drawBorder: false,
+              drawOnChartArea: false,
+            },
+            position: "left",
+            ticks: {
+              fontColor: colourer(2, 1),
+              suggestedMax: 100,
+              max: 100,
+              min: 0,
+              beginAtZero: true
+            }
+          }
+        ]
+      }
+    }
+
+    var usageChart = document.getElementById(chartId)
+    new Chart(usageChart.getContext('2d'), {
+      type: 'bar',
+      data: data,
+      options: axes
+    })
+
+    const table = $('#usageDataTable tbody')
+
+    table.empty()
+    let tableHeader = table.parent().find('thead')
+    tableHeader.empty()
+    tableHeader.html(`<tr><th class="text-left">Date</th><th class="text-right">Downloads</th><th class="text-right">Installs</th><th class="text-right">Confirmations</th><th class="text-right">%</th></tr>`)
+
+    rows.forEach((row) => {
+      const percentage = row.installs > 0 ?
+        row.confirmations / row.installs :
+        0
+      var buf = '<tr>'
+      buf = buf + `<td>${row.ymd}</td>`
+      buf = buf + `<td class="text-right">${st(row.downloads)}</td>`
+      buf = buf + `<td class="text-right">${st(row.installs)}</td>`
+      buf = buf + `<td class="text-right">${st(row.confirmations)}</td>`
+      buf = buf + `<td class="text-right">${stp(percentage)}</td>`
+      buf = buf + '</tr>'
+      table.append(buf)
+    })
+
+  }
+}
+
 // Build handler for a single value chart updater
 let buildSingleValueChartHandler = (chartContainerId, x, y, xLabel, yLabel, opts) => {
   opts = opts || {}
@@ -652,6 +790,8 @@ var aggMAUHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
 
 var usageVersionHandler = buildSuccessHandler('ymd', 'version', 'Date', 'Version', {colourBy: 'index', pivot: true})
 
+var thirtyDayRetentionHandler = build30DayRetentionChartHandler('usageChartContainer', {})
+
 let forceOrganicOrdering = (a, b) => {
   if (a === 'Organic') return -1
   if (b === 'Organic') return 1
@@ -758,6 +898,13 @@ var retentionRetriever = function () {
         return row
       })
       retentionHandler(rows)
+    }
+  })
+}
+const thirtyDayRetentionRetriever = async () => {
+  $.ajax('/api/1/retention_30day?' + standardParams(), {
+    success: (rows) => {
+      thirtyDayRetentionHandler(rows)
     }
   })
 }
@@ -1077,6 +1224,12 @@ var menuItems = {
     show: 'weeklyRetentionContent',
     title: ' Retention Week / Week',
     retriever: weeklyRetentionRetriever
+  },
+  '30dayRetention': {
+    show: 'usageContent',
+    title: 'Referral Promo 30 Day Confirmations',
+    subtitle: 'Downloads, installs and 30 day confirmations by day',
+    retriever: thirtyDayRetentionRetriever
   },
   'mnUsage': {
     show: 'usageContent',
@@ -1408,6 +1561,12 @@ const updatePageUIState = () => {
   } else {
     $('#controls-days-menu').find('a[data-days="0"]').parent().hide()
   }
+
+  if (viewState.showChannel) {
+    $('#controls-channels-dropdown').parent().show()
+  } else {
+    $('#controls-channels-dropdown').parent().hide()
+  }
 }
 
 const persistPageState = () => {
@@ -1454,6 +1613,7 @@ let initialize_router = () => {
     viewState.showShowToday = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
+    viewState.showChannel = true
     viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
@@ -1464,6 +1624,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1476,6 +1637,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1488,6 +1650,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1500,6 +1663,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
@@ -1510,7 +1674,21 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = false
     viewState.showShowToday = false
+    viewState.showChannel = true
     viewState.showRefFilter = true
+    updatePageUIState()
+    refreshData()
+  })
+
+  router.get('30day-retention', (req) => {
+    pageState.currentlySelected = '30dayRetention'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = true
+    viewState.showChannel = false
+    viewState.showWOISFilter = false
+    viewState.showCountryCodeFilter = false
     updatePageUIState()
     refreshData()
   })
@@ -1520,6 +1698,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1541,6 +1720,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1551,6 +1731,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1563,6 +1744,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1575,6 +1757,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1587,6 +1770,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1599,6 +1783,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     updatePageUIState()
     refreshData()
@@ -1609,6 +1794,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1621,6 +1807,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1633,6 +1820,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
@@ -1643,6 +1831,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = false
     viewState.showCountryCodeFilter = false
@@ -1655,6 +1844,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = true
     viewState.showCountryCodeFilter = true
@@ -1667,6 +1857,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
@@ -1682,6 +1873,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
@@ -1692,6 +1884,7 @@ let initialize_router = () => {
 
   router.get('development_crashes', function (req) {
     pageState.currentlySelected = 'mnDevelopmentCrashes'
+    viewState.showChannel = true
     updatePageUIState()
     refreshData()
   })
@@ -1699,6 +1892,7 @@ let initialize_router = () => {
   router.get('recent_crashes', function (req) {
     pageState.currentlySelected = 'mnRecentCrashes'
     viewState.showRefFilter = false
+    viewState.showChannel = true
     updatePageUIState()
     refreshData()
   })
@@ -1708,6 +1902,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     updatePageUIState()
     // refreshData()
@@ -1718,6 +1913,7 @@ let initialize_router = () => {
     viewState.showControls = true
     viewState.showDaysSelector = true
     viewState.showShowToday = true
+    viewState.showChannel = true
     viewState.showRefFilter = false
     updatePageUIState()
     refreshData()
@@ -1725,6 +1921,7 @@ let initialize_router = () => {
 
   router.get('crashes_platform', function (req) {
     pageState.currentlySelected = 'mnCrashes'
+    viewState.showChannel = true
     updatePageUIState()
     refreshData()
   })
