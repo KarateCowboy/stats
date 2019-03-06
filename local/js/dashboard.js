@@ -555,6 +555,8 @@ const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
 
 const usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
+const usageCountryHandler = buildSuccessHandler('ymd', 'country_code', 'Date', 'Country', {colourBy: 'hashedLabel', pivot: true})
+
 const usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
 
 const usageMeasureHandler = (rows) => {
@@ -588,10 +590,6 @@ const usageMeasureHandler = (rows) => {
     }
   })
   retainedHandler(rows)
-
-  const retained = rows.map((row) => { return row.retained })
-  const secondOrder = window.STATS.STATS.secondOrder(retained)
-  const thirdOrder = window.STATS.STATS.secondOrder(secondOrder)
 
   let tbl = $('#DNUDAUDataTable tbody')
   tbl.empty()
@@ -732,7 +730,8 @@ let standardParams = () => {
     showToday: pageState.showToday,
     version: pageState.version,
     ref: (pageState.ref || []).join(','),
-    wois: (pageState.wois || []).join(',')
+    wois: (pageState.wois || []).join(','),
+    countryCodes: (pageState.countryCodes || []).join(',')
   })
 }
 
@@ -787,6 +786,12 @@ var DRUCampaignRetriever = function () {
 var DAUPlatformRetriever = function () {
   $.ajax('/api/1/dau_platform?' + standardParams(), {
     success: usagePlatformHandler
+  })
+}
+
+var DAUCountryRetriever = function () {
+  $.ajax('/api/1/dau_country?' + standardParams(), {
+    success: usageCountryHandler
   })
 }
 
@@ -944,7 +949,7 @@ var crashesVersionRetriever = function () {
 // Retrieve overview stats and dispatch UI build
 var overviewRetriever = async function () {
   publisherPlatforms = publisherPlatforms !== undefined ? publisherPlatforms : await $.ajax('/api/1/publishers/platforms')
-  var downloads = await $.ajax('/api/1/dau_platform_first_summary')
+  let downloads = await $.ajax('/api/1/dau_platform_first_summary')
   try {
     window.OVERVIEW.firstRun(downloads, builders)
   } catch (e) {
@@ -952,20 +957,31 @@ var overviewRetriever = async function () {
     console.log(e.message)
   }
 
+  let [dauAverageRegion, dauAverageCountry, countries] = await Promise.all([
+    $.ajax('/api/1/dau_average_region'),
+    $.ajax('/api/1/dau_average_country'),
+    $.ajax('/api/1/countries')
+  ])
+  window.OVERVIEW.dauAverageRegion(dauAverageRegion, dauAverageCountry, countries)
+
   var platformStats = await $.ajax('/api/1/monthly_average_stats_platform')
   window.OVERVIEW.monthAveragesHandler(platformStats, builders)
-  let channel_totals, publisher_totals
+
   try {
-    channel_totals = await $.ajax('/api/1/publishers/channel_totals')
-    publisher_totals = await $.ajax('/api/1/publishers/publisher_totals')
+    let [channel_totals, publisher_totals] = await Promise.all([
+      $.ajax('/api/1/publishers/channel_totals'),
+      $.ajax('/api/1/publishers/publisher_totals')
+    ])
     window.STATS.PUB.overviewPublisherHandler(channel_totals, publisher_totals)
   } catch (e) {
     console.log('problem getting publisher information')
     console.log(e)
   }
 
-  var btc = await $.ajax('/api/1/ledger_overview')
-  var bat = await $.ajax('/api/1/bat/ledger_overview')
+  let [btc, bat] = await Promise.all([
+    $.ajax('/api/1/ledger_overview'),
+    $.ajax('/api/1/bat/ledger_overview')
+  ])
   window.OVERVIEW.ledger(btc, bat, builders)
 }
 
@@ -1052,6 +1068,11 @@ var menuItems = {
     show: 'usageContent',
     title: 'Daily Active Users by Platform (DAU)',
     retriever: DAUPlatformRetriever
+  },
+  'mnUsageCountry': {
+    show: 'usageContent',
+    title: 'Daily Active Users by Country (DAU)',
+    retriever: DAUCountryRetriever
   },
   'mnUsageReturning': {
     show: 'usageContent',
@@ -1490,6 +1511,17 @@ let initialize_router = () => {
     refreshData()
   })
 
+  router.get('usageCountry', (req) => {
+    pageState.currentlySelected = 'mnUsageCountry'
+    viewState.showControls = true
+    viewState.showDaysSelector = true
+    viewState.showShowToday = true
+    viewState.showRefFilter = true
+    viewState.showCountryCodeFilter = false
+    updatePageUIState()
+    refreshData()
+  })
+
   router.get('usage_returning', function (req) {
     pageState.currentlySelected = 'mnUsageReturning'
     viewState.showControls = true
@@ -1611,7 +1643,7 @@ let initialize_router = () => {
     viewState.showShowToday = true
     viewState.showRefFilter = true
     viewState.showWOISFilter = true
-    viewState.showCountryCodeFilter = false
+    viewState.showCountryCodeFilter = true
     updatePageUIState()
     refreshData()
   })

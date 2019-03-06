@@ -5,7 +5,6 @@
   }
 
   var platformIconImg = (platform) => {
-    if (platform === 'android') platform = 'Android Browser'
     return `<img src="/local/img/platform-icons/${platform}.png" height="18">`
   }
 

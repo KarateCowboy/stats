@@ -25,7 +25,38 @@ GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform
 `
 
+const DAU_COUNTRY = `
+SELECT
+  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
+  FC.country_code,
+  SUM(FC.total) AS count
+FROM dw.fc_agg_usage_daily FC
+WHERE
+  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+  FC.platform = ANY ($2) AND
+  FC.channel = ANY ($3) AND
+  FC.ref = ANY (COALESCE($4, ARRAY[FC.ref])) AND
+  FC.woi = ANY (COALESCE($5, ARRAY[FC.woi]))
+GROUP BY FC.ymd, FC.country_code
+ORDER BY FC.ymd DESC, FC.country_code
+`
+
 exports.setup = (server, client, mongo) => {
+
+  // Daily active users by country code
+  server.route({
+    method: 'GET',
+    path: '/api/1/dau_country',
+    handler: async function (request, reply) {
+      var [days, platforms, channels, ref, wois] = common.retrieveCommonParameters(request)
+      const results = await client.query(DAU_COUNTRY, [days, platforms, channels, ref, wois])
+      results.rows.forEach((row) => common.formatPGRow(row))
+      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
+      // condense small country counts to an 'other' category
+      results.rows = dataset.condense(results.rows, 'ymd', 'country_code', 0.002)
+      reply(results.rows)
+    }
+  })
 
   // Daily active users
   server.route({

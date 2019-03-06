@@ -160,6 +160,24 @@ exports.setup = (server, client, mongo) => {
 
   server.route({
     method: 'GET',
+    path: '/api/1/dau_average_region',
+    handler: async (request, reply) => {
+      let rows = (await client.query(`SELECT product, id, ord::integer, avg_dau::integer, percentage::numeric FROM dw.fc_region_seven_day_dau_average ORDER BY product, id`, [])).rows
+      reply(rows)
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/api/1/dau_average_country',
+    handler: async (request, reply) => {
+      let rows = (await client.query(`SELECT product, id, label, region_id, avg_dau::integer, percentage::numeric FROM dw.fc_country_seven_day_dau_average ORDER BY product, id`, [])).rows
+      reply(rows)
+    }
+  })
+
+  server.route({
+    method: 'GET',
     path: '/api/1/wois',
     handler: (request, reply) => {
       const now = moment().startOf('isoWeek')

@@ -141,6 +141,7 @@ exports.retrieveCommonParameters = (request) => {
   let channels = exports.channelPostgresArray(request.query.channelFilter)
   let ref = request.query.ref === '' ? null : _.compact(request.query.ref.split(','))
   let wois = request.query.wois === '' ? null : _.compact(request.query.wois.split(','))
+  let countryCodes = !request.query.countryCodes || request.query.countryCodes === '' ? null : _.compact(request.query.countryCodes.split(','))
 
-  return [days, platforms, channels, ref, wois]
+  return [days, platforms, channels, ref, wois, countryCodes]
 }
