@@ -39,4 +39,25 @@ describe('ReferralCode model', async function () {
       expect(c[0].updated_at).to.be.a('date')
     })
   })
+
+  context('statics', async function () {
+      describe('randomCodeText', async function(){
+          it('returns a six character ref code', async function(){
+              _.range(0,100).forEach((i) => {
+                  const code = db.ReferralCode.randomCodeText()
+                  expect(code).to.match(/^[A-Z0-9]{6,6}$/)
+              })
+            
+          })
+      })
+  })
+
+  describe('associatons', async function () {
+    specify('campaign', async function () {
+      const campaign = await factory.create('campaign')
+      const referralCode = await factory.create('ref_code_pg', { campaign_id: campaign.id })
+      const fetchedCampaign = await referralCode.$relatedQuery('campaign')
+      expect(fetchedCampaign.name).to.equal(campaign.name)
+    })
+  })
 })

@@ -7,7 +7,7 @@ exports.setup = (server, client, mongo) => {
       for (let region of regions) {
         region.subitems = (await client.query("SELECT id, label FROM dtl.countries WHERE region_id = $1", [region.id])).rows
       }
-      reply(regions)
+      return regions
     }
   })
 }

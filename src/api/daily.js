@@ -54,7 +54,7 @@ exports.setup = (server, client, mongo) => {
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       // condense small country counts to an 'other' category
       results.rows = dataset.condense(results.rows, 'ymd', 'country_code', 0.002)
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -62,7 +62,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       var [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await db.UsageSummary.dailyActiveUsers({
         daysAgo: parseInt(days.replace(' days', '')),
@@ -72,7 +72,7 @@ exports.setup = (server, client, mongo) => {
       })
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -80,7 +80,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/daily_new_users',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       const args = {
         daysAgo: parseInt(days.replace(' days', '')),
@@ -93,7 +93,7 @@ exports.setup = (server, client, mongo) => {
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -101,7 +101,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_platform',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       var [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await db.UsageSummary.dailyActiveUsers({
         daysAgo: parseInt(days.replace(' days', '')),
@@ -113,7 +113,7 @@ exports.setup = (server, client, mongo) => {
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -121,13 +121,13 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_platform_minus_first',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       var [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       const results = await db.UsageSummary.platformMinusFirst(days, platforms, channels, ref)
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -135,7 +135,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/versions',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let args = {
         daysAgo: days,
@@ -148,11 +148,14 @@ exports.setup = (server, client, mongo) => {
       // condense small version counts to an 'other' category
       results = dataset.condense(results, 'ymd', 'version')
       results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
-      reply(results)
+      return (results)
     }
   })
 
-  const correlate = (results, fld, valueFld='count') => {
+  const correlate = (results, fld, valueFld = 'count') => {
+    if (_.isEmpty(results)) {
+      return {}
+    }
     const sorted = _.sortBy(results, 'ymd')
     const maxLabel = sorted[sorted.length - 1].ymd
     const minLabel = sorted[0].ymd
@@ -189,7 +192,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dru_campaign',
-    handler: async (request, reply) => {
+    handler: async (request, h) => {
       let [days, platforms, channels] = common.retrieveCommonParameters(request)
       let args = {
         daysAgo: days,
@@ -202,7 +205,7 @@ exports.setup = (server, client, mongo) => {
       results = dataset.condense(results, 'ymd', 'campaign', 0.001)
       results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
       const correlations = correlate(results, 'campaign')
-      reply({
+      return ({
         results,
         correlations
       })
@@ -213,7 +216,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dnu_campaign',
-    handler: async (request, reply) => {
+    handler: async (request, h) => {
       let [days, platforms, channels] = common.retrieveCommonParameters(request)
       let args = {
         daysAgo: days,
@@ -226,7 +229,7 @@ exports.setup = (server, client, mongo) => {
       results = dataset.condense(results, 'ymd', 'campaign', 0.001)
       results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
       correlate(results, 'campaign')
-      reply(results)
+      return (results)
     }
   })
 
@@ -234,7 +237,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_campaign',
-    handler: async (request, reply) => {
+    handler: async (request, h) => {
       let [days, platforms, channels] = common.retrieveCommonParameters(request)
       let args = {
         daysAgo: days,
@@ -247,7 +250,7 @@ exports.setup = (server, client, mongo) => {
       results = dataset.condense(results, 'ymd', 'campaign', 0.001)
       results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
       correlate(results, 'campaign')
-      reply(results)
+      return (results)
     }
   })
 
@@ -255,13 +258,13 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_platform_first',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       var [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       const results = await client.query(DAU_PLATFORM_FIRST, [days, platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
+      return (results.rows)
     }
   })
 }

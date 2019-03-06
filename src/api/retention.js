@@ -29,7 +29,7 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/retention_week',
-    handler: async (request, reply) => {
+    handler: async (request, h) => {
       try {
         let platforms = common.platformPostgresArray(request.query.platformFilter)
         let channels = common.channelPostgresArray(request.query.channelFilter)
@@ -77,10 +77,10 @@ exports.setup = (server, client, mongo) => {
           }
           currentSize -= 1
         }
-        reply(data)
+        return (data)
       } catch (e) {
         console.log(e.message)
-        reply(e.toString()).code(500)
+        return (e.toString()).code(500)
       }
     }
   })

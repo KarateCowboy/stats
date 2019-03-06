@@ -24,15 +24,14 @@ let config = require('../config/config.' + profile + '.js')
 
 let server
 module.exports.setup = async (connections) => {
-  server = new Hapi.Server()
-  const connection = await server.connection({
+  server = new Hapi.Server({
     host: config.host,
     port: config.port
   })
   await mongoose.connect(process.env.MLAB_URI)
-  server.register(Inert, function () {})
+  await server.register(Inert)
   if (!process.env.TEST) {
-    server.register(blipp, function () {})
+    server.register(blipp)
   }
 
   // Setup the APIs

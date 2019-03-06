@@ -33,19 +33,30 @@ module.exports = class CommonAggregation {
   }
 
   cleanRecords (records) {
+    const validChannels = {
+      dev: true, unknown: true, stable: true, developer: true, nightly: true, beta: true, release: true
+    }
     records.forEach((row) => {
       row.ref = row.ref.replace(/[^A-Za-z0-9_\-]/g, '')
       row.version = row.version.replace(/[^0-9\.]/g, '')
+      row.channel = row.channel.replace(/[^A-Za-z]/g, '')
+
+      row.woi = row.woi.trim()
+      if (!row.woi.match(/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/g)) {
+        if (process.env.DEBUG) console.log(`reseting bad woi ${row.woi}`)
+        row.woi = '2016-01-04'
+      }
+
+      row.doi = row.doi.trim()
+      if (!row.doi.match(/^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$/g)) {
+        if (process.env.DEBUG) console.log(`reseting bad doi ${row.doi}`)
+        row.doi = '2016-01-04'
+      }
+
+      row.channel = row.channel || 'unknown'
+      if (!validChannels[row.channel]) row.channel = 'unknown'
       if (row.ref === '') row.ref = 'none'
       if (row.platform === 'android') row.platform = 'androidbrowser'
-      let woi = moment(row.woi)
-      if (!woi.isValid()) {
-        row.woi = '2016-02-10'
-      }
-      let doi = moment(row.doi)
-      if (!doi.isValid()) {
-        row.doi = '2016-02-10'
-      }
     })
   }
 

@@ -35,6 +35,22 @@ Given(/^there are new user records for the last three weeks$/, async function ()
   await factory.createMany('fc_usage', data)
 })
 
+Given(/^there are new user records for the last two months, across all channels$/, async function () {
+  const usages = []
+  const allChannels = await db.Channel.query()
+  await Promise.all(_.range(1, 61).map(async (i) => {
+    const day = moment().subtract(i, 'days')
+    const channel = _.first(_.shuffle(allChannels)).channel
+    const usageAttrs = await factory.attrs('fc_usage', {
+      ymd: day.format('YYYY-MM-DD'),
+      channel: channel,
+      total: (_.random(200, 5000))
+    })
+    usages.push(usageAttrs)
+  }))
+  await factory.createMany('fc_usage', usages)
+})
+
 Given(/^there are new user records for the last two months, across several campaigns$/, async function () {
   const two_months_ago = moment().subtract(2, 'months')
   this.setTo('two_months_ago', two_months_ago)
@@ -60,7 +76,7 @@ Given(/^there are new user records for the last two months, across several campa
 })
 
 Given(/^I filter Daily New Users by an existing campaign$/, async function () {
-  await this.menuHelpers.pickDaysBack(120)
+  await this.menuHelpers.setDaysBack(120)
   await browser.click('.selection')
   const refCodes = await this.sample_campaign.getReferralCodes()
   this.setTo('sampleRefCode', _.first(refCodes).code_text)
@@ -90,3 +106,15 @@ Then(/^I should see data in the Daily New Users table updated to match the campa
   }
 })
 
+Then(/^I should see data in the Daily New Users table updated to match the (.*) channel$/, async function (channel) {
+  let tableRows = await this.tableHelpers.tableRows()
+  const daysBack = await this.menuHelpers.getDaysBack()
+  const dates = await db.UsageSummary.query()
+    .distinct('ymd')
+    .where('channel', channel)
+    .andWhere('ymd', '>=', moment().subtract(daysBack, 'days').format('YYYY-MM-DD'))
+  if (_.isArray(tableRows) === false) {
+    tableRows = [tableRows]
+  }
+  expect(tableRows).to.have.property('length', dates.length)
+})

@@ -67,6 +67,10 @@ var channels = {
     id: 'beta',
     label: 'Beta'
   },
+  nightly: {
+    id: 'nightly',
+    label: 'Nightly'
+  },
   stable: {
     id: 'stable',
     label: 'Stable'
@@ -272,7 +276,7 @@ var statsHandler = function (rows) {
 
   var statsChart = document.getElementById('statsChart')
   var ctx = statsChart.getContext('2d')
-  var myChart = new Chart(ctx, { type: opts.chartType, data: data, options: window.STATS.COMMON.standardYAxisOptions})
+  var myChart = new Chart(ctx, {type: opts.chartType, data: data, options: window.STATS.COMMON.standardYAxisOptions})
 }
 
 // Build handler for a single value chart updater
@@ -654,9 +658,19 @@ let forceOrganicOrdering = (a, b) => {
   return a.localeCompare(b)
 }
 
-var DNUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'hashedLabel', pivot: true, chartType: 'bar', datasetOrdering: forceOrganicOrdering })
+var DNUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', {
+  colourBy: 'hashedLabel',
+  pivot: true,
+  chartType: 'bar',
+  datasetOrdering: forceOrganicOrdering
+})
 
-var DAUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', { colourBy: 'hashedLabel', pivot: true, chartType: 'bar', datasetOrdering: forceOrganicOrdering })
+var DAUCampaignHandler = buildSuccessHandler('ymd', 'campaign', 'Date', 'campaign', {
+  colourBy: 'hashedLabel',
+  pivot: true,
+  chartType: 'bar',
+  datasetOrdering: forceOrganicOrdering
+})
 
 var DRUCampaignHandler = (results, correlations) => {
   // show the chart and table
@@ -1261,6 +1275,7 @@ if (pageState) {
     channelFilter: {
       'dev': true,
       'beta': false,
+      'nightly': false,
       'release': true
     },
     showToday: false,
@@ -1357,8 +1372,7 @@ const updatePageUIState = () => {
       label = pageState.countryCodes.length + ' countries'
     }
     $(`#controls`).find(`h5.platform-list span.countries`).text(label).show()
-    $(`#controls`).find(`h5.platform-list span.countries`).tooltip({
-    })
+    $(`#controls`).find(`h5.platform-list span.countries`).tooltip({})
     $(`#controls`).find(`h5.platform-list span.countries`).attr('data-original-title', pageState.countryCodes.join(', '))
   } else {
     $(`#controls`).find(`h5.platform-list span.countries`).hide()
@@ -2140,14 +2154,14 @@ const setupControls = () => {
 }
 
 // callback from brave-menu
-$("#cc_menu").on("selection", (evt, countryCodes) => {
+$('#cc_menu').on('selection', (evt, countryCodes) => {
   pageState.countryCodes = countryCodes
   updatePageUIState()
   refreshData()
 })
 
 // callback from brave-menu
-$("#woi_menu").on("selection", (evt, wois) => {
+$('#woi_menu').on('selection', (evt, wois) => {
   pageState.wois = wois
   updatePageUIState()
   refreshData()

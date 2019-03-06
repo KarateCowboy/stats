@@ -77,7 +77,7 @@ Then(/^the ref select should not be visible$/, async function () {
 })
 
 Given(/^I pick "([^"]*)" days for the date range$/, async function (days) {
-  await this.menuHelpers.pickDaysBack(days)
+  await this.menuHelpers.setDaysBack(days)
 })
 
 When(/^I refresh the page$/, async function () {
@@ -121,4 +121,9 @@ Then(/^I should see (.*) in the url bar and the report title (.*)$/, async funct
   expect(url).to.contain(path)
   const contentTitle = await this.menuHelpers.getContentTitle()
   expect(contentTitle).to.contain(title)
+})
+
+When(/^I filter by channel (.*)$/, async function (channel) {
+  await this.menuHelpers.unsetAllChannels()
+  await this.menuHelpers.setChannel(channel)
 })

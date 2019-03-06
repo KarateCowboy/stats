@@ -9,7 +9,7 @@ const r = require('request')
 const allPlatforms = ['osx', 'winx64', 'winia32', 'ios', 'android', 'unknown', 'linux', 'darwin', 'androidbrowser', 'winx64-bc', 'linux-bc', 'osx-bc']
 exports.allPlatforms = allPlatforms
 
-const allChannels = ['dev', 'beta', 'stable', 'nightly', 'developer','unknown']
+const allChannels = ['dev', 'beta', 'stable', 'nightly', 'developer', 'unknown']
 exports.allChannels = allChannels
 
 exports.channelPostgresArray = (channelFilter) => {
@@ -99,24 +99,18 @@ module.exports.round = function (v, n) {
 
   client - Postgres client connection
   query  - SQL to execute
-  successHandler - function(reply, results, request) -> Null
+  successHandler - function( results, request) -> Null
   function to handle sending results to the reply function
   paramsBuilder - function(request) -> Array
   function to build a set of SQL params for query
 */
 module.exports.buildQueryReponseHandler = function (client, query, successHandler, paramsBuilder) {
   paramsBuilder = paramsBuilder || ((request) => { return [] })
-  successHandler = successHandler || ((reply, results) => { reply(results.rows) })
-  return (request, reply) => {
+  successHandler = successHandler || ((results) => { return (results.rows) })
+  return async (request, h) => {
     const params = paramsBuilder(request)
-    client.query(query, params, (err, results) => {
-      if (err) {
-        console.log(err)
-        reply(err.toString()).code(500)
-      } else {
-        successHandler(reply, results, request)
-      }
-    })
+    const results = await client.query(query, params)
+    return successHandler(results, request)
   }
 }
 

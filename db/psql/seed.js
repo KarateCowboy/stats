@@ -1,3 +1,4 @@
+const _ = require('lodash')
 module.exports.exec = async () => {
   const platforms = [
     ['winx64', 'Muon Windows 64', 'Muon Win64'],
@@ -38,6 +39,33 @@ module.exports.exec = async () => {
     await Promise.all(channels.map(async c => {
       await db.Channel.query().insert({channel: c[0], description: c[1], label: c[2]})
     }))
+  }
+
+  let publisherPlatforms = await knex('dtl.publisher_platforms').select()
+  if (_.isEmpty(publisherPlatforms)) {
+    const platforms = [
+      {
+        platform: 'publisher',
+        label: 'Publishers',
+        ord: 0,
+        icon_url: 'internet.svg'
+      },
+      {
+        platform: 'youtube',
+        label: 'Youtube',
+        ord: 1,
+        icon_url: 'youtube.svg'
+      },
+      {
+        platform: 'twitch',
+        label: 'Twitch',
+        ord: 2,
+        icon_url: 'twitch.svg'
+      }
+    ]
+    for (let i of platforms) {
+      await knex('dtl.publisher_platforms').insert(i)
+    }
   }
 
 }

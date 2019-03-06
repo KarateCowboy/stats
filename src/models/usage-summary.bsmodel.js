@@ -5,51 +5,25 @@
  */
 const moment = require('moment')
 const _ = require('lodash')
-module.exports = (sequelize, Sequelize) => {
-  const UsageSummary = sequelize.define('UsageSummary',
-    {
-      created_at: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
-      },
-      updated_at: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
-      },
-      ymd: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.NOW
-      },
-      platform: {
-        type: Sequelize.ENUM('linux', 'linux-bc', 'winia32', 'winia32-bc', 'winx64', 'winx64-bc', 'ios', 'androidbrowser', 'android', 'osx', 'osx-bc')
-      },
-      version: {
-        type: Sequelize.STRING
-      },
-      first_time: {
-        type: Sequelize.BOOLEAN
-      },
-      total: {type: Sequelize.INTEGER},
-      channel: {
-        type: Sequelize.ENUM('release', 'stable', 'beta', 'developer', 'nightly', 'dev')
-      },
-      ref: {
-        type: Sequelize.STRING
-      }
+const Joi = require('joi')
+const Schema = require('./validators/usage-summary')
+module.exports = (knex) => {
+  const BaseModel = require('./base_model')(knex)
+
+  class UsageSummary extends BaseModel {
+    get schema () {
+      return Schema
     }
 
-    , {
-      underscored: true,
-      schema:
-        'dw',
-      tableName:
-        'fc_usage',
-      timestamps:
-        true,
-      freezeTableName:
-        true
+    static get tableName () {
+      return 'dw.fc_usage'
     }
-  )
+
+    static basicDau () {
+      return this.query().select('ymd', 'platform', 'version').sum({count: 'total'}).groupBy('ymd', 'platform', 'version')
+    }
+  }
+
   UsageSummary.firstCount = async function (ymd, platforms, channels, ref) {
     const ymd_range = Math.abs(moment(ymd).diff(moment(), 'days'))
     const query = `SELECT

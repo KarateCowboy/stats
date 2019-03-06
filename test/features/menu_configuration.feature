@@ -46,4 +46,6 @@ Feature: Intelligent menu
       | crashes_platform_version    | mnCrashesVersion          | Daily Crashes by Version                       | Daily Crashes by Version                                   |
       | downloads                   | mnDownloads               | Downloads                                      | Downloads                                                  |
       | druCampaign                 | mnDRUCampaign             | Daily Returning Users by Campaign - DRU        | Daily Returning Users by Campaign (DRU)                    |
+      | dauCampaign                 | mnDAUCampaign             | Daily Active Users by Campaign - DAU           | Daily Active Users by Campaign (DAU)                       |
+      | dnuCampaign                 | mnDNUCampaign             | Daily New Users by Campaign - DNU              | Daily New Users by Campaign (DNU)                          |
 

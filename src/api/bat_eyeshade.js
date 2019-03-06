@@ -27,8 +27,8 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       BAT_EYESHADE_WALLETS_TOTAL,
-      (reply, results) => {
-        reply({
+      ( results) => {
+        return ({
           wallets: parseInt(results.rows[0].wallets),
           balance: parseFloat(results.rows[0].balance),
           funded: parseInt(results.rows[0].funded),

@@ -10,6 +10,17 @@ const WeekOfInstall = require('../../src/models/retention').WeekOfInstall
 const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
 const main = require('../../src/index')
 const _ = require('underscore')
+let params = {
+  method : 'GET',
+  url :  '/api/1/campaigns',
+  auth: {
+    strategy: 'session',
+    credentials: {
+      'user': 'admin',
+      'password': process.env.ADMIN_PASSWORD
+    }
+  }
+}
 
 describe('/retention_week', async function () {
   it.skip('returns twelve rows/three months of data', async function () {
@@ -50,10 +61,7 @@ describe('/retention_week', async function () {
     const server = await main.setup({pg: pg_client, mg: mongo_client})
 
     // execution
-    const params = {
-      method: 'GET',
-      url: `/api/1/retention_week?platformFilter=androidbrowser&channelFilter=stable`
-    }
+    params.url = `/api/1/retention_week?platformFilter=androidbrowser&channelFilter=stable`
     const response = await server.inject(params)
     const payload = JSON.parse(response.payload)
     expect(payload.length).to.be.above(10)
@@ -88,10 +96,7 @@ describe('/monthly_average_stats_platform', async function () {
     const server = await main.setup({pg: pg_client, mg: mongo_client})
 
     // execution
-    let params = {
-      method: 'GET',
-      url: `/api/1/monthly_average_stats_platform?platformFilter=winx64&channelFilter=dev&ref=123ABC`
-    }
+    params.url = `/api/1/monthly_average_stats_platform?platformFilter=winx64&channelFilter=dev&ref=123ABC`
     let response = await server.inject(params)
     //validation
     let payload = JSON.parse(response.payload)

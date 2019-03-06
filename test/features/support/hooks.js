@@ -41,7 +41,7 @@ Before(async function () {
   //for chrome
   const options = {desiredCapabilities: {browserName: 'chrome', 'chromeOptions': {args: ['--headless']}}}
   //keep around for testing with firefox
-  // const options = {desiredCapabilities: {browserName: 'firefox', 'moz:firefoxOptions': {args: ['-headless']}}}
+  //const options = {desiredCapabilities: {browserName: 'firefox', 'moz:firefoxOptions': {args: ['-headless']}}}
   global.browser = webdriver.remote(options)
   try {
     await server.kickoff()
