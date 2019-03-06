@@ -285,7 +285,7 @@ insert into dtl.countries (id, region_id, label) values ('UZ', 'Central Asia', '
 
 exports.down = async (knex) => {
   await knex.raw(`
-    DROP TABLE dtl.regions;
     DROP TABLE dtl.countries;
+    DROP TABLE dtl.regions;
   `)
 }
