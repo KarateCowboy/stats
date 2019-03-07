@@ -11,12 +11,22 @@ INSERT INTO dw.fc_thirty_day_referral_stats (
 ON CONFLICT (ymd, ref, platform) DO UPDATE SET downloads = $4, installs = $5, confirmations = $6
 `
 
+const platformMappings = {
+  'winx64': 'winx64-bc',
+  'winia32': 'winia32-bc',
+  'osx': 'osx-bc',
+  'linux': 'linux-bc',
+  'android': 'androidbrowser',
+  'ios': 'ios'
+}
+
 module.exports = class ThirtyDayAggregation {
   async updateSummary (rows) {
     let row
     try {
       await pg_client.query('BEGIN TRANSACTION')
       for (row of rows) {
+        if (platformMappings[row.platform]) row.platform = platformMappings[row.platform]
         await pg_client.query(QUERY, [
           row.ymd, row.referral_code, row.platform, row.retrievals, row.first_runs, row.finalized
         ])
