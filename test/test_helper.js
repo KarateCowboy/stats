@@ -85,7 +85,8 @@ class TestHelper {
         'campaigns',
         'referral_codes',
         'platforms',
-        'channels'
+        'channels',
+        'publisher_platforms'
       ]
     }
     this.materialized_views = {

@@ -84,13 +84,13 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/mau_platform',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await client.query(MAU_PLATFORM, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -98,12 +98,12 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/mau',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await client.query(MAU, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -111,12 +111,12 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_monthly_average',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await client.query(AVERAGE_MONTHLY_DAU, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -124,13 +124,13 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_monthly_average_platform',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await client.query(AVERAGE_MONTHLY_DAU_PLATFORM, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -138,12 +138,12 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_first_monthly_average',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await client.query(AVERAGE_MONTHLY_FIRST_DAU, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      reply(results.rows)
+      return (results.rows)
     }
   })
 
@@ -151,13 +151,13 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/dau_first_monthly_average_platform',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await client.query(AVERAGE_MONTHLY_FIRST_DAU_PLATFORM, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
-      reply(results.rows)
+      return (results.rows)
     }
   })
 }

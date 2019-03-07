@@ -7,10 +7,10 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/daily_retention',
-    handler: async (request, reply) => {
-      let [days, platforms, channels, ref, wois] = common.retrieveCommonParameters(request)
+    handler: async (request, h) => {
+      let [days, platforms, channels, ref, wois, countryCodes] = common.retrieveCommonParameters(request)
 
-      if (!ref) return reply([])
+      if (!ref) return []
 
       let dau = await db.UsageSummary.dailyActiveUsers({
         common: true,
@@ -18,7 +18,8 @@ exports.setup = (server, client, mongo) => {
         platforms: platforms,
         channels: channels,
         ref: ref,
-        wois: wois
+        wois: wois,
+        countryCodes: countryCodes
       })
       dau.rows.forEach((row) => common.formatPGRow(row))
       dau.rows = common.potentiallyFilterToday(dau.rows, request.query.showToday === 'true')
@@ -29,7 +30,8 @@ exports.setup = (server, client, mongo) => {
         platforms: platforms,
         channels: channels,
         ref: ref,
-        wois: wois
+        wois: wois,
+        countryCodes: countryCodes
       })
       dnu.rows.forEach((row) => common.formatPGRow(row))
       dnu.rows = common.potentiallyFilterToday(dnu.rows, request.query.showToday === 'true')
@@ -72,7 +74,7 @@ exports.setup = (server, client, mongo) => {
         }
       })
 
-      reply(combined)
+      return (combined)
     }
   })
 }

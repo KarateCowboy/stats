@@ -21,17 +21,17 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/job_status',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       client.query(JOB_STATUS, [], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           var rows = results.rows.map((row) => {
             row.ago = moment(row.ts).fromNow()
             row.duration = parseFloat(row.duration || 0)
             return row
           })
-          reply(rows)
+          return (rows)
         }
       })
     }
@@ -40,17 +40,17 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/jobs',
-    handler: function (request, reply) {
+    handler: function (request, h) {
       client.query(JOB_STATUS, [], (err, results) => {
         if (err) {
-          reply(err.toString()).code(500)
+          return h.response(err.toString()).code(500)
         } else {
           var rows = results.rows.map((row) => {
             row.ago = moment(row.ts).fromNow()
             row.duration = parseFloat(row.duration || 0)
             return row
           })
-          reply(rows)
+          return (rows)
         }
       })
     }

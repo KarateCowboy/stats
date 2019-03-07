@@ -99,6 +99,9 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
     if (args.wois !== undefined && _.compact(args.wois).length > 0) {
       query.whereIn('woi', args.wois)
     }
+    if (args.countryCodes !== undefined && _.compact(args.countryCodes).length > 0) {
+      query.whereIn('country_code', args.countryCodes)
+    }
     if (group.includes('platform') || group.includes('version')) {
       var day_totals = await pg_client.query(query.toString())
       if (group.includes('platform')) {
@@ -129,6 +132,9 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
     }
     if (args.wois !== undefined && _.compact(args.wois).length > 0) {
       query.whereIn('woi', args.wois)
+    }
+    if (args.countryCodes !== undefined && _.compact(args.countryCodes).length > 0) {
+      query.whereIn('country_code', args.countryCodes)
     }
     if (group.includes('platform') || group.includes('version')) {
       var day_totals = await pg_client.query(query.toString())
@@ -262,8 +268,7 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
 SELECT
   TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
   FC.version,
-  SUM(FC.total) AS count,
-  ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
+  SUM(FC.total) AS count
 FROM dw.fc_usage FC
 WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
@@ -276,8 +281,7 @@ ORDER BY FC.ymd DESC, FC.version`
 SELECT
   TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
   FC.version,
-  SUM(FC.total) AS count,
-  ROUND(SUM(FC.total) / ( SELECT SUM(total) FROM dw.fc_usage WHERE ymd = FC.ymd AND platform = ANY ($2) AND channel = ANY ($3) ), 3) * 100 AS daily_percentage
+  SUM(FC.total) AS count
 FROM dw.fc_usage FC
 WHERE
   FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
@@ -294,7 +298,6 @@ ORDER BY FC.ymd DESC, FC.version`
       results = await pg_client.query(DAU_VERSION_NO_REF, [`${args.daysAgo} days`, args.platform, args.channel])
     }
     return results.rows
-
   }
 
   return UsageSummary

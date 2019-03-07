@@ -29,7 +29,6 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false, other_attribu
   testing_ymd = working_date.clone()
   const usages = []
   for (let i of _.range(1, 29)) {
-    working_date.add(1, 'days')
     let refs = []
     if (!mixed_ref) {
       const noneRef = await db.ReferralCode.query().insert({code_text: 'none'})
@@ -58,6 +57,7 @@ build_monthly_usages = async (number_of_usages, mixed_ref = false, other_attribu
         usages.push(usage)
       }
     }
+    working_date.add(1, 'days')
   }
   await mongo_client.collection('brave_core_usage').insertMany(usages.slice(0, number_of_usages))
   const month_service = new MonthUpdate()
@@ -149,9 +149,8 @@ Given(/^there are "([^"]*)" returning mixed ref usages for the prior month$/, {t
 })
 
 Then(/^I should see MAU for all referral codes$/, async function () {
-  const total = await CoreUsage.count({
-    monthly: true
-  })
+  let total = await knex('dw.fc_usage_month').sum('total').where('ymd','<', moment().format('YYYY-MM-DD'))
+  total = parseInt(total[0].sum)
   expect(total).to.be.greaterThan(0, 'Total should be more than 0')
   const usageData = await browser.getHTML('#usageContent .table-responsive')
   expect(usageData).to.include(total.toLocaleString('en'))

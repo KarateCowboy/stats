@@ -74,13 +74,13 @@ const commonDaysParamsBuilder = (request) => {
 }
 
 // Default success handler
-const commonSuccessHandler = (reply, results, request) => {
+const commonSuccessHandler = ( results, request) => {
   results.rows.forEach((row) => row.count = parseFloat(row.count))
   results.rows = common.potentiallyFilterToday(
     results.rows,
     request.query.showToday === 'true'
   )
-  reply(results.rows)
+  return (results.rows)
 }
 
 // Endpoint definitions
@@ -153,8 +153,8 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       EYESHADE_WALLETS_TOTAL,
-      (reply, results) => {
-        reply({
+      ( results) => {
+        return ({
           wallets: parseInt(results.rows[0].wallets),
           balance: parseInt(results.rows[0].balance),
           funded: parseInt(results.rows[0].funded),
