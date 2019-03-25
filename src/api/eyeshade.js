@@ -59,7 +59,7 @@ SELECT
   wallets,
   balance,
   funded,
-  ( SELECT quote FROM dw.btc_quotes WHERE currency_code = 'USD' ) as btc_usd
+  ( SELECT quote FROM dw.bat_quotes WHERE currency_code = 'USD' ) as bat_usd
 FROM
 ( SELECT
   SUM(wallets)               AS wallets,
@@ -158,7 +158,7 @@ exports.setup = (server, client, mongo) => {
           wallets: parseInt(results.rows[0].wallets),
           balance: parseInt(results.rows[0].balance),
           funded: parseInt(results.rows[0].funded),
-          btc_usd: parseFloat(results.rows[0].btc_usd)
+          bat_usd: parseFloat(results.rows[0].bat_usd)
         })
       }
     )
