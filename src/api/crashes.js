@@ -329,19 +329,10 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/recent_crash_report_details',
-    handler: function (request, h) {
-      let days = parseInt(request.query.days || 7, 10)
-      days += ' days'
-      let platforms = common.platformPostgresArray(request.query.platformFilter)
-      return client.query(RECENT_CRASH_REPORT_DETAILS, [days], (err, results) => {
-        if (err) {
-          console.log(err)
-          return h.response(err.toString()).code(500)
-        } else {
-          results.rows.forEach((row) => common.formatPGRow(row))
-          return (results.rows)
-        }
-      })
+    handler: async (request, h) => {
+      let days = parseInt(request.query.days || 7, 10) + ' days'
+      let results = await client.query(RECENT_CRASH_REPORT_DETAILS, [days])
+      return results.rows
     }
   })
 
@@ -376,12 +367,14 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/crash_report',
     handler: function (request, h) {
       var id = request.query.id
-      return crash.storedCrash(client, id, (err, results) => {
-        if (err) {
-          return h.response(err.toString()).code(500)
-        } else {
-          return (results)
-        }
+      return new Promise((resolve, reject) => {
+        crash.storedCrash(client, id, (err, results) => {
+          if (err) {
+            reject(h.response(err.toString()).code(500))
+          } else {
+            resolve(results)
+          }
+        })
       })
     }
   })
