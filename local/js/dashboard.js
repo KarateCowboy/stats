@@ -1139,11 +1139,8 @@ var overviewRetriever = async function () {
     console.log(e)
   }
 
-  let [btc, bat] = await Promise.all([
-    $.ajax('/api/1/ledger_overview'),
-    $.ajax('/api/1/bat/ledger_overview')
-  ])
-  window.OVERVIEW.ledger(btc, bat, builders)
+  let bat = await $.ajax('/api/1/ledger_overview')
+  window.OVERVIEW.ledger(bat, builders)
 }
 
 var eyeshadeRetriever = function () {

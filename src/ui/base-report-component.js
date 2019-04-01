@@ -154,8 +154,8 @@ module.exports = class BaseReportComponent {
       }
 
       if (opts.growth_rate && rows[0]) {
-        averageGrowthRate = Math.pow(rows[rows.length - 1].count / rows[0].count, 1 / rows.length) - 1
-        averageGrowthRateDesc = 'Math.pow(' + rows[rows.length - 1].count + '/' + rows[0].count + ', 1 / ' + rows.length + ') - 1'
+        let averageGrowthRate = Math.pow(rows[rows.length - 1].count / rows[0].count, 1 / rows.length) - 1
+        let averageGrowthRateDesc = 'Math.pow(' + rows[rows.length - 1].count + '/' + rows[0].count + ', 1 / ' + rows.length + ') - 1'
         console.log(averageGrowthRate)
         table.append(tr([
           td(),
@@ -169,7 +169,7 @@ module.exports = class BaseReportComponent {
           td(st(rows[rows.length - 1].count))
         ]))
 
-        for (i = 1; i < 13; i++) {
+        for (let i = 1; i < 13; i++) {
           table.append(tr([
             td(moment(rows[rows.length - 1].ymd).add(i, 'months').format('MMMM YYYY')),
             td(st(rows[rows.length - 1].count * Math.pow(1 + averageGrowthRate, i)))

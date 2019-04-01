@@ -15,13 +15,14 @@ module.exports = class Application {
 
     this.router = new Grapnel()
     this.menuState = new MenuConfig()
+    this.contentTags = new Set()
     reportComponents.forEach((r) => {
       this.register(r)
     })
     this.currentlySelected = _.isEmpty(reportComponents) ? null : _.first(reportComponents).menuId
     if (pageState) {
       Object.assign(this.pageState, pageState)
-    } 
+    }
     this.drawSideBar()
 
     this.renderInitialUi()
@@ -47,6 +48,7 @@ module.exports = class Application {
   }
 
   async updateUiState () {
+    this.hideContentTags()
     $('#page-load-status').empty()
     this.toggleMenuItems()
     if (this.currentReport()) {
@@ -81,6 +83,11 @@ module.exports = class Application {
       }
     })
     $('#page-load-status').text('loaded')
+  }
+
+  hideContentTags () {
+    const toHide = Array.from(this.contentTags).filter((t) => { return t !== this.currentReport().contentTagId })
+    toHide.forEach((t) => { $(`#${t}`).hide()})
   }
 
   toggleMenuItems () {
@@ -173,6 +180,7 @@ module.exports = class Application {
     reportComponent.app = this
     this.reports[reportComponent.menuId] = reportComponent
     this.router.get(reportComponent.path, async (req) => { await this.routerOp(reportComponent)})
+    this.contentTags.add(reportComponent.contentTagId)
   }
 
   async routerOp (reportComponent) {

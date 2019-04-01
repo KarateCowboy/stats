@@ -32,6 +32,9 @@ describe('Application', function () {
   specify('pageState', function () {
     expect(application.pageState instanceof PageState).to.equal(true)
   })
+  specify('contentTags', function () {
+    expect(application.contentTags).to.be.an('set')
+  })
   describe('register', function () {
     let sampleComponent
     beforeEach(function () {
@@ -78,6 +81,10 @@ describe('Application', function () {
       expect(application.router.get.called).to.equal(true)
       expect(usesPath).to.equal(true)
       application.router.get.restore()
+    })
+    it('adds the reports contentTagId to the application list of content tags', async function () {
+      application.register(sampleComponent)
+      expect(application.contentTags).to.include(sampleComponent.contentTagId)
     })
     describe('.routerOp', function () {
       it('sets #currentlySelected to the report\'s menuId', function () {
@@ -126,6 +133,14 @@ describe('Application', function () {
       })
     })
     describe('updateUiState', async function () {
+      specify('calls the hideContentTags method', async function () {
+        application.reports = []
+        application.register(sampleComponent)
+        sinon.stub(application, 'hideContentTags')
+        await application.updateUiState()
+        expect(application.hideContentTags.called).to.equal(true)
+        application.hideContentTags.restore()
+      })
       specify('show / hide controls based on report menuConfig', async function () {
         const $ = require('jquery')
         application.reports = []
