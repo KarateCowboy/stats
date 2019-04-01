@@ -107,6 +107,7 @@ Then(/^I should see data in the Daily New Users table updated to match the campa
 })
 
 Then(/^I should see data in the Daily New Users table updated to match the (.*) channel$/, async function (channel) {
+  await browser.pause(500)
   let tableRows = await this.tableHelpers.tableRows()
   const daysBack = await this.menuHelpers.getDaysBack()
   const dates = await db.UsageSummary.query()

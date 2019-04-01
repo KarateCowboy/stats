@@ -8,20 +8,21 @@ const _ = require('lodash')
 const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const moment = require('moment')
-const {ObjectID} = require('mongodb')
-const PublisherTotal = require('../../src/models/publisher_total.model')()
+const ObjectionAdapter = require('factory-girl-objection-adapter')
 
 const define = () => {
-  factory.setAdapter(new FactoryGirl.MongooseAdapter(), 'publisher_total')
+  factory.setAdapter(new ObjectionAdapter(), 'publisher_total')
 
-  factory.define('publisher_total', PublisherTotal, {
-    _id: () => (new ObjectID()),
+  factory.define('publisher_total', db.PublisherTotal, {
+    id: () => _.random(100000, 200000),
     'email_verified_with_a_verified_channel_and_uphold_verified': _.random(500, 20000),
     'email_verified_with_a_verified_channel': _.random(500, 20000),
     'email_verified_with_a_channel': _.random(500, 20000),
     'email_verified': _.random(500, 20000),
-    createdAt: () => moment().toDate(),
-    updatedAt: () => moment().toDate()
+    created_at: () => moment().toDate(),
+    updated_at: () => moment().toDate()
   })
 }
 module.exports.define = define
+
+

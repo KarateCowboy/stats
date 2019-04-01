@@ -63,6 +63,7 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/dau',
     handler: async function (request, h) {
+      console.log(request)
       var [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await db.UsageSummary.dailyActiveUsers({
         daysAgo: parseInt(days.replace(' days', '')),

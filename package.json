@@ -90,6 +90,7 @@
     "cucumber": "4.1.0",
     "factory-girl": "5.0.2",
     "faker": "^4.1.0",
+    "hapi-auth-basic": "^5.0.0",
     "mocha": "5.1.1",
     "mocha-loader": "^2.0.1",
     "nock": "^10.0.2",

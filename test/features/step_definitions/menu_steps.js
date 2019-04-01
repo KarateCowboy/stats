@@ -79,6 +79,10 @@ Given(/^I view the Daily New Users report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#daily_new_users')
 })
 
+Given(/^I view the Daily Publishers report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#dailyPublishers')
+})
+
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref-filter`)
   expect(result).to.equal(true)
@@ -113,15 +117,12 @@ Given(/^I search the sidebar filter for (.*)$/, async function (menuSearchItem) 
   await browser.pause(100)
 })
 Then(/^I should see (.*) at the top of the sidebar list$/, {
-  timeout: 90000
+  timeout: 25000
 }, async function (menuSearchItem) {
-  // await browser.waitForVisible(`#${menuSearchItem}`)
-  // let isVisible = await browser.isVisible(`#${menuSearchItem}`)
   await browser.waitUntil(async function () {
     let isVisible = await browser.isVisible(`#${menuSearchItem}`)
     return isVisible === true
-  }, 20000, 'broke the wait')
-  // expect(isVisible).to.equal(true, `${menuSearchItem} should be visible, but is not`)
+  }, 10000, `could not find ${menuSearchItem} in the sidebar menu`)
   const allLi = await browser.getHTML('.sidebar > ul > li')
   const visibleLi = allLi.filter((li) => {
     return li.includes('display: none') === false
