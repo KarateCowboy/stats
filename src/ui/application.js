@@ -50,6 +50,7 @@ module.exports = class Application {
   async updateUiState () {
     this.hideContentTags()
     $('#page-load-status').empty()
+    $('#sideBar > li').removeClass('active')
     this.toggleMenuItems()
     if (this.currentReport()) {
       $('#contentTitle').empty().append(this.currentReport().title)
@@ -82,7 +83,13 @@ module.exports = class Application {
         controls.find(`h5.platform-list span.${k}`).hide()
       }
     })
+    $('#' + this.currentlySelected).parent().addClass('active')
     $('#page-load-status').text('loaded')
+    $(document).ajaxStart(function () {
+      $('#hourglassIndicator').fadeIn(200)
+    }).ajaxStop(function () {
+      $('#hourglassIndicator').fadeOut(200)
+    })
   }
 
   hideContentTags () {
@@ -107,12 +114,14 @@ module.exports = class Application {
 
   drawSideBar () {
     const _sideBar = `
+    <li>
     <div class="input-group" style="padding: 8px;">
       <input type="text" class="form-control" id="searchLinks" placeholder="Filter...">
       <span class="input-group-btn">
         <button class="btn btn-default" type="button" id="clearSearchLinks"><i class="fa fa-times" aria-hidden="true"></i></button>
       </span>
     </div>
+    </li>
       <% _.values(reportComponents).forEach(function(reportComponent) { %>
         <li><a href="#<%- reportComponent.path %>" id="<%- reportComponent.menuId %>"><%- reportComponent.menuTitle %></a></li>
       <% }) %>`
@@ -179,7 +188,7 @@ module.exports = class Application {
     }
     reportComponent.app = this
     this.reports[reportComponent.menuId] = reportComponent
-    this.router.get(reportComponent.path, async (req) => { await this.routerOp(reportComponent)})
+    this.router.get(reportComponent.path, async (req, evt) => { evt.preventDefault(); await this.routerOp(reportComponent)})
     this.contentTags.add(reportComponent.contentTagId)
   }
 

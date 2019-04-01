@@ -4,12 +4,12 @@
 
 var common = require('./common')
 
-const BAT_EYESHADE_WALLETS_TOTAL = `
+const BTC_EYESHADE_WALLETS_TOTAL = `
 SELECT
   wallets,
   balance,
   funded,
-  ( SELECT quote FROM dw.bat_quotes WHERE currency_code = 'USD' ) as btc_usd
+  ( SELECT quote FROM dw.btc_quotes WHERE currency_code = 'USD' ) as btc_usd
 FROM
 ( SELECT
   SUM(wallets)               AS wallets,
@@ -23,16 +23,16 @@ exports.setup = (server, client, mongo) => {
   // Ledger overview summary statistics
   server.route({
     method: 'GET',
-    path: '/api/1/bat/ledger_overview',
+    path: '/api/1/btc/ledger_overview',
     handler: common.buildQueryReponseHandler(
       client,
-      BAT_EYESHADE_WALLETS_TOTAL,
+      BTC_EYESHADE_WALLETS_TOTAL,
       ( results) => {
         return ({
           wallets: parseInt(results.rows[0].wallets),
           balance: parseFloat(results.rows[0].balance),
           funded: parseInt(results.rows[0].funded),
-          bat_usd: parseFloat(results.rows[0].btc_usd)
+          btc_usd: parseFloat(results.rows[0].btc_usd)
         })
       }
     )

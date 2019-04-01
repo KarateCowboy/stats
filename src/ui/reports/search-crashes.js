@@ -25,6 +25,7 @@ class SearchCrashes extends BaseReportComponent {
   }
 
   handler () {
+    console.log('executing crash search handler')
     var q = this.value
     var table = $('#search-results-table tbody')
     if (!q) {

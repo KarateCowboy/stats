@@ -356,7 +356,7 @@ let build30DayRetentionChartHandler = (chartContainerId, opts) => {
             drawBorder: false,
             drawOnChartArea: true,
           },
-          position: "right",
+          position: 'right',
           ticks: {
             fontColor: colourer(0, 1),
             beginAtZero: true
@@ -373,7 +373,7 @@ let build30DayRetentionChartHandler = (chartContainerId, opts) => {
               drawBorder: false,
               drawOnChartArea: false,
             },
-            position: "left",
+            position: 'left',
             ticks: {
               fontColor: colourer(2, 1),
               suggestedMax: 100,
@@ -697,9 +697,15 @@ const dailyNewUsersHandler = buildSuccessHandler('ymd', 'platform')
 
 const usagePlatformHandlerStandard = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label'})
 
-const usageCountryHandler = buildSuccessHandler('ymd', 'country_code', 'Date', 'Country', {colourBy: 'hashedLabel', pivot: true})
+const usageCountryHandler = buildSuccessHandler('ymd', 'country_code', 'Date', 'Country', {
+  colourBy: 'hashedLabel',
+  pivot: true
+})
 
-const usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
+const usagePlatformHandler = buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {
+  colourBy: 'label',
+  pivot: true
+})
 
 const usageMeasureHandler = (rows) => {
   let CostPerInstall = 0
