@@ -201,8 +201,8 @@ module.exports = class Application {
     this.currentlySelected = reportComponent.menuId
     Object.assign(this.menuState, reportComponent.menuConfig)
     await this.persistPageState()
-    await reportComponent.retriever()
     await this.updateUiState()
+    await reportComponent.retriever()
   }
 
   get currentlySelected () {
