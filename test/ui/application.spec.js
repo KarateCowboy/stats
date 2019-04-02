@@ -145,6 +145,7 @@ describe('Application', function () {
         const $ = require('jquery')
         application.reports = []
         application.register(sampleComponent)
+        application.currentlySelected = sampleComponent.menuId
         sinon.stub(application, 'toggleMenuItems')
         await application.updateUiState()
         expect(application.toggleMenuItems.called).to.equal(true)
@@ -170,8 +171,10 @@ describe('Application', function () {
         const $ = require('jquery')
         application.reports = []
         application.register(sampleComponent)
+        application.currentlySelected = sampleComponent.menuId
         application.pageState.days = _.shuffle(application.pageState.dayOptions)[0]
-        application.updateUiState()
+        console.log(`pageState.days is ${application.pageState.days}`)
+        await application.updateUiState()
 
         application.pageState.dayOptions.forEach((d) => {
           const currentDayOption = $(`a[data-days="${d}"] i`)
@@ -186,12 +189,18 @@ describe('Application', function () {
         const $ = require('jquery')
         application.reports = []
         application.register(sampleComponent)
+        application.currentlySelected = sampleComponent.menuId
         for (let key in application.pageState.platformFilter) {
           application.pageState.platformFilter[key] = _.shuffle([true, false])[0]
         }
-        application.updateUiState()
+        await application.updateUiState()
         const controls = $('#controls')
+          console.log(`.`)
+          console.log(`.`)
+          console.log(`.`)
         _.each(application.pageState.platformFilter, (v, k, lst) => {
+          console.log(`.`)
+          console.log(`.`)
           console.log(`.`)
           if (v) {
             const hasClass = controls.find(`a[data-platform="${k}"] i`).hasClass('fa-blank')
@@ -203,15 +212,13 @@ describe('Application', function () {
         })
 
       })
-      specify('highlight currently selected channels')
-      specify('highlight selected country codes')
-      specify('highlight selected weeks of installation')
       specify('update menu label for days', async function () {
         const $ = require('jquery')
         application.reports = []
         application.register(sampleComponent)
+        application.currentlySelected = sampleComponent.menuId
         application.pageState.days = _.shuffle(application.pageState.dayOptions)[0]
-        application.updateUiState()
+        await application.updateUiState()
         const menuLabelContent = $('#controls-selected-days').html()
         if (application.pageState.days === 10000) {
           expect(menuLabelContent).to.equal(`All days`)
@@ -224,14 +231,13 @@ describe('Application', function () {
           application.reports = []
           expect(application.reports).to.have.property('length', 0)
           application.drawSideBar()
-          expect(application.sideBar.length).to.be.greaterThan(15)
           expect(application.sideBar).to.not.contain('<li>')
         })
         it('displays one li/a per report', async function () {
           application.register(sampleComponent)
           application.drawSideBar()
           const matches = application.sideBar.match(/<li>/g)
-          expect(matches).to.have.property('length', _.keys(application.reports).length)
+          expect(matches).to.have.property('length', _.keys(application.reports).length + 1)
         })
       })
     })
@@ -283,27 +289,13 @@ describe('Application', function () {
         dailyReturningUsers
       ]
       const app = new Application(sampleReports)
-      expect(app.sideBar.match(/<li>/g)).to.have.property('length', 2)
+      expect(app.sideBar.match(/<li>/g)).to.have.property('length', 3)
     })
     it('calls renderInitialUi', async function () {
       sinon.spy(Application.prototype, 'renderInitialUi')
       const app = new Application()
       expect(app.renderInitialUi.called).to.equal(true)
       Application.prototype.renderInitialUi.restore()
-    })
-    it('routes to the first report in the reports', async function () {
-      const dailyNewUsers = new BaseReportComponent()
-      dailyNewUsers.menuId = 'dailyNewUsers'
-      const dailyReturningUsers = new BaseReportComponent()
-      dailyReturningUsers.menuId = 'dailyReturningUsers'
-      const sampleReports = [
-        dailyNewUsers,
-        dailyReturningUsers
-      ]
-      const app = new Application(sampleReports)
-      expect(app.sideBar.match(/<li>/g)).to.have.property('length', 2)
-      expect(app.currentlySelected).to.equal(_.first(sampleReports).menuId)
-      expect(app.router.navigate.calledWith(sampleReports[0].path)).to.equal(true)
     })
   })
   describe('renderInitialUi', async function () {

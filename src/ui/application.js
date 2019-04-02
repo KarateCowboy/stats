@@ -126,9 +126,13 @@ module.exports = class Application {
         <li><a href="#<%- reportComponent.path %>" id="<%- reportComponent.menuId %>"><%- reportComponent.menuTitle %></a></li>
       <% }) %>`
     const compiled = _.template(_sideBar)
-    this.sideBar = compiled({
-      reportComponents: this.reports
-    })
+    if(!_.isEmpty(this.reports)){
+      this.sideBar = compiled({
+        reportComponents: this.reports
+      })
+    }else{
+      this.sideBar = ''
+    }
   }
 
   setupSideFilter () {
