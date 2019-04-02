@@ -20,7 +20,7 @@ class DevelopmentCrashes extends BaseReportComponent {
     let results
     try {
       results = await $.ajax('/api/1/crash_ratios?' + $.param(this.app.pageState.standardParams()))
-      this.handler(results)
+      await this.handler(results)
     } catch (e) {
       console.log(`Error running retriever for ${this.title}`)
       console.log(e.message)

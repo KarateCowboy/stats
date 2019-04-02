@@ -53,61 +53,52 @@ const overviewPublisherHandler = function (channel_totals, publisher_totals) {
 }
 
 const OVERVIEW = {
-  ledger: function (btc, bat, b) {
-    var overviewTable = $('#overview-ledger-table tbody')
+  ledger: function (bat, b) {
+    let overviewTable = $('#overview-ledger-table tbody')
     overviewTable.empty()
 
     overviewTable.append(tr([
       b.td(''),
-      b.th('<img src="/local/img/token-icons/btc.png" height="18"> BTC', 'right'),
       b.th('<img src="/local/img/token-icons/bat.svg" height="18"> BAT', 'right'),
       b.td()
     ]))
     overviewTable.append(tr([
       b.td('Wallets'),
-      b.td(b.st(btc.wallets), 'right'),
       b.td(b.st(bat.wallets), 'right'),
       b.td()
     ]))
     overviewTable.append(tr([
       b.td('Funded wallets'),
-      b.td(b.st(btc.funded), 'right'),
       b.td(b.st(bat.funded), 'right'),
       b.td()
     ]))
     overviewTable.append(tr([
       b.td('Percentage of wallets funded'),
-      b.td(numeral(btc.funded / btc.wallets).format('0.0%'), 'right'),
       b.td(numeral(bat.funded / bat.wallets).format('0.0%'), 'right'),
       b.td()
     ]))
     overviewTable.append(tr([
       b.td('USD / 1 Token'),
-      b.td(b.st3(btc.btc_usd), 'right'),
       b.td(b.st3(bat.bat_usd), 'right'),
       b.td('$ USD')
     ]))
     overviewTable.append(tr([
       b.td('Total balance of funded wallets'),
-      b.td(b.st3(btc.balance), 'right'),
       b.td(b.st3(bat.balance), 'right'),
       b.td('tokens')
     ]))
     overviewTable.append(tr([
       b.td(),
-      b.td(b.std(btc.balance * btc.btc_usd), 'right'),
       b.td(b.std(bat.balance * bat.bat_usd), 'right'),
       b.td('$ USD')
     ]))
     overviewTable.append(tr([
       b.td('Average balance of funded wallets'),
-      b.td(b.round((btc.balance / btc.funded), 6), 'right'),
       b.td(b.round((bat.balance / bat.funded), 6), 'right'),
       b.td('tokens')
     ]))
     overviewTable.append(tr([
       b.td(),
-      b.td(b.std((btc.balance / btc.funded) * btc.btc_usd), 'right'),
       b.td(b.std((bat.balance / bat.funded) * bat.bat_usd), 'right'),
       b.td('$ USD')
     ]))
@@ -350,7 +341,7 @@ class Overview extends BaseReportComponent {
     this.menuId = 'overview'
     this.menuTitle = 'Overview'
     this.subtitle = ''
-    this.path = 'overview'
+    this.path = 'overView'
     this.contentTagId = 'overviewContent'
     this.menuConfig.showControls = false
     this.menuConfig.showShowToday = false
@@ -391,14 +382,15 @@ class Overview extends BaseReportComponent {
       console.log(e)
     }
 
-    let [btc, bat] = await Promise.all([
-      $.ajax('/api/1/ledger_overview'),
-      $.ajax('/api/1/bat/ledger_overview')
-    ])
-    OVERVIEW.ledger(btc, bat, builders)
+    let bat = await $.ajax('/api/1/ledger_overview')
+    OVERVIEW.ledger(bat, builders)
 
     ReferralWidget()
     $(`#${this.contentTagId}`).show()
+    $('#monthly-averages-whats-this').on('click', function (e) {
+      e.preventDefault()
+      $('#monthly-averages-instructions').show('slow')
+    })
 
   }
 }

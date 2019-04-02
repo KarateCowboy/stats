@@ -15,13 +15,14 @@ module.exports = class Application {
 
     this.router = new Grapnel()
     this.menuState = new MenuConfig()
+    this.contentTags = new Set()
     reportComponents.forEach((r) => {
       this.register(r)
     })
     this.currentlySelected = _.isEmpty(reportComponents) ? null : _.first(reportComponents).menuId
     if (pageState) {
       Object.assign(this.pageState, pageState)
-    } 
+    }
     this.drawSideBar()
 
     this.renderInitialUi()
@@ -47,7 +48,9 @@ module.exports = class Application {
   }
 
   async updateUiState () {
+    this.hideContentTags()
     $('#page-load-status').empty()
+    $('#sideBar > li').removeClass('active')
     this.toggleMenuItems()
     if (this.currentReport()) {
       $('#contentTitle').empty().append(this.currentReport().title)
@@ -80,7 +83,18 @@ module.exports = class Application {
         controls.find(`h5.platform-list span.${k}`).hide()
       }
     })
+    $('#' + this.currentlySelected).parent().addClass('active')
     $('#page-load-status').text('loaded')
+    $(document).ajaxStart(function () {
+      $('#hourglassIndicator').fadeIn(200)
+    }).ajaxStop(function () {
+      $('#hourglassIndicator').fadeOut(200)
+    })
+  }
+
+  hideContentTags () {
+    const toHide = Array.from(this.contentTags).filter((t) => { return t !== this.currentReport().contentTagId })
+    toHide.forEach((t) => { $(`#${t}`).hide()})
   }
 
   toggleMenuItems () {
@@ -100,19 +114,25 @@ module.exports = class Application {
 
   drawSideBar () {
     const _sideBar = `
+    <li>
     <div class="input-group" style="padding: 8px;">
       <input type="text" class="form-control" id="searchLinks" placeholder="Filter...">
       <span class="input-group-btn">
         <button class="btn btn-default" type="button" id="clearSearchLinks"><i class="fa fa-times" aria-hidden="true"></i></button>
       </span>
     </div>
+    </li>
       <% _.values(reportComponents).forEach(function(reportComponent) { %>
         <li><a href="#<%- reportComponent.path %>" id="<%- reportComponent.menuId %>"><%- reportComponent.menuTitle %></a></li>
       <% }) %>`
     const compiled = _.template(_sideBar)
-    this.sideBar = compiled({
-      reportComponents: this.reports
-    })
+    if(!_.isEmpty(this.reports)){
+      this.sideBar = compiled({
+        reportComponents: this.reports
+      })
+    }else{
+      this.sideBar = ''
+    }
   }
 
   setupSideFilter () {
@@ -172,7 +192,8 @@ module.exports = class Application {
     }
     reportComponent.app = this
     this.reports[reportComponent.menuId] = reportComponent
-    this.router.get(reportComponent.path, async (req) => { await this.routerOp(reportComponent)})
+    this.router.get(reportComponent.path, async (req, evt) => { evt.preventDefault(); await this.routerOp(reportComponent)})
+    this.contentTags.add(reportComponent.contentTagId)
   }
 
   async routerOp (reportComponent) {
@@ -184,8 +205,8 @@ module.exports = class Application {
     this.currentlySelected = reportComponent.menuId
     Object.assign(this.menuState, reportComponent.menuConfig)
     await this.persistPageState()
-    await reportComponent.retriever()
     await this.updateUiState()
+    await reportComponent.retriever()
   }
 
   get currentlySelected () {
