@@ -341,7 +341,7 @@ class Overview extends BaseReportComponent {
     this.menuId = 'overview'
     this.menuTitle = 'Overview'
     this.subtitle = ''
-    this.path = 'overview'
+    this.path = 'overView'
     this.contentTagId = 'overviewContent'
     this.menuConfig.showControls = false
     this.menuConfig.showShowToday = false
