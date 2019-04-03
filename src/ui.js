@@ -44,7 +44,7 @@ exports.setup = (server, db) => {
   // Login handler
   const login = async function (request, h) {
     if (request.auth.isAuthenticated) {
-      return h.redirect('/dashboard#overview')
+      return h.redirect('/dashboard#overView')
     }
 
     let message = ''
@@ -71,12 +71,12 @@ exports.setup = (server, db) => {
     delete accountToStore.password
     await request.server.app.cache.set(sid, {account: accountToStore}, 0)
     request.cookieAuth.set({sid: sid})
-    return h.redirect('/dashboard#overview')
+    return h.redirect('/dashboard#overView')
   }
 
   const logout = function (request, h) {
     request.cookieAuth.clear()
-    return h.redirect('/dashboard#overview')
+    return h.redirect('/dashboard#overView')
   }
 
   // Static directory handling
@@ -138,7 +138,7 @@ exports.setup = (server, db) => {
     method: 'GET',
     path: '/',
     handler: function (request, h) {
-      return h.redirect('/dashboard#overview')
+      return h.redirect('/dashboard#overView')
     }
   })
 

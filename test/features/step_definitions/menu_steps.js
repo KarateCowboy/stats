@@ -126,7 +126,7 @@ Then(/^I should see (.*) at the top of the sidebar list$/, {
   const visibleLi = allLi.filter((li) => {
     return li.includes('display: none') === false
   })
-  expect(visibleLi).to.have.property('length', 1)
+  expect(visibleLi).to.have.property('length', 2)
   expect(visibleLi.toString()).to.contain(menuSearchItem)
 })
 When(/^I click the sidebar item (.*)$/, async function (menuSearchItem) {

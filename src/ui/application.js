@@ -83,6 +83,7 @@ module.exports = class Application {
         controls.find(`h5.platform-list span.${k}`).hide()
       }
     })
+
     $('#' + this.currentlySelected).parent().addClass('active')
     $('#page-load-status').text('loaded')
     $(document).ajaxStart(function () {
@@ -105,6 +106,12 @@ module.exports = class Application {
         $(selector).hide()
       }
     })
+    if(this.menuState.showRefFilter){
+      $('#ref-filter').parent().show()
+    }else {
+      $('#ref-filter').parent().hide()
+    }
+
   }
 
   renderInitialUi () {

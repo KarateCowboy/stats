@@ -20,7 +20,7 @@ Feature: Intelligent menu
 
     Examples:
       | path                        | menu-link-id            | sidebar-title                                  | report-title                                               |
-      | overview                    | overview                | Overview                                       | Overview                                                   |
+      | overView                    | overview                | Overview                                       | Overview                                                   |
       | dnu_dau_retention           | dailyRetention          | Daily Retention                                | Daily Retention                                            |
       | weekly-retention            | weeklyRetention         | Retention Week / Week                          | Retention Week / Week                                      |
       | usage_month_agg             | usageMonthAgg           | Monthly Active Users - MAU                     | Monthly Active Users (MAU)                                 |
