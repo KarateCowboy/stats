@@ -6,6 +6,7 @@ const PublisherTotalSchema = Joi.object().keys({
   'email_verified_with_a_verified_channel': Joi.number().integer(),
   'email_verified_with_a_channel': Joi.number().integer(),
   'email_verified': Joi.number().integer(),
+  'ymd': Joi.date(),
   'created_at': Joi.date(),
   'updated_at': Joi.date()
 })

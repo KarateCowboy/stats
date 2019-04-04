@@ -19,6 +19,7 @@ const define = () => {
     'email_verified_with_a_verified_channel': _.random(500, 20000),
     'email_verified_with_a_channel': _.random(500, 20000),
     'email_verified': _.random(500, 20000),
+    'ymd': () => moment().toDate(),
     created_at: () => moment().toDate(),
     updated_at: () => moment().toDate()
   })

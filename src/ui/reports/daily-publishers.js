@@ -15,7 +15,8 @@ class DailyPublishers extends BaseReportComponent {
 
   async retriever () {
     try {
-      let publisherTotals = await $.ajax('/api/1/publishers/publisher_totals')
+      let publisherTotals = await $.ajax('/api/1/publishers/publisher_totals?' + $.param(this.app.pageState.standardParams()))
+      console.log(publisherTotals)
       this.handler(publisherTotals)
     } catch (e) {
       alert(`Error fetching data for ${this.title}. Please see browser console.`)
@@ -24,10 +25,11 @@ class DailyPublishers extends BaseReportComponent {
   }
 
   handler (publisherTotals) {
-    const handler = BaseReportComponent.buildSuccessHandler('ymd', 'country_code', 'Date', 'Country', {
+    const handler = BaseReportComponent.buildSuccessHandler('ymd', 'verificationStatus', 'Date', 'stuff', {
       colourBy: 'hashedLabel',
       pivot: true
     })
+    handler(publisherTotals)
 
     $(`#${this.contentTagId}`).show()
   }

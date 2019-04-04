@@ -5,6 +5,8 @@ exports.up = async (knex) => {
     table.integer('email_verified_with_a_verified_channel').defaultTo(0)
     table.integer('email_verified_with_a_channel').defaultTo(0)
     table.integer('email_verified').defaultTo(0)
+    table.date('ymd').defaultTo(knex.fn.now())
+    table.unique('ymd')
     table.timestamps()
   })
 }

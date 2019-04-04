@@ -130,6 +130,7 @@ exports.setup = (server, client, mongo) => {
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       results.rows.forEach((row) => common.convertPlatformLabels(row))
+      console.dir(results.rows, { colors: true })
       return (results.rows)
     }
   })

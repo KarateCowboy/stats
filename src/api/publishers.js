@@ -153,8 +153,10 @@ exports.setup = (server, client, mongo) => {
       const daysAgo = parseInt(request.query.days || 7, 10)
       let result
       try {
-        result = await db.PublisherTotal.query().orderBy('created_at', 'desc').andWhere('created_at', '>', moment().subtract(daysAgo, 'days').format('YYYY-MM-DD'))
-        return result
+        result = await db.PublisherTotal.query()
+          .orderBy('created_at', 'desc')
+          .andWhere('ymd', '>', moment().subtract(daysAgo, 'days').format('YYYY-MM-DD'))
+        return _.flatten(result.map(r => r.asYmd()))
       } catch (e) {
         console.log(e.message)
         throw e

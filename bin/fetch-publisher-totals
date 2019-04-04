@@ -18,10 +18,16 @@ class FetchPublishers extends Script {
       method: 'GET',
       url: 'https://publishers.basicattentiontoken.org/api/v1/public/channels/totals',
     }
-    let api_result = await common.prequest(channel_options)
-    const channel_total = new ChannelTotal(JSON.parse(api_result))
-
-    await channel_total.save()
+    let api_result
+    try{
+      api_result = await common.prequest(channel_options)
+      const channel_total = new ChannelTotal(JSON.parse(api_result))
+      await channel_total.save()
+    } catch(e){
+      console.log(`Error retrieving channels data from publishers API`)
+      console.log(e.message)
+      process.exit(1)
+    }
 
     const publisher_options = {
       method: 'GET',
@@ -35,9 +41,27 @@ class FetchPublishers extends Script {
       console.log('configuring proxy agent')
       publisher_options.agent = new ProxyAgent(process.env.FIXIE_URL)
     }
-    api_result = await common.prequest(publisher_options)
-    const publisher_total = new PublisherTotal(JSON.parse(api_result))
-    await publisher_total.save()
+    try{
+      api_result = await common.prequest(publisher_options)
+      const publisher_total = new PublisherTotal(JSON.parse(api_result))
+      await publisher_total.save()
+    }catch(e){
+      console.log('Error retrieving Publisher Totals from publishers API')
+      console.log(e.message)
+      console.dir(api_result, { colors: true })
+      process.exit(1)
+    }
+
+    const publisherTotalAttrs = JSON.parse(api_result)
+    const today = this.moment().format('YYYY-MM-DD')
+    try{
+      await db.PublisherTotal.query().where('ymd',today).delete()
+      await db.PublisherTotal.query().insert(publisherTotalAttrs)
+    }catch(e){
+      console.log(`Error writing PublisherTotal to database`)
+      console.log(e.message)
+      console.log
+    }
 
     await this.shutdown()
   }
@@ -46,7 +70,3 @@ class FetchPublishers extends Script {
 const fetch_publishers = new FetchPublishers(path.basename(__filename))
 
 fetch_publishers.run()
-
-
-
-
