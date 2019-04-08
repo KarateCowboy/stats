@@ -38,19 +38,19 @@ describe('crud endpoints', async function () {
     beforeEach(async function () {
       params.url = '/api/1/publishers/publisher_totals'
       days = _.range(0, 7).map((d) => { return {ymd: moment().subtract(d, 'days').format()}})
-      await factory.createMany('publisher_total', days)
+      await factory.createMany('publisher_signup_day', days)
     })
     it('returns a list of publisher totals', async function () {
       let response = await server.inject(params)
       let payload = JSON.parse(response.payload)
-      expect(payload).to.have.property('length', days.length * 4)
+      expect(payload).to.have.property('length', days.length * 3)
     })
     it('works with the days parameter', async function () {
       const daysBackToSearch = 3
       params.url += '?days=' + daysBackToSearch
       let response = await server.inject(params)
       let payload = JSON.parse(response.payload)
-      expect(payload).to.have.property('length', daysBackToSearch * 4)
+      expect(payload).to.have.property('length', daysBackToSearch * 3)
     })
   })
 

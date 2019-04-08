@@ -153,7 +153,7 @@ exports.setup = (server, client, mongo) => {
       const daysAgo = parseInt(request.query.days || 7, 10)
       let result
       try {
-        result = await db.PublisherTotal.query()
+        result = await db.PublisherSignupDay.query()
           .orderBy('created_at', 'desc')
           .andWhere('ymd', '>', moment().subtract(daysAgo, 'days').format('YYYY-MM-DD'))
         return _.flatten(result.map(r => r.asYmd()))

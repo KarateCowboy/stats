@@ -11,6 +11,12 @@ class DailyPublishers extends BaseReportComponent {
     this.menuId = 'dailyPublishers'
     this.reportContent = `<marquee>Daily Active Users Content</marquee>`
     this.contentTagId = 'usageContent'
+    this.menuConfig.showControls = true
+    this.menuConfig.showShowToday = true
+    this.menuConfig.showDaysSelector = true
+    this.menuConfig.showCountryCodeFilter = false
+    this.menuConfig.showWOISFilter = false
+    this.menuConfig.showRefFilter = false
   }
 
   async retriever () {
