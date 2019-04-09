@@ -43,7 +43,7 @@ describe('PublisherSignupDay', async function () {
         'E-mail, channel, and basic uphold identity verified',
         'Verified e-mail with verified channel',
         'Verified e-mail'
-        ])
+      ])
 
     })
   })
@@ -131,6 +131,16 @@ describe('PublisherSignupDay', async function () {
       const newSignupDay = await db.PublisherSignupDay
         .buildFromRemote(threeDaysAgo)
       expect(newSignupDay.ymd).to.equal(threeDaysAgo)
+    })
+    it('takes an optional second date to specify a range, and returns an array', async function () {
+      const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD')
+      const newSignupDays = await db.PublisherSignupDay.buildFromRemote(threeDaysAgo, yesterday)
+      expect(newSignupDays).to.be.an('array')
+      expect(newSignupDays.map(i => i.ymd)).to.include(threeDaysAgo)
+      expect(newSignupDays.map(i => i.ymd)).to.include(yesterday)
+      expect(_.every(newSignupDays, (i) => { return i.email_verified > 0 })).to.equal(true)
+      expect(_.every(newSignupDays, (i) => { return i.email_channel_verified > 0 })).to.equal(true)
+      expect(_.every(newSignupDays, (i) => { return i.email_channel_and_uphold_verified > 0 })).to.equal(true)
     })
     afterEach(async function () {
       common.prequest.restore()

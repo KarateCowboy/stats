@@ -54,10 +54,18 @@ class FetchPublishers extends Script {
     }
 
     const today = this.moment(args.day).format('YYYY-MM-DD')
+    let attrsSet
     try {
-      const attrs = await db.PublisherSignupDay.buildFromRemote(today)
-      await db.PublisherSignupDay.query().where('ymd', today).delete()
-      await db.PublisherSignupDay.query().insert(attrs)
+      if (args.end) {
+        console.log('running for set')
+        attrsSet = await db.PublisherSignupDay.buildFromRemote(today, args.end)
+      } else {
+        attrsSet = await db.PublisherSignupDay.buildFromRemote(today)
+        attrsSet = [attrsSet]
+
+      }
+      await db.PublisherSignupDay.query().whereIn('ymd', attrsSet.map(i => i.ymd)).delete()
+      await db.PublisherSignupDay.query().insert(attrsSet)
     } catch (e) {
       console.log(`Error writing PublisherSignupDay for date ${today} to database`)
       console.log(e.message)

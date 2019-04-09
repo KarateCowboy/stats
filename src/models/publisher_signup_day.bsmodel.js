@@ -22,7 +22,7 @@ module.exports = function (knex) {
       return 'dw.publisher_signup_days'
     }
 
-    static async buildFromRemote (ymd) {
+    static async buildFromRemote (ymd, endYmd) {
       let requestParams = {
         method: 'GET',
         url: '',
@@ -34,32 +34,55 @@ module.exports = function (knex) {
         const ProxyAgent = require('proxy-agent')
         requestParams.agent = new ProxyAgent(process.env.FIXIE_URL)
       }
-        requestParams.url = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/channel_uphold_and_email_verified_signups_per_day'
-        let channelUpholdVerified = await this.safeFetch(requestParams, ymd)
-        requestParams.url = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/channel_and_email_verified_signups_per_day'
-        let channelEmailVerified = await this.safeFetch(requestParams, ymd)
-        requestParams.url = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/email_verified_signups_per_day'
-        let emailVerified = await this.safeFetch(requestParams, ymd)
-        return {
-          email_channel_and_uphold_verified: channelUpholdVerified,
-          email_channel_verified: channelEmailVerified,
-          email_verified: emailVerified,
+      requestParams.url = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/channel_uphold_and_email_verified_signups_per_day'
+      let channelUpholdVerified = await this.safeFetch(requestParams, ymd)
+      requestParams.url = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/channel_and_email_verified_signups_per_day'
+      let channelEmailVerified = await this.safeFetch(requestParams, ymd)
+      requestParams.url = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/email_verified_signups_per_day'
+      let emailVerified = await this.safeFetch(requestParams, ymd)
+      if (endYmd) {
+        const start = moment(ymd)
+        const end = moment(endYmd)
+        const results = []
+        let working = start.clone()
+        while (working.isSameOrBefore(end)) {
+          const workingYmd = working.format('YYYY-MM-DD')
+          let psd = {
+            email_channel_and_uphold_verified: this._findInPubResults(channelUpholdVerified, workingYmd),
+            email_channel_verified: this._findInPubResults(channelEmailVerified, workingYmd),
+            email_verified: this._findInPubResults(emailVerified, workingYmd),
+            ymd: workingYmd
+          }
+          results.push(psd)
+          working.add(1, 'days')
+        }
+        return results
+      } else {
+        let psd = {
+          email_channel_and_uphold_verified: this._findInPubResults(channelUpholdVerified, ymd),
+          email_channel_verified: this._findInPubResults(channelEmailVerified, ymd),
+          email_verified: this._findInPubResults(emailVerified, ymd),
           ymd: ymd
         }
-
+        return psd
+      }
     }
 
-    static async safeFetch(requestParams, ymd){
+    static _findInPubResults (collection, ymd) {
+      const findFunc = (i) => { return i[0] === ymd}
+      return _.last(_.find(collection, findFunc))
+    }
+
+    static async safeFetch (requestParams, ymd) {
       let apiResponse
       try {
-      apiResponse = await common.prequest(requestParams)
-      apiResponse = JSON.parse(apiResponse)
-      if(_.isEmpty(apiResponse)){
-        return 0
-      } else {
-        let e = apiResponse.find((i) => { return i[0] === ymd })
-        return e[1]
-      }
+        apiResponse = await common.prequest(requestParams)
+        apiResponse = JSON.parse(apiResponse)
+        if (_.isEmpty(apiResponse)) {
+          return null
+        } else {
+          return apiResponse
+        }
       } catch (e) {
         console.log('Error trying to build PublisherSignupDay from remote API')
         console.log(e.message)
