@@ -21,7 +21,7 @@
             </ul>
           </li>
 
-          <li class="dropdown">
+          <li class="dropdown" id="controls-muon-menu-container">
             <a class="dropdown-toggle" type="button" data-toggle="dropdown">
               Muon
               <span class="caret"></span>
@@ -73,7 +73,7 @@
             </ul>
           </li>
 
-          <li class="dropdown">
+          <li class="dropdown" id="controls-mobile-menu-container">
             <a class="dropdown-toggle" type="button" data-toggle="dropdown">
               Mobile
               <span class="caret"></span>
@@ -134,6 +134,7 @@
           <li><a class="fa fa-bolt" id="hourglassIndicator"></a></li>
         </ul>
 
+
       </div>
       <div>
         <h5 class="platform-list text-center">
@@ -151,6 +152,7 @@
                                       src='/local/img/platform-icons/linux.png'> Core Linux</span>
           <span class="androidbrowser"><img width="12" height="12" src='/local/img/platform-icons/android.png'> Android</span>
           <span class="ios"><img width="12" height="12" src='/local/img/platform-icons/ios.png'> iOS</span>
+          <span class="nightly label label-warning">Nightly</span>
           <span class="dev label label-primary">Developer</span>
           <span class="beta label label-success">Beta</span>
           <span class="release label label-info">Release / Stable</span>
@@ -158,6 +160,13 @@
           <span class="countries label label-danger"></span>
         </h5>
       </div>
+	<nav id="controls-pagination">
+          <ul class="pager">
+            <li class="previous"><a class="pagination-first pointer"><span>&larr;</span> First</a></li>
+            <li class="previous"><a class="pagination-previous pointer"><span>&larr;</span> Previous</a></li>
+            <li class="next"><a class="pagination-next pointer">Next <span>&rarr;</span></a></li>
+          </ul>
+        </nav>
     </div>
   </nav>
 </div>
