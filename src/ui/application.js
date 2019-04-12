@@ -100,6 +100,7 @@ module.exports = class Application {
 
   toggleMenuItems () {
     _.each(this.menuState.mappings, (selector, attrib) => {
+      console.log(attrib, this.menuState[attrib])
       if (this.menuState[attrib]) {
         $(selector).show()
       } else {
@@ -199,11 +200,15 @@ module.exports = class Application {
     }
     reportComponent.app = this
     this.reports[reportComponent.menuId] = reportComponent
-    this.router.get(reportComponent.path, async (req, evt) => { evt.preventDefault(); await this.routerOp(reportComponent)})
+    this.router.get(reportComponent.path, async (req, evt) => {
+      console.log(req)
+      evt.preventDefault()
+      await this.routerOp(reportComponent, req)
+    })
     this.contentTags.add(reportComponent.contentTagId)
   }
 
-  async routerOp (reportComponent) {
+  async routerOp (reportComponent, req) {
     if (this.reports[this.currentlySelected]) {
       const contentTagId = this.reports[this.currentlySelected].contentTagId
       $(`#${contentTagId}`).hide()
@@ -213,7 +218,7 @@ module.exports = class Application {
     Object.assign(this.menuState, reportComponent.menuConfig)
     await this.persistPageState()
     await this.updateUiState()
-    await reportComponent.retriever()
+    await reportComponent.retriever(req)
   }
 
   get currentlySelected () {
