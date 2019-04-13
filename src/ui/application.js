@@ -130,13 +130,15 @@ module.exports = class Application {
       </span>
     </div>
     </li>
-      <% _.values(reportComponents).forEach(function(reportComponent) { %>
+      <% reportComponents.forEach(function(reportComponent) { %>
         <li><a href="#<%- reportComponent.path %>" id="<%- reportComponent.menuId %>"><%- reportComponent.menuTitle %></a></li>
       <% }) %>`
     const compiled = _.template(_sideBar)
     if(!_.isEmpty(this.reports)){
+      const reports = _.values(this.reports).filter((r)=> { return !_.isEmpty(r.menuTitle) && !_.isEmpty(r.menuId)})
+
       this.sideBar = compiled({
-        reportComponents: this.reports
+        reportComponents: reports
       })
     }else{
       this.sideBar = ''

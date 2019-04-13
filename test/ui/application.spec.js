@@ -237,6 +237,21 @@ describe('Application', function () {
           const matches = application.sideBar.match(/<li>/g)
           expect(matches).to.have.property('length', _.keys(application.reports).length + 1)
         })
+        it('does not display a link or menu item for configs with falsy menuTitle or menuId', async function () {
+          sampleComponent.menuTitle = ''
+          application.register(sampleComponent)
+
+          application.drawSideBar()
+          let matches = application.sideBar.match(/<li>/g)
+          expect(matches).to.have.property('length', _.keys(application.reports).length)
+
+          sampleComponent.menuTitle = 'Sample Title'
+          sampleComponent.menuId = ''
+
+          application.drawSideBar()
+          matches = application.sideBar.match(/<li>/g)
+          expect(matches).to.have.property('length', _.keys(application.reports).length)
+        })
       })
     })
     describe('toggleMenuItems', async function () {
@@ -264,14 +279,15 @@ describe('Application', function () {
         specify('shows and hides specified controls', async function () {
           const $ = require('jquery')
           const sampleMenuConfig = new MenuConfig()
+          delete sampleMenuConfig.mappings['showPagination']
           for (let key in sampleMenuConfig.mappings) {
             application.menuState[key] = false
             await application.toggleMenuItems()
             const domObject = $(sampleMenuConfig.mappings[key])
-            expect(domObject.is(':hidden')).to.equal(true, `${sampleMenuConfig[key]} element should be hidden`)
+            expect(domObject.is(':hidden')).to.equal(true, `${key} element should be hidden`)
             application.menuState[key] = true
             await application.toggleMenuItems()
-            expect(domObject.is(':visible')).to.equal(true, `${sampleMenuConfig[key]} controls element should be visible`)
+            expect(domObject.is(':visible')).to.equal(true, `${key} controls element should be visible`)
           }
         })
       })

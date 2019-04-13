@@ -20,8 +20,8 @@ class CrashDetails extends BaseReportComponent {
     this.title = 'Crash Details'
     this.subtitle = ''
     this.path = 'crash/:id'
-    this.menuTitle = 'Crash'
-    this.menuId = 'crash'
+    this.menuTitle = ''
+    this.menuId = ''
     this.reportContent = `<marquee>Daily Active Users Content</marquee>`
     this.contentTagId = 'topCrashContent'
     this.menuConfig.showControls = false
