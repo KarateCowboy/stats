@@ -28,6 +28,7 @@ require('./fixtures/fc_usage_month_exception').define()
 require('./fixtures/wallets').define()
 require('./fixtures/channel_total').define()
 require('./fixtures/ledger/wallets').define()
+require('./fixtures/crash').define()
 const fixtures = {
   publisher_signup_day: require('./fixtures/publisher_signup_day'),
   fc_usage: require('./fixtures/fc_usage'),
@@ -93,6 +94,7 @@ class TestHelper {
         'campaigns',
         'promotions',
         'publishers',
+        'crashes',
         'referral_codes',
         'platforms',
         'channels',
