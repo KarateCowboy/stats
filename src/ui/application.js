@@ -15,16 +15,21 @@ module.exports = class Application {
       console.log('provided pageState is null')
     }
     this.pageState = new PageState()
-
+    if (pageState) {
+      Object.assign(this.pageState, pageState)
+    }
     this.router = new Grapnel()
     this.menuState = new MenuConfig()
     this.contentTags = new Set()
     reportComponents.forEach((r) => {
       this.register(r)
     })
-    this.currentlySelected = _.isEmpty(reportComponents) ? null : _.first(reportComponents).menuId
-    if (pageState) {
-      Object.assign(this.pageState, pageState)
+    if(this.pageState.currentlySelected){
+      this.currentlySelected = this.pageState.currentlySelected
+    }else if(_.isEmpty(reportComponents)){
+      this.currentlySelected = null
+    }else {
+      this.currentlySelected = _.first(reportComponents)
     }
     this.drawSideBar()
 

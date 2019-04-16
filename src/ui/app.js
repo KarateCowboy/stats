@@ -40,8 +40,9 @@ const Downloads = require('./reports/downloads')
 
 global.init = async function () {
   let priorState  = null
-  if (await window.localStorage.getItem('pageState')) {
-    priorState = JSON.parse(await window.localStorage.getItem('pageState'))
+  let storedStateData = await window.localStorage.getItem('pageState') 
+  if (storedStateData) {
+    priorState = JSON.parse(storedStateData)
   }
   global.app = new Application([
     (new OverviewReport()),
