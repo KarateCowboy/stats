@@ -11,6 +11,9 @@ require('./common')
 module.exports = class Application {
   constructor (reportComponents = [], pageState = null) {
     this.reports = {}
+    if(pageState === null){
+      console.log('provided pageState is null')
+    }
     this.pageState = new PageState()
 
     this.router = new Grapnel()
@@ -26,7 +29,7 @@ module.exports = class Application {
     this.drawSideBar()
 
     this.renderInitialUi()
-    if (!_.isEmpty(this.reports) && this.currentlySelectedu) {
+    if (!_.isEmpty(this.reports) && this.currentlySelected) {
       this.router.navigate(this.reports[this.currentlySelected].path)
     }
     $(document).on('uiChange', () => {
@@ -34,7 +37,7 @@ module.exports = class Application {
       this.updateUiState()
     })
     $(document).on('dataChange', async () => {
-      this.persistPageState()
+      // this.persistPageState()
       await this.reports[this.currentlySelected].retriever()
     })
   }
@@ -100,7 +103,6 @@ module.exports = class Application {
 
   toggleMenuItems () {
     _.each(this.menuState.mappings, (selector, attrib) => {
-      console.log(attrib, this.menuState[attrib])
       if (this.menuState[attrib]) {
         $(selector).show()
       } else {
@@ -203,7 +205,6 @@ module.exports = class Application {
     reportComponent.app = this
     this.reports[reportComponent.menuId] = reportComponent
     this.router.get(reportComponent.path, async (req, evt) => {
-      console.log(req)
       evt.preventDefault()
       await this.routerOp(reportComponent, req)
     })
@@ -232,6 +233,7 @@ module.exports = class Application {
   }
 
   async persistPageState () {
+    console.log('saving page state')
     await window.localStorage.setItem('pageState', JSON.stringify(this.pageState))
   }
 }

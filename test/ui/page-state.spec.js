@@ -102,5 +102,13 @@ describe('PageState', async function () {
       expect(_.keys(pageState.channelFilter)).to.have.members(_.keys(channelFilterKeys))
       expect(_.values(pageState.channelFilter)).to.have.members(_.values(channelFilterKeys))
     })
+    specify('wois', async function() {
+      expect(pageState).to.have.property('wois')
+      expect(pageState.wois instanceof Array).to.equal(true, 'wois property should be an array, but was not')
+    })
+    specify('countryCodes', async function() {
+      expect(pageState).to.have.property('countryCodes')
+      expect(pageState.countryCodes instanceof Array).to.equal(true, 'countryCodes property should be an array, but was not')
+    })
   })
 })

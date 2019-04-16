@@ -35,6 +35,8 @@ module.exports = class PageState {
       'nightly': false,
       'release': true
     }
+    this.wois = []
+    this.countryCodes = []
 
     // dispatch pagination events
     $("#controls-pagination").on('click', 'a', (e) => {
@@ -55,6 +57,17 @@ module.exports = class PageState {
       } else {
         this.showToday = !this.showToday
       }
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
+    $('#woi_menu').on('selection', (evt, wois) => {
+      this.wois = wois
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
+    // callback from brave-menu
+    $('#cc_menu').on('selection', (evt, countryCodes) => {
+      this.countryCodes = countryCodes
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
     })
@@ -172,7 +185,7 @@ module.exports = class PageState {
       version: null,
       ref: (this.ref || []).join(','),
       wois: (this.wois || []).join(','),
-      countryCodes: null,
+      countryCodes: (this.countryCodes || []).join(','),
       offset: this.offset
     }
   }

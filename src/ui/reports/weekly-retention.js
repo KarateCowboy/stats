@@ -16,6 +16,8 @@ class WeeklyRetention extends BaseReportComponent {
     this.path = 'weekly-retention'
     this.contentTagId = 'weeklyRetentionContent'
     this.menuConfig.showDaysSelector = false
+    this.showCountryCodeFilter = false
+    this.showWOISFilter = false
 
   }
 
@@ -127,4 +129,3 @@ class WeeklyRetention extends BaseReportComponent {
 }
 
 module.exports = WeeklyRetention
-
