@@ -1,4 +1,5 @@
 require('../test_helper')
+const sinon = require('sinon')
 const CrashExpirationService = require('../../src/services/crash.service')
 describe('CrashExpirationService', async function () {
   describe('expire', async function () {
@@ -23,11 +24,37 @@ describe('CrashExpirationService', async function () {
         const crashAttrs = await factory.attrs('crash')
         const crash = await knex('dtl.crashes').insert(crashAttrs)
         //execution
-        await service.expire({ id: crashAttrs.id })
+        await service.expire({id: crashAttrs.id})
         //validation
         const allCrashes = await knex('dtl.crashes').select()
-        expect(allCrashes).to.have.property('length',0)
-
+        expect(allCrashes).to.have.property('length', 0)
+      })
+    })
+    context('dtl.crashes_archive table', async function () {
+      it('deletes the crash by id', async function () {
+        //setup
+        const crashAttrs = await factory.attrs('crash')
+        const crash = await knex('dtl.crashes_archive').insert(crashAttrs)
+        //execution
+        await service.expire({id: crashAttrs.id})
+        //validation
+        const allCrashes = await knex('dtl.crashes_archive').select()
+        expect(allCrashes).to.have.property('length', 0)
+      })
+    })
+    context('S3 Crash Bucket', async function () {
+      it('deletes the crash by id', async function () {
+        //setup
+        const crashAttrs = await factory.attrs('crash')
+      })
+    })
+    context('ElasticSearch', async function() {
+      it('removes the crash from the search index', async function(){
+        const crashAttrs = await factory.attrs('crash')
+        const indexArgs = { index: 'crashes', id: crashAttrs.id, type: 'crash' } 
+        sinon.stub(service.elasticClient, 'delete').withArgs(indexArgs)
+        await service.expire({ id: crashAttrs.id })
+        expect(service.elasticClient.delete.calledWith(indexArgs)).to.equal(true, 'elasticClient.delete method should have been called with the expected args')
       })
     })
   })

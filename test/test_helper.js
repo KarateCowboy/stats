@@ -94,11 +94,12 @@ class TestHelper {
         'campaigns',
         'promotions',
         'publishers',
-        'crashes',
+        ['crashes', 'delete'],
+        'crashes_archive',
         'referral_codes',
-        'platforms',
-        'channels',
-        'publisher_platforms'
+        ['platforms', 'delete'],
+        ['channels','delete'],
+       ['publisher_platforms','delete']
       ]
     }
     this.materialized_views = {
@@ -143,8 +144,13 @@ class TestHelper {
       let self = this
       await Promise.all(self.postgres_tables[schema].map(async (relation) => {
         if (!relation.toString().includes('undefined')) {
-          const sql_string = `${schema}.${relation}`
-          await knex(sql_string).delete()
+          if(relation instanceof Array){
+            const sql_string = `${schema}.${relation[0]}`
+            await knex(sql_string).delete()
+          }else {
+            const sql_string = `${schema}.${relation}`
+            await knex(sql_string).truncate()
+          }
         }
       }))
     }
