@@ -39,11 +39,11 @@ module.exports = class PageState {
     this.countryCodes = []
 
     // dispatch pagination events
-    $("#controls-pagination").on('click', 'a', (e) => {
-      console.log("pagination click")
+    $('#controls-pagination').on('click', 'a', (e) => {
+      console.log('pagination click')
       if ($(e.target).hasClass('pagination-first')) { this.offset = 0 }
-      if ($(e.target).hasClass('pagination-previous')) { this.offset -= 100  }
-      if ($(e.target).hasClass('pagination-next')) { this.offset += 100  }
+      if ($(e.target).hasClass('pagination-previous')) { this.offset -= 100 }
+      if ($(e.target).hasClass('pagination-next')) { this.offset += 100 }
       if (this.offset < 0) this.offset = 0
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
@@ -184,8 +184,8 @@ module.exports = class PageState {
       channelFilter: this.serializeChannelParams(),
       version: null,
       ref: (this.ref || []).join(','),
-      wois: (this.wois || []).join(','),
-      countryCodes: (this.countryCodes || []).join(','),
+      wois: this.wois.join(','),
+      countryCodes: this.countryCodes.join(','),
       offset: this.offset
     }
   }
