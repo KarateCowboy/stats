@@ -19,6 +19,7 @@ module.exports = class Application {
       Object.assign(this.pageState, pageState)
       this.pageState.wois = []
       this.pageState.countryCodes = []
+      this.pageState.ref = []
     }
     this.router = new Grapnel()
     this.menuState = new MenuConfig()
