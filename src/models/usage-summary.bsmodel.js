@@ -152,6 +152,43 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
     }
   }
 
+  UsageSummary.dauCampaignAgg = async (args) => {
+    console.log(args)
+    const QUERY = `
+    SELECT
+      TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd,
+      COALESCE(CMP.name, 'unknown') AS campaign,
+      SUM(total) AS count
+    FROM
+      dw.fc_agg_usage_daily FC                            LEFT JOIN
+      dtl.referral_codes    REF ON FC.ref = REF.code_text LEFT JOIN
+      dtl.campaigns         CMP ON REF.campaign_id = CMP.id
+    WHERE
+      FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+      FC.platform = ANY ($2) AND
+      FC.channel = ANY ($3) AND
+      FC.ref = ANY (COALESCE($4, ARRAY[FC.ref])) AND
+      FC.woi = ANY (COALESCE($5, ARRAY[FC.woi])) AND
+      FC.country_code = ANY (COALESCE($6, ARRAY[FC.country_code]))
+    GROUP BY
+      TO_CHAR(ymd, 'YYYY-MM-DD'),
+      cmp.name
+    ORDER BY
+      TO_CHAR(ymd, 'YYYY-MM-DD') DESC,
+      cmp.name
+    `
+    return (await pg_client.query(QUERY,
+      [
+        `${args.daysAgo} days`,
+        args.platforms,
+        args.channels,
+        args.ref,
+        args.wois,
+        args.countryCodes
+      ]
+    ))
+  }
+
   UsageSummary.dauCampaign = async (args) => {
     const QUERY = `
     SELECT
@@ -211,6 +248,43 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
         args.channel
       ]
     )).rows
+  }
+
+  UsageSummary.dnuCampaignAgg = async (args) => {
+    const QUERY = `
+    SELECT
+      TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd,
+      COALESCE(CMP.name, 'unknown') AS campaign,
+      SUM(total) AS count
+    FROM
+      dw.fc_agg_usage_daily FC                            LEFT JOIN
+      dtl.referral_codes    REF ON FC.ref = REF.code_text LEFT JOIN
+      dtl.campaigns         CMP ON REF.campaign_id = CMP.id
+    WHERE
+      FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+      FC.platform = ANY ($2) AND
+      FC.channel = ANY ($3) AND
+      FC.ref = ANY (COALESCE($4, ARRAY[FC.ref])) AND
+      FC.woi = ANY (COALESCE($5, ARRAY[FC.woi])) AND
+      FC.country_code = ANY (COALESCE($6, ARRAY[FC.country_code])) AND
+      first_time
+    GROUP BY
+      TO_CHAR(ymd, 'YYYY-MM-DD'),
+      cmp.name
+    ORDER BY
+      TO_CHAR(ymd, 'YYYY-MM-DD') DESC,
+      cmp.name
+    `
+    return (await pg_client.query(QUERY,
+      [
+        `${args.daysAgo} days`,
+        args.platforms,
+        args.channels,
+        args.ref,
+        args.wois,
+        args.countryCodes
+      ]
+    ))
   }
 
   UsageSummary.druCampaign = async (args) => {
