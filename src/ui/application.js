@@ -174,6 +174,7 @@ module.exports = class Application {
 
     let menuFilters = [
       ['filterMAU', 'MAU'],
+      ['filterMRU', 'MRU'],
       ['filterDAU', 'DAU'],
       ['filterDNU', 'DNU'],
       ['filterLedger', 'Ledger'],
