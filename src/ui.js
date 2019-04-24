@@ -8,7 +8,7 @@ if (process.env.LOCAL) {
 }
 
 // Setup authentication and user interface components
-exports.setup = (server, db) => {
+exports.setup = async (server, db) => {
   // The ADMIN_PASSWORD environment variable must be set
   if (!process.env.ADMIN_PASSWORD) {
     throw new Error('ADMIN_PASSWORD not set')
@@ -18,6 +18,7 @@ exports.setup = (server, db) => {
   if (!process.env.SESSION_SECRET) {
     throw new Error('SESSION_SECRET not set')
   }
+  server.register(require('hapi-auth-basic'))
 
   // Register the server side templates
   server.register(require('vision'))
@@ -114,7 +115,23 @@ exports.setup = (server, db) => {
       return out
     }
   })
-  server.auth.default('session')
+  if(process.env.TEST){
+    const scheme = () => {
+      return {
+        authenticate: (request,h) => {
+          return h.authenticated({credentials: { user: 'admin'}})
+        }
+      }
+    }
+    server.auth.scheme('test', scheme)
+    const validate = (request, username, password ) => { 
+      return { isValid: true, credentials: {id: users.admin.id, name: users.admin.name } }
+    }
+    server.auth.strategy('test', 'test')
+     server.auth.default('test', 'test', validate)
+  } else {
+     server.auth.default('session')
+  }
   server.route([
     {
       method: ['GET', 'POST'],

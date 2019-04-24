@@ -6,9 +6,11 @@ const ChannelTotal = require('../../../../src/models/channel_total.model')()
 const PublisherTotal = require('../../../../src/models/publisher_total.model')()
 
 Then(/^I should see the publishers table with row headings and data$/, async function () {
-  let exists = await browser.isVisible('#publishers_overview')
-  expect(exists).to.equal(true, 'publishers_overview widget should be visible on the overview page')
-  await browser.pause(300)
+  let exists 
+  await browser.waitUntil(async () => {
+    exists = await browser.isVisible('#publishers_overview')
+    return exists
+  }, 5000,'publishers_overview widget should be visible on the overview page' )
   exists = await browser.isVisible('#publishers_overview #publishers_table')
   const publisher_table_rows = await browser.getHTML('#publishers_table tr ')
   let row_headings = ['Verified', 'With a channel', 'With a verified channel', 'With Uphold']
@@ -67,7 +69,7 @@ Given(/^there is recent data for publisher totals$/, async function () {
       createdAt: day,
       updatedAt: day
     })
-    await factory.create('publisher_total', {
+    await factory.create('publisher_signup_day', {
       createdAt: day,
       updatedAt: day
     })
@@ -75,3 +77,10 @@ Given(/^there is recent data for publisher totals$/, async function () {
   }
 })
 
+Then(/^I should see the chart and table for the Daily Publishers report$/, async function () {
+   await browser.waitUntil(async () => {
+     let isVisible = await browser.isVisible('#usageContent')
+     return isVisible
+   },500, 'usageContent is not visible for Daily Publishers report')
+  
+})

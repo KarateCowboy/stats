@@ -41,21 +41,21 @@ describe('ReferralCode model', async function () {
   })
 
   context('statics', async function () {
-      describe('randomCodeText', async function(){
-          it('returns a six character ref code', async function(){
-              _.range(0,100).forEach((i) => {
-                  const code = db.ReferralCode.randomCodeText()
-                  expect(code).to.match(/^[A-Z0-9]{6,6}$/)
-              })
-            
-          })
+    describe('randomCodeText', async function () {
+      it('returns a six character ref code', async function () {
+        _.range(0, 100).forEach((i) => {
+          const code = db.ReferralCode.randomCodeText()
+          expect(code).to.match(/^[A-Z0-9]{6,6}$/)
+        })
+
       })
+    })
   })
 
-  describe('associatons', async function () {
+  describe('associations', async function () {
     specify('campaign', async function () {
       const campaign = await factory.create('campaign')
-      const referralCode = await factory.create('ref_code_pg', { campaign_id: campaign.id })
+      const referralCode = await factory.create('ref_code_pg', {campaign_id: campaign.id})
       const fetchedCampaign = await referralCode.$relatedQuery('campaign')
       expect(fetchedCampaign.name).to.equal(campaign.name)
     })

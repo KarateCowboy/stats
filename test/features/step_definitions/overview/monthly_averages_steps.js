@@ -14,7 +14,7 @@ Given(/^there are core usages for the last six months$/, async function () {
   await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_average_monthly_usage_mv')
 })
 Then(/^I should see the averages laid out for the core usages$/, async function () {
-  await browser.waitForVisible('#monthly-averages-table > tbody > tr', 700)
+  await browser.waitForVisible('#monthly-averages-table > tbody > tr', 3000)
   const table_body_html = await browser.getHTML('#monthly-averages-table > tbody')
   expect(table_body_html).to.contain('winx64-bc')
 })
