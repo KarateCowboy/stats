@@ -145,7 +145,7 @@ module.exports = class Application {
       <% }) %>`
     const compiled = _.template(_sideBar)
     if(!_.isEmpty(this.reports)){
-      const reports = _.values(this.reports).filter((r)=> { return !_.isEmpty(r.menuTitle) && !_.isEmpty(r.menuId)})
+      const reports = _.values(this.reports).filter((r)=> { return !_.isEmpty(r.menuTitle) })
 
       this.sideBar = compiled({
         reportComponents: reports
