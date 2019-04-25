@@ -5,6 +5,7 @@
 var common = require('./common')
 var _ = require('underscore')
 const ChannelTotal = require('../models/channel_total.model')()
+const PublisherTotal = require('../models/publisher_total.model')()
 const moment = require('moment')
 const PUBLISHERS_OVERVIEW = `
 SELECT
@@ -163,4 +164,14 @@ exports.setup = (server, client, mongo) => {
       }
     }
   })
+  server.route({
+    method: 'GET',
+    path: '/api/1/publishers/totals',
+    handler: async function (request, h) {
+      const result = await PublisherTotal.find({}).sort({createdAt: -1}).limit(1)
+      const publisher_total = result !== null && result.length > 0 ? _.first(result) : (new PublisherTotal())
+      return (publisher_total.toObject())
+    }
+  })
+
 }

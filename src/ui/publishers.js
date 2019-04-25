@@ -100,7 +100,7 @@
           </tbody>
         </table>
         </div>`
-    publishersOverview.html(template)
+    // publishersOverview.html(template)
 
   }
 
