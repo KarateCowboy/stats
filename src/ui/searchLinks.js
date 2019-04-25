@@ -42,10 +42,12 @@ function setup () {
   $("#clearSearchLinks").on('click', function () {
     $("#searchLinks").val('')
     filterLinksOn(null)
-    $("#searchLinks").focus()
+    console.log('inner focus')
+    //$("#searchLinks").focus()
   })
 
-  $("#searchLinks").focus()
+  console.log('outer focus')
+  //$("#searchLinks").focus()
 }
 
 window.SEARCH_LINKS = {

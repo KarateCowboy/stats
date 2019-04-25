@@ -215,3 +215,7 @@ h5.platform-list span {
   margin-left: 4px;
   width: 95%;
 }
+
+.pointer {
+  cursor: pointer
+}

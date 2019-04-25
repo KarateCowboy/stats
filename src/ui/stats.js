@@ -1,6 +1,3 @@
-window.STATS = {};
-
-(function () {
   var secondOrder = (d) => {
     var points = []
     for (var i = 1; i < d.length; i += 1) {
@@ -12,13 +9,15 @@ window.STATS = {};
   var perc = (d2, d1) => {
     var points = []
     for (var i = 0; i < d1.length - 1; i += 1) {
-      points.push(d2[i+1] / d1[i])
+      points.push(d2[i + 1] / d1[i])
     }
     return points
   }
 
   var sum = (d) => {
-    return d.reduce((memo, value) => { return memo + value }, 0)
+    return d.reduce((memo, value) => {
+      return memo + value
+    }, 0)
   }
 
   var avg = (d) => {
@@ -33,7 +32,7 @@ window.STATS = {};
     return points
   }
 
-  var smooth = (d, size=3) => {
+  var smooth = (d, size = 3) => {
     var points = []
     var start, realSize
     var deltaBack = Math.floor(points / 2)
@@ -49,12 +48,9 @@ window.STATS = {};
     return points
   }
 
-  window.STATS.STATS = {
-    secondOrder: secondOrder,
-    perc: perc,
-    sum: sum,
-    avg: avg,
-    subArray: subArray,
-    smooth: smooth
-  }
-})()
+  module.exports.secondOrder = secondOrder
+  module.exports.perc = perc
+  module.exports.sum = sum
+  module.exports.avg = avg
+  module.exports.subArray = subArray
+  module.exports.smooth = smooth
