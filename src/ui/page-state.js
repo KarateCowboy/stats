@@ -11,6 +11,7 @@ module.exports = class PageState {
     this.dayOptions = [10000, 365, 120, 90, 60, 30, 14, 7]
     this.ref = null
     this.offset = 0
+    this.showToday = false
     this.platformFilter = {
       'osx': true,
       'winx64': true,
@@ -182,6 +183,7 @@ module.exports = class PageState {
       days: this.days,
       platformFilter: this.serializePlatformParams(),
       channelFilter: this.serializeChannelParams(),
+      showToday: this.showToday,
       version: null,
       ref: (this.ref || []).join(','),
       wois: (this.wois || []).join(','),
