@@ -24,6 +24,7 @@ class BraveMenu {
       const pageStateAttr = $(this).data('pageState')
       let menu = new BraveMenu($(this), pageState[pageStateAttr])
       menu.init()
+      menu.updateMenuUI()
     })
   }
 
@@ -33,14 +34,14 @@ class BraveMenu {
         this.optionData = d
         const choiceList = this.el.find('ul')
         _.each(this.optionData, (item) => {
-          choiceList.append(`<li class="choice"><a data-id="${item.id}" data-type="item"><i class="fa fa-check fa-blank"></i> <strong>${item.label}</strong></a></li>`)
+          choiceList.append(`<li class="choice"><a data-id="${item.id}" data-type="item" style="display:none;"><i class="fa fa-check fa-blank"></i> <strong>${item.label}</strong></a></li>`)
           _.each(item.subitems, (subitem) => {
-            choiceList.append(`<li class="choice"><a data-id="${subitem.id}" data-type="subitem"><i class="fa fa-check fa-blank"></i> <span>${subitem.label}</span> ` + (this.showId ? `<small class="text-muted">${subitem.id}</small>` : '') + `<span class="hidden">${item.label}</span></a></li>`)
+            choiceList.append(`<li class="choice"><a data-id="${subitem.id}" data-type="subitem" style="display: none;"><i class="fa fa-check fa-blank"></i> <span>${subitem.label}</span> ` + (this.showId ? `<small class="text-muted">${subitem.id}</small>` : '') + `<span class="hidden">${item.label}</span></a></li>`)
           })
         })
         this.el.on('keyup', 'input.search', (evt) => {
           let term = $(evt.target).val()
-          if (term === '') {
+          if (_.isEmpty(term)) {
             this.hideAllNotSelected()
           } else {
             this.showOrHideOnTerm(term)
@@ -54,9 +55,9 @@ class BraveMenu {
         const id = target.data('id')
         if (type === 'item') {
           this.subitemsByItem[id].forEach((subitem) => {
-            this.selectedIds[subitem.id] = !this.selectedIds[id]
+            this.selectedIds[subitem.id] = !this.selectedIds[subitem.id]
           })
-        }else if (type === 'subitem') {
+        } else if (type === 'subitem') {
           this.selectedIds[id] = !this.selectedIds[id]
         }
 
@@ -74,8 +75,9 @@ class BraveMenu {
   }
 
   selectedSubitems () {
-    const allLi = this.el.find('a > i')
-    return allLi.filter(function () { return !$(this).hasClass('fa-blank')})
+    return _.keys(this.selectedIds).filter((id) => {
+      return this.selectedIds[id] && !this.subitemsByItem[id]
+    })
   }
 
   get domData () {
@@ -98,11 +100,20 @@ class BraveMenu {
 
   updateMenuUI () {
     this.el.find('a').each((item, elem) => {
+      let aEl = $(elem)
       const elemId = $(elem).data('id')
       if (this.selectedIds[elemId]) {
-        if ($(elem).find('i').hasClass('fa-blank')) $(elem).find('i').removeClass('fa-blank')
+        if (aEl.find('i').hasClass('fa-blank')) {
+          aEl.find('i').removeClass('fa-blank')
+          aEl.show()
+        }
       } else {
-        if (!$(elem).find('i').hasClass('fa-blank')) $(elem).find('i').addClass('fa-blank')
+        if (!aEl.find('i').hasClass('fa-blank') && ['item', 'subitem'].includes(aEl.data('type'))) {
+          aEl.find('i').addClass('fa-blank')
+          if (_.isEmpty(this.el.find('input.search').val())) {
+            aEl.hide()
+          }
+        }
       }
     })
     if (this.showSelectedCount) {
@@ -115,10 +126,6 @@ class BraveMenu {
       this.el.find('a.none').hide()
       this.el.find('li[role=separator]').hide()
     }
-  }
-
-  get optionItems () {
-    return this.el.find('li.choice')
   }
 
   get url () {
@@ -172,7 +179,6 @@ class BraveMenu {
         return label.match(t)
       })) {
         $(elem).show()
-
       } else {
         if (!this.isChecked($(elem))) {
           $(elem).hide()

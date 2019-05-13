@@ -15,6 +15,8 @@ class DailyRetention extends BaseReportComponent {
     this.menuId = 'dailyRetention'
     this.reportContent = `<marquee>Daily Active Users Content</marquee>`
     this.contentTagId = 'DNUDAUContent'
+    this.menuConfig.showWOISFilter = true
+    this.menuConfig.showCountryCodeFilter = true
 
   }
 
