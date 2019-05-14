@@ -47,4 +47,5 @@ Feature: Intelligent menu
       | downloads                   | downloads               | Downloads                                      | Downloads                                                  |
       | druCampaign                 | druCampaign             | Daily Returning Users by Campaign - DRU        | Daily Returning Users by Campaign (DRU)                    |
       | dauCampaign                 | dauCampaign             | Daily Active Users by Campaign - DAU           | Daily Active Users by Campaign (DAU)                       |
-      | dnuCampaign                 | dnuCampaign             | Daily New Users by Campaign - DNU              | Daily New Users by Campaign (DNU)                          | 
+      | dnuCampaign                 | dnuCampaign             | Daily New Users by Campaign - DNU              | Daily New Users by Campaign (DNU)                          |
+      | dailyPublishers             | dailyPublishers         | Daily Publishers                               | Daily Publishers                                           |

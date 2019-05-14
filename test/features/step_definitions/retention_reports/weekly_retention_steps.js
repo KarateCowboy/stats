@@ -11,11 +11,7 @@ const moment = require('moment')
 const ReferralCode = require('../../../../src/models/referral-code.model')()
 
 Given(/^I am logged in to the system$/, {timeout: 30000}, async function () {
-  await browser.url('http://localhost:8193')
-  await browser.waitForVisible('#inputEmail', 10000)
-  await browser.setValue('#inputEmail', 'admin')
-  await browser.setValue('#inputPassword', this.adminPassword)
-  await browser.click('.btn-primary')
+  await browser.url('http://localhost:8193/dashboard')
 })
 
 Given(/^I click the menu item for weekly retention$/, async function () {

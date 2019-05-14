@@ -48,7 +48,8 @@ const overviewPublisherHandler = function (channel_totals, publisher_totals) {
           </tbody>
         </table>
         </div>`
-  publishersOverview.html(template)
+  publishersOverview.empty()
+  publishersOverview.append(template)
 
 }
 
@@ -374,7 +375,7 @@ class Overview extends BaseReportComponent {
     try {
       let [channel_totals, publisher_totals] = await Promise.all([
         $.ajax('/api/1/publishers/channel_totals'),
-        $.ajax('/api/1/publishers/publisher_totals')
+        $.ajax('/api/1/publishers/totals')
       ])
       overviewPublisherHandler(channel_totals, publisher_totals)
     } catch (e) {

@@ -13,6 +13,8 @@ const DailyRetention = require('./reports/daily-retention')
 const WeeklyRetention = require('./reports/weekly-retention')
 const ThirtyDayRetention = require('./reports/thirty-day-retention')
 const MonthlyActiveUsers = require('./reports/monthly-active-users')
+const MonthlyReturningUsers = require('./reports/monthly-returning-users')
+const MonthlyReturningUsersByPlatform = require('./reports/monthly-returning-users-by-platform')
 const MonthlyActiveUsersByPlatform = require('./reports/monthly-active-users-by-platform')
 const MonthlyAverageDailyActiveUsers = require('./reports/monthly-average-daily-active-users')
 const MonthlyAverageDailyActiveUsersByPlatform = require('./reports/monthly-average-daily-active-users-by-platform')
@@ -28,6 +30,7 @@ const DailyActiveUsersByVersion = require('./reports/daily-active-users-by-versi
 const DailyNewUsers = require('./reports/daily-new-users')
 const DailyNewUsersByPlatform = require('./reports/daily-new-users-by-platform')
 const DailyNewUsersByCampaign = require('./reports/daily-new-users-by-campaign')
+const DailyPublishers = require('./reports/daily-publishers')
 const SearchCrashes = require('./reports/search-crashes')
 const CrashDetails = require('./reports/crash-details')
 const TopCrashReasons = require('./reports/top-crash-reasons')
@@ -39,7 +42,9 @@ const DailyCrashesByVersion = require('./reports/daily-crashes-by-version')
 const Downloads = require('./reports/downloads')
 
 global.init = async function () {
+
   let priorState = null
+  
   let storedStateData = await window.localStorage.getItem('pageState')
   if (storedStateData) {
     priorState = JSON.parse(storedStateData)
@@ -55,6 +60,8 @@ global.init = async function () {
     (new MonthlyAverageDailyActiveUsersByPlatform()),
     (new MonthlyAverageDailyNewUsers()),
     (new MonthlyAverageDailyNewUsersByPlatform()),
+    (new MonthlyReturningUsers()),
+    (new MonthlyReturningUsersByPlatform()),
     (new DailyActiveUsers()),
     (new DailyActiveUsersByPlatform()),
     (new DailyActiveUsersByCountry()),
@@ -65,6 +72,7 @@ global.init = async function () {
     (new DailyNewUsers()),
     (new DailyNewUsersByPlatform()),
     (new DailyNewUsersByCampaign()),
+    (new DailyPublishers()),
     (new SearchCrashes()),
     (new CrashDetails()),
     (new TopCrashReasons()),

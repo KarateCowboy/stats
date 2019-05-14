@@ -32,7 +32,7 @@ SELECT
   SUM(FC.total) AS count
 FROM dw.fc_agg_usage_daily FC
 WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2019-02-21'::date) AND
   FC.platform = ANY ($2) AND
   FC.channel = ANY ($3) AND
   FC.ref = ANY (COALESCE($4, ARRAY[FC.ref])) AND

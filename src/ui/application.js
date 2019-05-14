@@ -72,6 +72,14 @@ module.exports = class Application {
     } else {
       $('#controls-selected-days').html(this.pageState.days + ' days')
     }
+
+    if (this.pageState.showToday) {
+      $(`#controls`).find(`a[data-days="0"] i`).removeClass('fa-blank')
+      $('#controls-selected-days').html($('#controls-selected-days').html() + ' + Now')
+    } else {
+      $(`#controls`).find(`a[data-days="0"] i`).addClass('fa-blank')
+    }
+
     // highlight currently selected platforms
     const controls = $('#controls')
     _.each(this.pageState.platformFilter, (v, k, lst) => {
@@ -174,6 +182,7 @@ module.exports = class Application {
 
     let menuFilters = [
       ['filterMAU', 'MAU'],
+      ['filterMRU', 'MRU'],
       ['filterDAU', 'DAU'],
       ['filterDNU', 'DNU'],
       ['filterLedger', 'Ledger'],
