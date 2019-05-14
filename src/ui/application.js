@@ -1,6 +1,7 @@
 const Grapnel = require('grapnel')
 const BaseReportComponent = require('./base-report-component')
 const MenuConfig = require('./menu-config')
+const BraveMenu = require('./brave-menu')
 const PageState = require('./page-state')
 const $ = require('jquery')
 const _ = require('lodash')
@@ -11,15 +12,12 @@ require('./common')
 module.exports = class Application {
   constructor (reportComponents = [], pageState = null) {
     this.reports = {}
-    if(pageState === null){
+    if (pageState === null) {
       console.log('provided pageState is null')
     }
     this.pageState = new PageState()
     if (pageState) {
       Object.assign(this.pageState, pageState)
-      this.pageState.wois = []
-      this.pageState.countryCodes = []
-      this.pageState.ref = []
     }
     this.router = new Grapnel()
     this.menuState = new MenuConfig()
@@ -27,11 +25,11 @@ module.exports = class Application {
     reportComponents.forEach((r) => {
       this.register(r)
     })
-    if(this.pageState.currentlySelected){
+    if (this.pageState.currentlySelected) {
       this.currentlySelected = this.pageState.currentlySelected
-    }else if(_.isEmpty(reportComponents)){
+    } else if (_.isEmpty(reportComponents)) {
       this.currentlySelected = null
-    }else {
+    } else {
       this.currentlySelected = _.first(reportComponents)
     }
     this.drawSideBar()
@@ -125,9 +123,9 @@ module.exports = class Application {
         $(selector).hide()
       }
     })
-    if(this.menuState.showRefFilter){
+    if (this.menuState.showRefFilter) {
       $('#ref-filter').parent().show()
-    }else {
+    } else {
       $('#ref-filter').parent().hide()
     }
 
@@ -135,6 +133,7 @@ module.exports = class Application {
 
   renderInitialUi () {
     $('#sideBar').empty().html(this.sideBar)
+    BraveMenu.init(this.pageState)
     this.setupSideFilter()
   }
 
@@ -152,13 +151,13 @@ module.exports = class Application {
         <li><a href="#<%- reportComponent.path %>" id="<%- reportComponent.menuId %>"><%- reportComponent.menuTitle %></a></li>
       <% }) %>`
     const compiled = _.template(_sideBar)
-    if(!_.isEmpty(this.reports)){
-      const reports = _.values(this.reports).filter((r)=> { return !_.isEmpty(r.menuTitle) })
+    if (!_.isEmpty(this.reports)) {
+      const reports = _.values(this.reports).filter((r) => { return !_.isEmpty(r.menuTitle) && !_.isEmpty(r.menuId)})
 
       this.sideBar = compiled({
         reportComponents: reports
       })
-    }else{
+    } else {
       this.sideBar = ''
     }
   }

@@ -42,7 +42,9 @@ const DailyCrashesByVersion = require('./reports/daily-crashes-by-version')
 const Downloads = require('./reports/downloads')
 
 global.init = async function () {
-  let priorState  = null
+
+  let priorState = null
+  
   let storedStateData = await window.localStorage.getItem('pageState')
   if (storedStateData) {
     priorState = JSON.parse(storedStateData)
