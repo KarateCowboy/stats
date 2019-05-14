@@ -24,7 +24,7 @@ const define = () => {
   }
 
   factory.define('crash', Crash, {
-    id: () => { return faker.random.alphaNumeric() },
+    id: () => { return faker.random.alphaNumeric(24).toUpperCase() },
     ts: () => { return moment().format('YYYY-MM-DD hh:mm:ss')},
     github_repo: null,
     contents: () => {

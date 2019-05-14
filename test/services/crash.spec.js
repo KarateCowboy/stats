@@ -46,14 +46,21 @@ describe('CrashExpirationService', async function () {
       it('deletes the crash by id', async function () {
         //setup
         const crashAttrs = await factory.attrs('crash')
+        const bucketParams = {
+          Bucket: process.env.S3_CRASH_BUCKET,
+          Key: crashAttrs.id
+        }
+        sinon.stub(service.S3, 'deleteObject').withArgs(bucketParams)
+        await service.expire({id: crashAttrs.id})
+        expect(service.S3.deleteObject.calledWith(bucketParams)).to.equal(true)
       })
     })
-    context('ElasticSearch', async function() {
-      it('removes the crash from the search index', async function(){
+    context('ElasticSearch', async function () {
+      it('removes the crash from the search index', async function () {
         const crashAttrs = await factory.attrs('crash')
-        const indexArgs = { index: 'crashes', id: crashAttrs.id, type: 'crash' } 
+        const indexArgs = {index: 'crashes', id: crashAttrs.id, type: 'crash'}
         sinon.stub(service.elasticClient, 'delete').withArgs(indexArgs)
-        await service.expire({ id: crashAttrs.id })
+        await service.expire({id: crashAttrs.id})
         expect(service.elasticClient.delete.calledWith(indexArgs)).to.equal(true, 'elasticClient.delete method should have been called with the expected args')
       })
     })
