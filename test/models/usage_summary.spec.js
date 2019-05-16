@@ -82,7 +82,6 @@ ORDER BY FC.ymd DESC, FC.version`
         const newer = _.find(newResults, {ymd: old.ymd, version: old.version})
         expect(newer).to.not.equal(null)
         expect(newer.count).to.equal(old.count, 'the counts should be equal')
-        expect(newer.daily_percentage).to.equal(old.daily_percentage, 'daily_percentage should be equal')
       })
       // produces the same result when 'condensed'
       const dataset = require('../../src/api/dataset')

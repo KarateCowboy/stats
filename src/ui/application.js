@@ -1,6 +1,7 @@
 const Grapnel = require('grapnel')
 const BaseReportComponent = require('./base-report-component')
 const MenuConfig = require('./menu-config')
+const BraveMenu = require('./brave-menu')
 const PageState = require('./page-state')
 const $ = require('jquery')
 const _ = require('lodash')
@@ -11,22 +12,30 @@ require('./common')
 module.exports = class Application {
   constructor (reportComponents = [], pageState = null) {
     this.reports = {}
+    if (pageState === null) {
+      console.log('provided pageState is null')
+    }
     this.pageState = new PageState()
-
+    if (pageState) {
+      Object.assign(this.pageState, pageState)
+    }
     this.router = new Grapnel()
     this.menuState = new MenuConfig()
     this.contentTags = new Set()
     reportComponents.forEach((r) => {
       this.register(r)
     })
-    this.currentlySelected = _.isEmpty(reportComponents) ? null : _.first(reportComponents).menuId
-    if (pageState) {
-      Object.assign(this.pageState, pageState)
+    if (this.pageState.currentlySelected) {
+      this.currentlySelected = this.pageState.currentlySelected
+    } else if (_.isEmpty(reportComponents)) {
+      this.currentlySelected = null
+    } else {
+      this.currentlySelected = _.first(reportComponents)
     }
     this.drawSideBar()
 
     this.renderInitialUi()
-    if (!_.isEmpty(this.reports) && this.currentlySelectedu) {
+    if (!_.isEmpty(this.reports) && this.currentlySelected) {
       this.router.navigate(this.reports[this.currentlySelected].path)
     }
     $(document).on('uiChange', () => {
@@ -34,7 +43,7 @@ module.exports = class Application {
       this.updateUiState()
     })
     $(document).on('dataChange', async () => {
-      this.persistPageState()
+      // this.persistPageState()
       await this.reports[this.currentlySelected].retriever()
     })
   }
@@ -63,6 +72,14 @@ module.exports = class Application {
     } else {
       $('#controls-selected-days').html(this.pageState.days + ' days')
     }
+
+    if (this.pageState.showToday) {
+      $(`#controls`).find(`a[data-days="0"] i`).removeClass('fa-blank')
+      $('#controls-selected-days').html($('#controls-selected-days').html() + ' + Now')
+    } else {
+      $(`#controls`).find(`a[data-days="0"] i`).addClass('fa-blank')
+    }
+
     // highlight currently selected platforms
     const controls = $('#controls')
     _.each(this.pageState.platformFilter, (v, k, lst) => {
@@ -83,6 +100,7 @@ module.exports = class Application {
         controls.find(`h5.platform-list span.${k}`).hide()
       }
     })
+
     $('#' + this.currentlySelected).parent().addClass('active')
     $('#page-load-status').text('loaded')
     $(document).ajaxStart(function () {
@@ -105,10 +123,17 @@ module.exports = class Application {
         $(selector).hide()
       }
     })
+    if (this.menuState.showRefFilter) {
+      $('#ref-filter').parent().show()
+    } else {
+      $('#ref-filter').parent().hide()
+    }
+
   }
 
   renderInitialUi () {
     $('#sideBar').empty().html(this.sideBar)
+    BraveMenu.init(this.pageState)
     this.setupSideFilter()
   }
 
@@ -122,15 +147,17 @@ module.exports = class Application {
       </span>
     </div>
     </li>
-      <% _.values(reportComponents).forEach(function(reportComponent) { %>
+      <% reportComponents.forEach(function(reportComponent) { %>
         <li><a href="#<%- reportComponent.path %>" id="<%- reportComponent.menuId %>"><%- reportComponent.menuTitle %></a></li>
       <% }) %>`
     const compiled = _.template(_sideBar)
-    if(!_.isEmpty(this.reports)){
+    if (!_.isEmpty(this.reports)) {
+      const reports = _.values(this.reports).filter((r) => { return !_.isEmpty(r.menuTitle) && !_.isEmpty(r.menuId)})
+
       this.sideBar = compiled({
-        reportComponents: this.reports
+        reportComponents: reports
       })
-    }else{
+    } else {
       this.sideBar = ''
     }
   }
@@ -155,6 +182,7 @@ module.exports = class Application {
 
     let menuFilters = [
       ['filterMAU', 'MAU'],
+      ['filterMRU', 'MRU'],
       ['filterDAU', 'DAU'],
       ['filterDNU', 'DNU'],
       ['filterLedger', 'Ledger'],
@@ -192,11 +220,14 @@ module.exports = class Application {
     }
     reportComponent.app = this
     this.reports[reportComponent.menuId] = reportComponent
-    this.router.get(reportComponent.path, async (req, evt) => { evt.preventDefault(); await this.routerOp(reportComponent)})
+    this.router.get(reportComponent.path, async (req, evt) => {
+      evt.preventDefault()
+      await this.routerOp(reportComponent, req)
+    })
     this.contentTags.add(reportComponent.contentTagId)
   }
 
-  async routerOp (reportComponent) {
+  async routerOp (reportComponent, req) {
     if (this.reports[this.currentlySelected]) {
       const contentTagId = this.reports[this.currentlySelected].contentTagId
       $(`#${contentTagId}`).hide()
@@ -206,7 +237,7 @@ module.exports = class Application {
     Object.assign(this.menuState, reportComponent.menuConfig)
     await this.persistPageState()
     await this.updateUiState()
-    await reportComponent.retriever()
+    await reportComponent.retriever(req)
   }
 
   get currentlySelected () {
@@ -218,6 +249,7 @@ module.exports = class Application {
   }
 
   async persistPageState () {
+    console.log('saving page state')
     await window.localStorage.setItem('pageState', JSON.stringify(this.pageState))
   }
 }

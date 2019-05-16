@@ -15,6 +15,7 @@ const {
   b,
   std
 } = require('./builders')
+
 module.exports = class BaseReportComponent {
   constructor (app = null) {
     this.menuConfig = new MenuConfig()
@@ -26,6 +27,118 @@ module.exports = class BaseReportComponent {
     this.reportContent = `<marquee>hello, Brave new world</marquee>`
     this.contentTagId = 'usageContent'
     this.app = app
+  }
+
+  static buildMultiValueChartHandler (chartContainerId, x, y, valueAttribute, x_label, y_label, opts) {
+    opts = opts || {}
+    x_label = x_label || 'Date'
+    y_label = y_label || 'Platform'
+    opts.valueClamper = opts.valueClamper || _.identity
+
+    return (rows) => {
+      if (opts.valueManipulator) rows = rows.map(opts.valueManipulator)
+      // the rows array contains an entry for each dataset
+
+      // Build a list of unique labels
+      var labels = _.chain(rows)
+        .map((row) => {
+          return row[x]
+        })
+        .uniq()
+        .sort()
+        .value()
+
+      // Build a list of unique data sets
+      var ys = _.chain(rows)
+        .map((row) => {
+          return row[y]
+        })
+        .uniq()
+        .value()
+
+      // Associate the data
+      var product = _.object(_.map(labels, (label) => {
+        return [label, {}]
+      }))
+      rows.forEach((row) => {
+        product[row[x]][row[y]] = opts.valueClamper(row[valueAttribute])
+      })
+
+      // Build the Chart.js data structure
+      var datasets = []
+      ys.forEach((platform) => {
+        var dataset = []
+        labels.forEach((label) => {
+          dataset.push(product[label][platform] || 0)
+        })
+        datasets.push(dataset)
+      })
+
+      // Determine the color of the line by label or index
+      var colourer = (idx, opacity) => {
+        return COLOR.colorForLabel(ys[idx], opacity)
+      }
+      if (opts.colourBy === 'index') {
+        colourer = (idx, opacity) => {
+          return COLOR.colorForIndex(idx, opacity)
+        }
+      }
+      if (opts.colourBy === 'hashedLabel') {
+        colourer = (idx, opacity) => {
+          return COLOR.colorForHashedLabel(ys[idx], opacity)
+        }
+      }
+
+      var data = {
+        labels: labels,
+        datasets: _.map(datasets, (dataset, idx) => {
+          return {
+            label: ys[idx] || 'All',
+            data: dataset,
+            borderColor: colourer(idx, 1),
+            pointColor: colourer(idx, 0.5),
+            backgroundColor: colourer(idx, 0.05)
+          }
+        })
+      }
+
+      let container = $('#' + chartContainerId)
+      let chartId = chartContainerId + 'Chart'
+      container.empty()
+      container.append(`<canvas id='${chartId}' height='500' width='800'></canvas>`)
+      var usageChart = document.getElementById(chartId)
+
+      let yaxisOptions = JSON.parse(JSON.stringify(COMMON.standardYAxisOptions))
+      if (opts.yaxisLog) {
+        yaxisOptions.scales.yAxes[0].type = 'logarithmic'
+        yaxisOptions.scales.yAxes[0].ticks = {
+          callback: (value, index, values) => {
+            return Number(value.toString())
+          }
+        }
+        yaxisOptions.scales.yAxes[0].afterBuildTicks = (chart) => {
+          let maxTicks = 25
+          let maxLog = Math.log(chart.ticks[0])
+          let minLogDensity = maxLog / maxTicks
+
+          let ticks = []
+          let currLog = -Infinity
+          _.each(chart.ticks.reverse(), (tick) => {
+            let log = Math.max(0, Math.log(tick))
+            if (log - currLog > minLogDensity) {
+              ticks.push(tick)
+              currLog = log
+            }
+          })
+          chart.ticks = ticks
+        }
+      }
+
+      new Chart.Line(usageChart.getContext('2d'), {
+        data: data,
+        options: yaxisOptions
+      })
+    }
   }
 
   static buildSuccessHandler (x, y, x_label, y_label, opts) {

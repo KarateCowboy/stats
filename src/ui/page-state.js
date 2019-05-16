@@ -10,6 +10,8 @@ module.exports = class PageState {
     this.version = null
     this.dayOptions = [10000, 365, 120, 90, 60, 30, 14, 7]
     this.ref = null
+    this.offset = 0
+    this.showToday = false
     this.platformFilter = {
       'osx': true,
       'winx64': true,
@@ -34,6 +36,19 @@ module.exports = class PageState {
       'nightly': false,
       'release': true
     }
+    this.wois = []
+    this.countryCodes = []
+
+    // dispatch pagination events
+    $('#controls-pagination').on('click', 'a', (e) => {
+      console.log('pagination click')
+      if ($(e.target).hasClass('pagination-first')) { this.offset = 0 }
+      if ($(e.target).hasClass('pagination-previous')) { this.offset -= 100 }
+      if ($(e.target).hasClass('pagination-next')) { this.offset += 100 }
+      if (this.offset < 0) this.offset = 0
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
 
     $('#controls-days-menu').on('click', 'a', (evt) => {
       const target = $(evt.target)
@@ -43,6 +58,17 @@ module.exports = class PageState {
       } else {
         this.showToday = !this.showToday
       }
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
+    $('#woi_menu').on('selection', (evt, wois) => {
+      this.wois = wois
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
+    // callback from brave-menu
+    $('#cc_menu').on('selection', (evt, countryCodes) => {
+      this.countryCodes = countryCodes
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
     })
@@ -157,10 +183,12 @@ module.exports = class PageState {
       days: this.days,
       platformFilter: this.serializePlatformParams(),
       channelFilter: this.serializeChannelParams(),
+      showToday: this.showToday,
       version: null,
       ref: (this.ref || []).join(','),
-      wois: (this.wois || []).join(','),
-      countryCodes: null
+      wois: this.wois.join(','),
+      countryCodes: this.countryCodes.join(','),
+      offset: this.offset
     }
   }
 

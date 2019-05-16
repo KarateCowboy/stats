@@ -111,8 +111,6 @@ describe('Application', function () {
         await window.localStorage.setItem('pageState', JSON.stringify(savedPageState))
         await application.routerOp(sampleComponent)
         const loadedPageState = JSON.parse(await window.localStorage.getItem('pageState'))
-        console.log('loaded pageState')
-        console.log(loadedPageState)
         expect(savedPageState.platformFilter.osx).to.equal(!loadedPageState.platformFilter.osx)
       })
 
@@ -195,9 +193,9 @@ describe('Application', function () {
         }
         await application.updateUiState()
         const controls = $('#controls')
-          console.log(`.`)
-          console.log(`.`)
-          console.log(`.`)
+        console.log(`.`)
+        console.log(`.`)
+        console.log(`.`)
         _.each(application.pageState.platformFilter, (v, k, lst) => {
           console.log(`.`)
           console.log(`.`)
@@ -239,31 +237,57 @@ describe('Application', function () {
           const matches = application.sideBar.match(/<li>/g)
           expect(matches).to.have.property('length', _.keys(application.reports).length + 1)
         })
+        it('does not display a link or menu item for configs with falsy menuTitle or menuId', async function () {
+          sampleComponent.menuTitle = ''
+          application.register(sampleComponent)
+
+          application.drawSideBar()
+          let matches = application.sideBar.match(/<li>/g)
+          expect(matches).to.have.property('length', _.keys(application.reports).length)
+
+          sampleComponent.menuTitle = 'Sample Title'
+          sampleComponent.menuId = ''
+
+          application.drawSideBar()
+          matches = application.sideBar.match(/<li>/g)
+          expect(matches).to.have.property('length', _.keys(application.reports).length)
+        })
       })
     })
     describe('toggleMenuItems', async function () {
       context('respective menuConfig keys => DOM objects', async function () {
+        specify('show / hide #ref-filter based on MenuConfig.showRefFilter', async function () {
+          const $ = require('jquery')
+          application.reports = []
+          application.register(sampleComponent)
+          application.currentlySelected = sampleComponent.menuId
+          application.menuState.showRefFilter = false
+          // sinon.stub(application, 'toggleMenuItems')
+          // await application.updateUiState()
+          // expect(application.toggleMenuItems.called).to.equal(true)
+          // application.toggleMenuItems.restore()
+          application.toggleMenuItems()
+          const refFilter = $('#ref-filter')
+          expect(refFilter.parent().is(':hidden')).to.equal(true, 'refFilter should be hidden')
+        })
+
         beforeEach(async function () {
           application.reports = []
           application.register(sampleComponent)
           sampleComponent.menuConfig = new MenuConfig()
         })
         specify('shows and hides specified controls', async function () {
-          const controlSelectorMappings = {
-            showControls: '#controls',
-            showWOISFilter: '#woi_menu',
-            showCountryCodeFilter: '#cc_menu',
-            showDaysSelector: '#days-menu'
-          }
           const $ = require('jquery')
-          for (let key in controlSelectorMappings) {
+          const sampleMenuConfig = new MenuConfig()
+          delete sampleMenuConfig.mappings['showPagination']
+          for (let key in sampleMenuConfig.mappings) {
             application.menuState[key] = false
             await application.toggleMenuItems()
-            const domObject = $(controlSelectorMappings[key])
-            expect(domObject.is(':hidden')).to.equal(true, `${controlSelectorMappings[key]} element should be hidden`)
+            const domObject = $(sampleMenuConfig.mappings[key])
+            expect(domObject.is(':hidden')).to.equal(true, `${key} element should be hidden`)
             application.menuState[key] = true
             await application.toggleMenuItems()
-            expect(domObject.is(':visible')).to.equal(true, `${controlSelectorMappings[key]} controls element should be visible`)
+            expect(domObject.is(':visible')).to.equal(true, `${key} controls element should be visible`)
           }
         })
       })

@@ -14,6 +14,7 @@ class DailyNewUsersByCampaign extends BaseReportComponent {
     this.contentTagId = 'usageContent'
     this.menuConfig.showWOISFilter = false
     this.menuConfig.showCountryCodeFilter = false
+    this.menuConfig.showRefFilter = false
 
   }
   async retriever () {

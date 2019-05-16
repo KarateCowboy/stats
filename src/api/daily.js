@@ -32,7 +32,7 @@ SELECT
   SUM(FC.total) AS count
 FROM dw.fc_agg_usage_daily FC
 WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2016-01-26'::date) AND
+  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2019-02-21'::date) AND
   FC.platform = ANY ($2) AND
   FC.channel = ANY ($3) AND
   FC.ref = ANY (COALESCE($4, ARRAY[FC.ref])) AND
@@ -63,7 +63,6 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/dau',
     handler: async function (request, h) {
-      console.log(request)
       var [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await db.UsageSummary.dailyActiveUsers({
         daysAgo: parseInt(days.replace(' days', '')),

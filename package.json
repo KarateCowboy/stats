@@ -8,7 +8,7 @@
     "npm": "5.6.x"
   },
   "scripts": {
-    "devtest": "webpack-dev-server --config webpack.test.config.js",
+    "ui-tests": "webpack-dev-server --config webpack.test.config.js",
     "heroku-postbuild": "webpack --config ./webpack.config.js --progress",
     "build": "webpack-cli",
     "start": "webpack-cli && node src/run.js",
