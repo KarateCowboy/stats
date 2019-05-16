@@ -163,4 +163,19 @@ exports.setup = (server, client, mongo) => {
       }
     }
   })
+  server.route({
+    method: 'GET',
+    path: '/api/1/publishers/daily_aggregate',
+    handler: async function (request, h) {
+      let result
+      try {
+        result = await db.PublisherSignupDay.dailyTotalAgg()
+        const flattenedYmds = _.flatten(result.map(r => r.asYmd()))
+        return flattenedYmds
+      } catch (e) {
+        console.log(e.message)
+        throw e
+      }
+    }
+  })
 }

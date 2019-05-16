@@ -114,6 +114,22 @@ module.exports = function (knex) {
       ]
     }
 
+    static async dailyTotalAgg (lastDay = moment().format('YYYY-MM-DD')) {
+      const dailyTotals = await this.query().where('ymd', '<=', lastDay).orderBy('ymd','asc')
+      const aggregatedTotals = []
+      dailyTotals.reduce((acc, val) => {
+        acc.email_verified += val.email_verified
+        acc.email_channel_verified += val.email_channel_verified
+        acc.email_channel_and_uphold_verified += val.email_channel_and_uphold_verified
+        acc.ymd = val.ymd
+        let newSignupDay = new db.PublisherSignupDay()
+        newSignupDay = _.assign(newSignupDay, acc)
+        aggregatedTotals.push(newSignupDay)
+        return acc
+      }, {email_verified: 0, email_channel_verified: 0, email_channel_and_uphold_verified: 0})
+      return aggregatedTotals
+    }
+
     static get relationMappings () {
       // return {
       //   campaign: {

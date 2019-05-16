@@ -83,6 +83,9 @@ Given(/^I view the Daily Publishers report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#dailyPublishers')
 })
 
+Given(/^I view the Daily Publishers Agg report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#dailyPublishersAgg')
+})
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref-filter`)
   expect(result).to.equal(true)

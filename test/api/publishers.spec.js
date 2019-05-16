@@ -53,5 +53,17 @@ describe('crud endpoints', async function () {
       expect(payload).to.have.property('length', daysBackToSearch * 3)
     })
   })
-
+  describe('daily publishers aggregated', async function () {
+    let days
+    beforeEach(async function () {
+      params.url = '/api/1/publishers/daily_aggregate'
+      days = _.range(0, 7).map((d) => { return {ymd: moment().subtract(d, 'days').format()}})
+      await factory.createMany('publisher_signup_day', days)
+    })
+    it('returns a list of agggregated publisher signup totals', async function () {
+      let response = await server.inject(params)
+      let payload = JSON.parse(response.payload)
+      expect(payload).to.have.property('length', days.length * 3)
+    })
+  })
 })

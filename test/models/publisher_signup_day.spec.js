@@ -28,6 +28,26 @@ describe('PublisherSignupDay', async function () {
       expect(publisherSignupDay).to.have.property('email_verified', publisherSignupDayAttrs.email_verified)
     })
   })
+  describe('#dailyTotalAgg', async function () {
+    it('returns the total up to that day', async function () {
+      const attrs = _.range(1, 20).map((i) => { return {ymd: moment().subtract(i, 'days').format('YYYY-MM-DD')}})
+      const publisherSignupDays = await factory.createMany('publisher_signup_day', attrs)
+      const result = await db.PublisherSignupDay.dailyTotalAgg()
+      const aggregatedTotals = []
+      publisherSignupDays.reduce((acc, val) => {
+        acc.email_verified += val.email_verified
+        acc.email_channel_verified += val.email_channel_verified
+        acc.email_channel_and_uphold_verified += val.email_channel_and_uphold_verified
+        acc.ymd = val.ymd
+        aggregatedTotals.push(_.clone(acc))
+        return acc
+      }, {email_verified: 0, email_channel_verified: 0, email_channel_and_uphold_verified: 0})
+      expect(true).to.equal(true)
+      expect(result.map(i => i.email_verified)).to.have.members(aggregatedTotals.map((i) => {return i.email_verified}))
+      expect(result.map(i => i.email_channel_verified)).to.have.members(aggregatedTotals.map(i => i.email_channel_verified))
+      expect(result.map(i => i.email_channel_and_uphold_verified)).to.have.members(aggregatedTotals.map(i => i.email_channel_and_uphold_verified))
+    })
+  })
   describe('#asYmd', async function () {
     specify('returns an array with ymd, verificationStatus, and count', async function () {
       publisherSignupDayAttrs = await factory.attrs('publisher_signup_day')
