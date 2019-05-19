@@ -140,7 +140,7 @@ module.exports = class CommonAggregation {
           '_id.country_code': 1
         }
       }
-    ], {explain: false})
+    ], {explain: false, allowDiskUse: true})
 
     return (await query.toArray()).map((row) => {
       row._id.count = row.count
