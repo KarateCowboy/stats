@@ -31,6 +31,7 @@ const DailyNewUsers = require('./reports/daily-new-users')
 const DailyNewUsersByPlatform = require('./reports/daily-new-users-by-platform')
 const DailyNewUsersByCampaign = require('./reports/daily-new-users-by-campaign')
 const DailyPublishers = require('./reports/daily-publishers')
+const DailyPublishersAgg = require('./reports/daily-publishers-aggregated')
 const SearchCrashes = require('./reports/search-crashes')
 const CrashDetails = require('./reports/crash-details')
 const TopCrashReasons = require('./reports/top-crash-reasons')
@@ -73,6 +74,7 @@ global.init = async function () {
     (new DailyNewUsersByPlatform()),
     (new DailyNewUsersByCampaign()),
     (new DailyPublishers()),
+    (new DailyPublishersAgg()),
     (new SearchCrashes()),
     (new CrashDetails()),
     (new TopCrashReasons()),

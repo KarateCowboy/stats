@@ -164,6 +164,7 @@ class TestHelper {
     global.pg_client = null
     await global.knex.destroy()
     await mongoose.connection.close()
+    await global.db.sequelize.close()
   }
 }
 
