@@ -85,19 +85,19 @@ module.exports = class PageState {
     $.ajax('/api/1/campaigns', {
       success: (response) => {
         this.campaigns = response
-        let template = ''
-        _.sortBy(response, 'name').map((c) => {
-          let optgroup = `<optgroup label="${c.name}">`
-          c.referralCodes.forEach((r) => {
-            optgroup += `<option id=${r.id}>${r.code_text}</option>`
-          })
-          optgroup += '</optgroup>'
-          template += optgroup
-        })
+        const compiled = _.template(`
+            <% _.forEach(groups, function(group) { %>
+              <optgroup label="<%- group.name %>">
+              <% _.forEach(group.referralCodes, function(o) { %>
+                <option id=<%- o.id%>><%- o.code_text%></option>
+              <% }) %>
+              </optgroup>
+            <% }) %>
+          `)
 
         const ref_filter = $('#ref-filter')
         ref_filter.empty()
-        ref_filter.append(template)
+        ref_filter.append(compiled({'groups': this.campaigns }))
         ref_filter.select2({
           width: 300,
           placeholder: 'Campaign / referral codes'
