@@ -10,6 +10,7 @@ module.exports = class PageState {
     this.version = null
     this.dayOptions = [10000, 365, 120, 90, 60, 30, 14, 7]
     this.ref = []
+    this.refcodes = []
     this.offset = 0
     this.showToday = false
     this.platformFilter = {
@@ -94,10 +95,9 @@ module.exports = class PageState {
               </optgroup>
             <% }) %>
           `)
-
         const ref_filter = $('#ref-filter')
         ref_filter.empty()
-        ref_filter.append(compiled({'groups': this.campaigns }))
+        ref_filter.append(compiled({'groups': campaigns }))
         ref_filter.select2({
           width: 300,
           placeholder: 'Campaign / referral codes'
@@ -111,6 +111,7 @@ module.exports = class PageState {
             }
           }
         })
+        ref_filter.val(this.ref).trigger('change')
         ref_filter.on('change', () => {
           let referral_codes = []
           const ref_filter = $('#ref-filter')
@@ -118,6 +119,7 @@ module.exports = class PageState {
             referral_codes = ref_filter.select2('data').map(i => i.id)
           }
           this.ref = referral_codes
+          document.dispatchEvent(uiChange)
           document.dispatchEvent(dataChange)
         })
         $('#clear-ref').on('click', () => {
