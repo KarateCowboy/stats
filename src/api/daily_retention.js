@@ -10,90 +10,89 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/daily_retention',
     handler: async (request, h) => {
       try {
-      let [days, platforms, channels, ref, wois, countryCodes] = common.retrieveCommonParameters(request)
+        let [days, platforms, channels, ref, wois, countryCodes] = common.retrieveCommonParameters(request)
 
-      if (!ref) return []
+        if (!ref) return []
 
-      let dau = await db.UsageSummary.dauCampaignAgg({
-        common: true,
-        daysAgo: parseInt(days.replace(' days', '')),
-        platforms: platforms,
-        channels: channels,
-        ref: ref,
-        wois: wois,
-        countryCodes: countryCodes
-      })
-      dau.rows.forEach((row) => common.formatPGRow(row))
-      dau.rows = common.potentiallyFilterToday(dau.rows, request.query.showToday === 'true')
+        let [dau, dnu] = await Promise.all([db.UsageSummary.dauCampaignAgg({
+          common: true,
+          daysAgo: parseInt(days.replace(' days', '')),
+          platforms: platforms,
+          channels: channels,
+          ref: ref,
+          wois: wois,
+          countryCodes: countryCodes
+        }), db.UsageSummary.dnuCampaignAgg({
+          common: true,
+          daysAgo: parseInt(days.replace(' days', '')),
+          platforms: platforms,
+          channels: channels,
+          ref: ref,
+          wois: wois,
+          countryCodes: countryCodes
+        })])
 
-      let dnu = await db.UsageSummary.dnuCampaignAgg({
-        common: true,
-        daysAgo: parseInt(days.replace(' days', '')),
-        platforms: platforms,
-        channels: channels,
-        ref: ref,
-        wois: wois,
-        countryCodes: countryCodes
-      })
-      dnu.rows.forEach((row) => common.formatPGRow(row))
-      dnu.rows = common.potentiallyFilterToday(dnu.rows, request.query.showToday === 'true')
+        dau.rows.forEach((row) => common.formatPGRow(row))
+        dau.rows = common.potentiallyFilterToday(dau.rows, request.query.showToday === 'true')
 
-      if (wois) {
-        const firstWOI = wois.sort()[0]
-        dnu.rows = dnu.rows.filter((row) => {
-          return row.ymd > moment(firstWOI).subtract(5, 'days').format('YYYY-MM-DD')
-        })
-        dau.rows = dau.rows.filter((row) => {
-          return row.ymd > moment(firstWOI).subtract(5, 'days').format('YYYY-MM-DD')
-        })
-      }
+        dnu.rows.forEach((row) => common.formatPGRow(row))
+        dnu.rows = common.potentiallyFilterToday(dnu.rows, request.query.showToday === 'true')
 
-      const dauGroupedByCampaign = _.groupBy(dau.rows, (row) => { return row.campaign })
-      const dnuGroupedByCampaign = _.groupBy(dnu.rows, (row) => { return row.campaign })
+        if (wois) {
+          const firstWOI = wois.sort()[0]
+          dnu.rows = dnu.rows.filter((row) => {
+            return row.ymd > moment(firstWOI).subtract(5, 'days').format('YYYY-MM-DD')
+          })
+          dau.rows = dau.rows.filter((row) => {
+            return row.ymd > moment(firstWOI).subtract(5, 'days').format('YYYY-MM-DD')
+          })
+        }
 
-      const campaignSummary = (campaign, dau, dnu) => {
+        const dauGroupedByCampaign = _.groupBy(dau.rows, (row) => { return row.campaign })
+        const dnuGroupedByCampaign = _.groupBy(dnu.rows, (row) => { return row.campaign })
 
-        let s = 0
-        dnu.forEach((row) => {
-          s += row.count
-        })
+        const campaignSummary = (campaign, dau, dnu) => {
+          let s = 0
+          dnu.forEach((row) => {
+            s += row.count
+          })
 
-        let dnuSum = 0
-        let combined = dau.reverse().map((dau) => {
-          let ymd = dau.ymd
-          let dauTotal = dau.count
-          let dnuTotal = 0
-          let dnuRow = dnu.find((row) => { return row.ymd === dau.ymd })
-          if (dnuRow) dnuTotal = dnuRow.count
+          let dnuSum = 0
+          let combined = dau.reverse().map((dau) => {
+            let ymd = dau.ymd
+            let dauTotal = dau.count
+            let dnuTotal = 0
+            let dnuRow = dnu.find((row) => { return row.ymd === dau.ymd })
+            if (dnuRow) dnuTotal = dnuRow.count
 
-          let retained = 0
-          if (dnuSum > (s * 0.0001)) {
-            retained = (dauTotal - dnuTotal) / dnuSum
-            retained = Math.round(retained * 10000) / 10000
-          }
-          dnuSum += dnuTotal
-          return {
-            ymd,
+            let retained = 0
+            if (dnuSum > (s * 0.0001)) {
+              retained = (dauTotal - dnuTotal) / dnuSum
+              retained = Math.round(retained * 10000) / 10000
+            }
+            dnuSum += dnuTotal
+            return {
+              ymd,
+              campaign,
+              dau: dauTotal,
+              dnu: dnuTotal,
+              dru: dauTotal - dnuTotal,
+              dnuSum,
+              retained
+            }
+          })
+          return combined
+        }
+
+        const completeResults = _.keys(dauGroupedByCampaign).map((campaign) => {
+          return campaignSummary(
             campaign,
-            dau: dauTotal,
-            dnu: dnuTotal,
-            dru: dauTotal - dnuTotal,
-            dnuSum,
-            retained
-          }
+            dauGroupedByCampaign[campaign],
+            dnuGroupedByCampaign[campaign]
+          )
         })
-        return combined
-      }
 
-      const completeResults = _.keys(dauGroupedByCampaign).map((campaign) => {
-        return campaignSummary(
-          campaign,
-          dauGroupedByCampaign[campaign],
-          dnuGroupedByCampaign[campaign]
-        )
-      })
-
-      return (completeResults)
+        return (completeResults)
       } catch (e) {
         console.log(e.toString())
         console.trace(e)
