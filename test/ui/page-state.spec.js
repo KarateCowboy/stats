@@ -60,10 +60,8 @@ describe('PageState', async function () {
       expect(pageState).to.have.property('version', null)
     })
     specify('ref', async function () {
-      expect(pageState).to.have.property('ref', null)
-    })
-    specify('campaigns', async function () {
-      expect(pageState).to.have.property('campaigns')
+      expect(pageState).to.have.property('ref')
+      expect(pageState.ref).to.be.an('array')
     })
     specify('productPlatforms', async function () {
       expect(pageState).to.have.property('productPlatforms')
@@ -102,13 +100,18 @@ describe('PageState', async function () {
       expect(_.keys(pageState.channelFilter)).to.have.members(_.keys(channelFilterKeys))
       expect(_.values(pageState.channelFilter)).to.have.members(_.values(channelFilterKeys))
     })
-    specify('wois', async function() {
+    specify('wois', async function () {
       expect(pageState).to.have.property('wois')
       expect(pageState.wois instanceof Array).to.equal(true, 'wois property should be an array, but was not')
     })
-    specify('countryCodes', async function() {
+    specify('countryCodes', async function () {
       expect(pageState).to.have.property('countryCodes')
       expect(pageState.countryCodes instanceof Array).to.equal(true, 'countryCodes property should be an array, but was not')
+    })
+    context('deprecated', async function () {
+      specify('campaigns', async function () {
+        expect(pageState).to.not.have.property('campaigns')
+      })
     })
   })
 })

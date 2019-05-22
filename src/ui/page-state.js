@@ -2,14 +2,14 @@ const $ = require('jquery')
 require('select2')
 const uiChange = require('./ui-change-event')
 const dataChange = require('./data-change-event')
+let campaigns = []
 module.exports = class PageState {
   constructor () {
     this.currentlySelected = null
-    this.campaigns = []
     this.days = 14
     this.version = null
     this.dayOptions = [10000, 365, 120, 90, 60, 30, 14, 7]
-    this.ref = null
+    this.ref = []
     this.offset = 0
     this.showToday = false
     this.platformFilter = {
@@ -84,7 +84,7 @@ module.exports = class PageState {
     })
     $.ajax('/api/1/campaigns', {
       success: (response) => {
-        this.campaigns = response
+        campaigns = response
         const compiled = _.template(`
             <% _.forEach(groups, function(group) { %>
               <optgroup label="<%- group.name %>">
@@ -132,7 +132,7 @@ module.exports = class PageState {
       $('li[role=group]').on('click', (obj) => {
         let campaignName = $(obj.target).html()
         if (campaignName !== 'No Campaign') {
-          let campaign = _.find(this.campaigns, {
+          let campaign = _.find(campaigns, {
             'name': campaignName
           })
           const current = $('#ref-filter').select2('data').map(i => i.text)
