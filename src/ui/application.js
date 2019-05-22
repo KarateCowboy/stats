@@ -18,8 +18,6 @@ module.exports = class Application {
     this.pageState = new PageState()
     if (pageState) {
       Object.assign(this.pageState, pageState)
-      $('ref-filter').val(this.pageState.ref)
-
     }
     this.router = new Grapnel()
     this.menuState = new MenuConfig()
@@ -45,6 +43,7 @@ module.exports = class Application {
       this.updateUiState()
     })
     $(document).on('dataChange', async () => {
+      // this.persistPageState()
       await this.reports[this.currentlySelected].retriever()
     })
   }

@@ -9,7 +9,7 @@ module.exports = class PageState {
     this.days = 14
     this.version = null
     this.dayOptions = [10000, 365, 120, 90, 60, 30, 14, 7]
-    this.refcodes = []
+    this.ref = null
     this.offset = 0
     this.showToday = false
     this.platformFilter = {
@@ -94,6 +94,7 @@ module.exports = class PageState {
           optgroup += '</optgroup>'
           template += optgroup
         })
+
         const ref_filter = $('#ref-filter')
         ref_filter.empty()
         ref_filter.append(template)
@@ -110,7 +111,6 @@ module.exports = class PageState {
             }
           }
         })
-        ref_filter.val(this.ref).trigger('change')
         ref_filter.on('change', () => {
           let referral_codes = []
           const ref_filter = $('#ref-filter')
@@ -118,7 +118,6 @@ module.exports = class PageState {
             referral_codes = ref_filter.select2('data').map(i => i.id)
           }
           this.ref = referral_codes
-          document.dispatchEvent(uiChange)
           document.dispatchEvent(dataChange)
         })
         $('#clear-ref').on('click', () => {
