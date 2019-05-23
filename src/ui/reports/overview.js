@@ -32,18 +32,26 @@ const overviewPublisherHandler = function (channel_totals, publisher_totals) {
       <div class="panel-body">
         <table class="table table-striped" id="channels_table">
           <thead>
-            <tr><th>All</th>
-            <th><img src="/local/img/publisher-icons/youtube.svg" height="24" /></th>
-            <th><img src="/local/img/publisher-icons/internet.svg" height="24" /></th>
-            <th><img src="/local/img/publisher-icons/twitch.svg" height="24" /></th>
+            <tr><th class="all_channels">All</th>
+            <th class="youtube"><img src="/local/img/publisher-icons/youtube.svg" height="24" /></th>
+            <th class="site"><img src="/local/img/publisher-icons/internet.svg" height="24" /></th>
+            <th class="twitch"><img src="/local/img/publisher-icons/twitch.svg" height="24" /></th>
+            <th class="twitter"><img src="/local/img/publisher-icons/twitter.svg" height="24" /></th>
+            <th class="github"><img src="/local/img/publisher-icons/github.svg" height="24" /></th>
+            <th class="reddit"><img src="/local/img/publisher-icons/reddit.svg" height="24" /></th>
+            <th class="vimeo"><img src="/local/img/publisher-icons/vimeo.svg" height="24" /></th>
             </tr>
           </thead>
           <tbody>
           <tr>
-          <td>${ channel_totals.all_channels.toLocaleString()}</td>
-          <td>${ channel_totals.youtube.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('youtube')}%</span></td>
-          <td>${ channel_totals.site.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('site')}%</span></td>
-          <td>${ channel_totals.twitch.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('twitch')}%</span></td>
+          <td class="all_channels">${ channel_totals.all_channels.toLocaleString()}</td>
+          <td class="youtube">${ channel_totals.youtube.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('youtube')}%</span></td>
+          <td class="site">${ channel_totals.site.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('site')}%</span></td>
+          <td class="twitch">${ channel_totals.twitch.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('twitch')}%</span></td>
+          <td class="twitter">${ channel_totals.twitter.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('twitter')}%</span></td>
+          <td class="github">${ channel_totals.github.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('github')}%</span></td>
+          <td class="reddit">${ channel_totals.reddit.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('reddit')}%</span></td>
+          <td class="vimeo">${ channel_totals.vimeo.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('vimeo')}%</span></td>
           </tr>
           </tbody>
         </table>
@@ -57,7 +65,6 @@ const OVERVIEW = {
   ledger: function (bat, b) {
     let overviewTable = $('#overview-ledger-table tbody')
     overviewTable.empty()
-
     overviewTable.append(tr([
       b.td(''),
       b.th('<img src="/local/img/token-icons/bat.svg" height="18"> BAT', 'right'),
