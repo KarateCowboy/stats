@@ -251,6 +251,8 @@ module.exports = class Application {
 
   async persistPageState () {
     console.log('saving page state')
+    // temporary fix
+    delete this.pageState.campaigns
     await window.localStorage.setItem('pageState', JSON.stringify(this.pageState))
   }
 }
