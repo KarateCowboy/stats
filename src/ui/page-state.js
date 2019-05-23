@@ -10,7 +10,6 @@ module.exports = class PageState {
     this.version = null
     this.dayOptions = [10000, 365, 120, 90, 60, 30, 14, 7]
     this.ref = []
-    this.refcodes = []
     this.offset = 0
     this.showToday = false
     this.platformFilter = {
