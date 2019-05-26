@@ -35,7 +35,8 @@ const fixtures = {
   campaigns: require('./fixtures/campaign'),
   referral_codes: require('./fixtures/referral_code_pg'),
   platform: require('./fixtures/platform'),
-  channel: require('./fixtures/channel')
+  channel: require('./fixtures/channel'),
+  crash: require('./fixtures/crash')
 }
 
 class TestHelper {
@@ -96,7 +97,8 @@ class TestHelper {
         'referral_codes',
         'platforms',
         'channels',
-        'publisher_platforms'
+        'publisher_platforms',
+        'crashes'
       ]
     }
     this.materialized_views = {

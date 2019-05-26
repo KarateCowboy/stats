@@ -13,17 +13,20 @@ class DailyCrashesByPlatform extends BaseReportComponent {
     this.contentTagId = 'usageContent'
     this.menuConfig.showWOISFilter = false
     this.menuConfig.showCountryCodeFilter = false
-
+    this.menuConfig.showMobile = false
+    this.menuConfig.showMuon = false
+    this.menuConfig.showRefFilter = false
   }
 
   async retriever () {
     let results
     try {
       results = await $.ajax('/api/1/dc_platform?' + $.param(this.app.pageState.standardParams()))
+      console.log(results)
       this.handler(results.rows)
     } catch (e) {
       console.log(`Error running retriever for ${this.title}`)
-      console.log(e.message)
+      console.log(e)
     }
   }
 

@@ -156,17 +156,32 @@ ORDER BY ts DESC
 
 const CRASHES_PLATFORM = `
 SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  FC.platform,
-  SUM(FC.total) AS count
-FROM dtl.crashes FC
+  C.contents->>'year_month_day' AS ymd,
+  CASE
+    WHEN C.contents->>'platform' = 'linux' THEN 'linux'
+    WHEN C.contents->>'platform' = 'Win64' THEN 'winx64-bc'
+    WHEN C.contents->>'platform' IN ('Win32', 'win32') THEN 'winia32'
+    WHEN C.contents->>'platform' IN ('OS X', 'darwin') THEN 'osx-bc'
+    WHEN C.contents->>'platform' = 'unknown' THEN 'unknown'
+    ELSE 'unknown' END AS platform,
+  COUNT(CASE
+    WHEN C.contents->>'platform' = 'linux' THEN 'linux'
+    WHEN C.contents->>'platform' = 'Win64' THEN 'winx64-bc'
+    WHEN C.contents->>'platform' IN ('Win32', 'win32') THEN 'winia32'
+    WHEN C.contents->>'platform' IN ('OS X', 'darwin') THEN 'osx-bc'
+    WHEN C.contents->>'platform' = 'unknown' THEN 'unknown'
+    ELSE 'unknown' END) AS count
+FROM dtl.crashes C
 WHERE
-  FC.ymd >= current_date - CAST($1 as INTERVAL) AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3)
-GROUP BY FC.ymd, FC.platform
-ORDER BY FC.ymd DESC, FC.platform
+  sp.to_ymd((contents->>'year_month_day'::text)) >= current_date - CAST($1 as INTERVAL)
+  AND C.contents->>'channel' = ANY($2)
+  AND C.contents->>'platform' = ANY($3)
+  AND C.contents->>'muon-version' IS NULL
+group by ymd DESC, platform
 `
+// COUNT(platform) AS count
+// GROUP BY C.contents->>'year_month_day', platform, C.contents->>'_version'
+// ORDER BY C.contents->>'year_month_day' DESC
 
 const CRASH_VERSIONS = `
 SELECT
@@ -201,15 +216,14 @@ exports.setup = (server, client, mongo) => {
     handler: function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
-      let platforms = common.platformPostgresArray(request.query.platformFilter)
+      let platforms = db.Crash.mapPlatformFilters(common.platformPostgresArray(request.query.platformFilter))
       let channels = common.channelPostgresArray(request.query.channelFilter)
-      return client.query(CRASHES_PLATFORM, [days, platforms, channels], (err, results) => {
+      return client.query(CRASHES_PLATFORM, [days, channels, platforms], (err, results) => {
         if (err) {
           return h.response(err.toString()).code(500)
         } else {
-          results.rows.forEach((row) => common.formatPGRow(row))
           results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-          return (results.rows)
+          return (results)
         }
       })
     }
@@ -335,7 +349,6 @@ exports.setup = (server, client, mongo) => {
           params.push(channels)
         }
         query += ` ORDER BY ts DESC OFFSET ${offset} LIMIT 100`
-        console.log(query, params)
         let results = await client.query(query, params)
         return results.rows
       } catch (e) {

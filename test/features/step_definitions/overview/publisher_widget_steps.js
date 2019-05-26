@@ -69,7 +69,7 @@ Given(/^there is recent data for publisher totals$/, async function () {
       createdAt: day,
       updatedAt: day
     })
-    await factory.create('publisher_signup_day', {
+    await factory.create('publisher_total', {
       createdAt: day,
       updatedAt: day
     })

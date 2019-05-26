@@ -15,6 +15,13 @@ let sample_codes, testing_ymd
 
 Given(/^I view the Daily Active Users by Platform report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#usage')
+  await browser.waitUntil(async function () {
+    let isVisible = await browser.isVisible(`#contentTitle`)
+    let contentTitleText = await browser.getText('#contentTitle')
+    return isVisible === true && contentTitleText.includes('Daily Active Users by Platform')
+  }, 10000, 'waiting to load the report')
+  await browser.pause(3000)
+
 })
 
 Given(/^there are "([^"]*)" usages for the prior week$/, {timeout: 100000}, async function (number_of_usages) {
