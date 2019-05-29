@@ -23,6 +23,22 @@ describe('ChannelTotal', async function () {
       const channel_total = new ChannelTotal()
       expect(channel_total).to.have.property('site', 0 )
     })
+    specify('twitter', async function() {
+      const channel_total = new ChannelTotal()
+      expect(channel_total).to.have.property('twitter', 0 )
+    })
+    specify('reddit', async function() {
+      const channel_total = new ChannelTotal()
+      expect(channel_total).to.have.property('reddit', 0 )
+    })
+    specify('github', async function() {
+      const channel_total = new ChannelTotal()
+      expect(channel_total).to.have.property('github', 0 )
+    })
+    specify('vimeo', async function() {
+      const channel_total = new ChannelTotal()
+      expect(channel_total).to.have.property('vimeo', 0 )
+    })
     specify(' all_channels: {type: Number},', async function () {
       const channel_total = new ChannelTotal()
       expect(channel_total).to.have.property('all_channels', 0 )

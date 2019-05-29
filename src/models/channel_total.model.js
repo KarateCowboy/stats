@@ -22,6 +22,22 @@ module.exports = function () {
       type: Schema.Types.Number,
       default: 0
     },
+    twitter: {
+      type: Schema.Types.Number,
+      default: 0
+    },
+    vimeo: {
+      type: Schema.Types.Number,
+      default: 0
+    },
+    github: {
+      type: Schema.Types.Number,
+      default: 0
+    },
+    reddit: {
+      type: Schema.Types.Number,
+      default: 0
+    },
     all_channels: {
       type: Schema.Types.Number,
       default: 0
@@ -38,5 +54,3 @@ module.exports = function () {
     return mongooseClient.model('ChannelTotal', ChannelTotal)
   }
 }
-
-
