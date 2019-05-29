@@ -121,7 +121,13 @@ class BraveMenuAPI {
       }
     })
     if (this.showSelectedCount) {
-      this.el.find('a.dropdown-toggle span.title').text(`${this.title} (${this.selectedSubitems().length})`)
+      if (this.selectedSubitems().length === 0) {
+        this.el.find('a.dropdown-toggle span.title').text(`${this.title}`)
+      } else if (this.selectedSubitems().length < 3) {
+        this.el.find('a.dropdown-toggle span.title').text(`${this.title} (${this.selectedSubitems().join(', ')})`)
+      } else {
+        this.el.find('a.dropdown-toggle span.title').text(`${this.title} (${this.selectedSubitems().length})`)
+      }
     }
     if (this.selectedSubitems().length > 0) {
       this.el.find('a.none').show()
