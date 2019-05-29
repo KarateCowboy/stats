@@ -2,6 +2,7 @@ const Grapnel = require('grapnel')
 const BaseReportComponent = require('./base-report-component')
 const MenuConfig = require('./menu-config')
 const BraveMenu = require('./brave-menu')
+const BraveMenuAPI = require('./brave-menu-api')
 const PageState = require('./page-state')
 const $ = require('jquery')
 const _ = require('lodash')
@@ -81,7 +82,6 @@ module.exports = class Application {
       $(`#controls`).find(`a[data-days="0"] i`).addClass('fa-blank')
     }
 
-    // highlight currently selected platforms
     const controls = $('#controls')
     _.each(this.pageState.platformFilter, (v, k, lst) => {
       if (v) {
@@ -92,6 +92,7 @@ module.exports = class Application {
         controls.find(`h5.platform-list span.${k}`).hide()
       }
     })
+
     _.each(this.pageState.channelFilter, (v, k, lst) => {
       if (v) {
         controls.find(`a[data-channel="${k}"] i`).removeClass('fa-blank')
@@ -101,6 +102,17 @@ module.exports = class Application {
         controls.find(`h5.platform-list span.${k}`).hide()
       }
     })
+
+    if (this.pageState.ref.length > 0) {
+      controls.find(`h5.platform-list span.refs`).show()
+      if (this.pageState.ref.length < 4) {
+        controls.find(`h5.platform-list span.refs`).html(this.pageState.ref.join(', '))
+      } else {
+        controls.find(`h5.platform-list span.refs`).html(this.pageState.ref.length + ' ref codes')
+      }
+    } else {
+      controls.find(`h5.platform-list span.refs`).hide()
+    }
 
     $('#' + this.currentlySelected).parent().addClass('active')
     $('#page-load-status').text('loaded')
@@ -135,6 +147,7 @@ module.exports = class Application {
   renderInitialUi () {
     $('#sideBar').empty().html(this.sideBar)
     BraveMenu.init(this.pageState)
+    BraveMenuAPI.init(this.pageState)
     this.setupSideFilter()
   }
 
@@ -250,9 +263,7 @@ module.exports = class Application {
   }
 
   async persistPageState () {
-    console.log('saving page state')
-    // temporary fix
-    delete this.pageState.campaigns
+    console.log('saving page state', this.pageState)
     await window.localStorage.setItem('pageState', JSON.stringify(this.pageState))
   }
 }
