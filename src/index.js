@@ -26,7 +26,12 @@ let server
 module.exports.setup = async (connections) => {
   server = new Hapi.Server({
     host: config.host,
-    port: config.port
+    port: config.port,
+    routes: {
+      security: {
+        hsts: true
+      }
+    }
   })
   await mongoose.connect(process.env.MLAB_URI)
   await server.register(Inert)
