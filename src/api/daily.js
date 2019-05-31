@@ -36,7 +36,8 @@ WHERE
   FC.platform = ANY ($2) AND
   FC.channel = ANY ($3) AND
   FC.ref = ANY (COALESCE($4, ARRAY[FC.ref])) AND
-  FC.woi = ANY (COALESCE($5, ARRAY[FC.woi]))
+  FC.woi = ANY (COALESCE($5, ARRAY[FC.woi])) AND
+  FC.country_code = ANY (COALESCE($6, ARRAY[FC.country_code]))
 GROUP BY FC.ymd, FC.country_code
 ORDER BY FC.ymd DESC, FC.country_code
 `
@@ -48,8 +49,8 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/dau_country',
     handler: async function (request, reply) {
-      var [days, platforms, channels, ref, wois] = common.retrieveCommonParameters(request)
-      const results = await client.query(DAU_COUNTRY, [days, platforms, channels, ref, wois])
+      var [days, platforms, channels, ref, wois, country_codes] = common.retrieveCommonParameters(request)
+      const results = await client.query(DAU_COUNTRY, [days, platforms, channels, ref, wois, country_codes])
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
       // condense small country counts to an 'other' category

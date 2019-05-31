@@ -10,7 +10,8 @@ class DailyActiveUsersByCountry extends BaseReportComponent {
     this.menuId = 'usageCountry'
     this.reportContent = `<marquee>Daily Active Users Content</marquee>`
     this.contentTagId = 'usageContent'
-    this.menuConfig.showWOISFilter = false
+    this.menuConfig.showWOISFilter = true
+    this.menuConfig.showCountryCodeFilter = true
   }
 
   async retriever () {
