@@ -5,7 +5,6 @@ const _ = require('underscore')
 const COMMON = require('../common')
 const ReferralWidget = require('./referral')
 
-let publisherPlatforms
 const overviewPublisherHandler = function (channel_totals, publisher_totals) {
   let publishersOverview = $('#publishers_overview')
   const ratio_of_pubs = (n) => { return parseInt(publisher_totals[n] / publisher_totals.email_verified * 100)}
@@ -360,46 +359,43 @@ class Overview extends BaseReportComponent {
   }
 
   async retriever () {
-    publisherPlatforms = await $.ajax('/api/1/publishers/platforms')
-    let downloads = await $.ajax('/api/1/dau_platform_first_summary')
-    try {
-      OVERVIEW.firstRun(downloads, builders)
-    } catch (e) {
-      console.log('Error running #firstRun')
-      console.log(e.message)
-    }
+    let downloads = $.ajax('/api/1/dau_platform_first_summary', {
+      success: (downloads) => {
+        OVERVIEW.firstRun(downloads, builders)
+      }
+    })
 
-    let [dauAverageRegion, dauAverageCountry, countries] = await Promise.all([
+    Promise.all([
       $.ajax('/api/1/dau_average_region'),
       $.ajax('/api/1/dau_average_country'),
       $.ajax('/api/1/countries')
-    ])
-    OVERVIEW.dauAverageRegion(dauAverageRegion, dauAverageCountry, countries)
+    ]).then((results) => {
+      let [dauAverageRegion, dauAverageCountry, countries] = results
+      OVERVIEW.dauAverageRegion(dauAverageRegion, dauAverageCountry, countries)
+    })
 
-    var platformStats = await $.ajax('/api/1/monthly_average_stats_platform')
-    OVERVIEW.monthAveragesHandler(platformStats, builders)
+    $.ajax('/api/1/monthly_average_stats_platform', {
+      success: (platformStats) => {
+        OVERVIEW.monthAveragesHandler(platformStats, builders)
+      }
+    })
 
-    try {
-      let [channel_totals, publisher_totals] = await Promise.all([
-        $.ajax('/api/1/publishers/channel_totals'),
-        $.ajax('/api/1/publishers/totals')
-      ])
-      overviewPublisherHandler(channel_totals, publisher_totals)
-    } catch (e) {
-      console.log('problem getting publisher information')
-      console.log(e)
-    }
+    Promise.all([
+      $.ajax('/api/1/publishers/channel_totals'),
+      $.ajax('/api/1/publishers/totals')
+    ]).then((results) => {
+      let [channelTotals, publisherTotals] = results
+      overviewPublisherHandler(channelTotals, publisherTotals)
+    })
 
-    let bat = await $.ajax('/api/1/ledger_overview')
-    OVERVIEW.ledger(bat, builders)
+    $.ajax('/api/1/ledger_overview', {
+      success: (bat) => {
+        OVERVIEW.ledger(bat, builders)
+      }
+    })
 
     ReferralWidget()
     $(`#${this.contentTagId}`).show()
-    $('#monthly-averages-whats-this').on('click', function (e) {
-      e.preventDefault()
-      $('#monthly-averages-instructions').show('slow')
-    })
-
   }
 }
 
