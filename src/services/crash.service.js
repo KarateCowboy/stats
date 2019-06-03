@@ -28,7 +28,6 @@ class CrashExpirationService {
         Key: crash.id
       })
       await knex('dtl.crashes').where('id', crash.id).delete()
-      await knex('dtl.crashes_archive').where('id', crash.id).delete()
       this.elasticClient.delete({id: crash.id, type: 'crash', index: 'crashes'})
     } catch (e) {
       console.log(`Error deleting crash with id ${crash.id}`)

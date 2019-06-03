@@ -7,9 +7,9 @@ const commander = require('commander')
 class ExpireCrash extends Script {
   async run(){
     await this.setup()
-    commander.option('-i, --id [id]', '24 char id of the crash to delete')
+    commander.option('-i, --id [id]', '24 char id of the crash to delete').parse(process.argv)
     const service = new CrashExpirationService()
-    await service.expire(commander.id)
+    await service.expire({ id: commander.id })
 
     await this.shutdown()
   }

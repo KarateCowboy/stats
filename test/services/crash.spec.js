@@ -30,18 +30,6 @@ describe('CrashExpirationService', async function () {
         expect(allCrashes).to.have.property('length', 0)
       })
     })
-    context('dtl.crashes_archive table', async function () {
-      it('deletes the crash by id', async function () {
-        //setup
-        const crashAttrs = await factory.attrs('crash')
-        const crash = await knex('dtl.crashes_archive').insert(crashAttrs)
-        //execution
-        await service.expire({id: crashAttrs.id})
-        //validation
-        const allCrashes = await knex('dtl.crashes_archive').select()
-        expect(allCrashes).to.have.property('length', 0)
-      })
-    })
     context('S3 Crash Bucket', async function () {
       it('deletes the crash by id', async function () {
         //setup
