@@ -59,7 +59,7 @@ SELECT
   wallets,
   balance,
   funded,
-  ( SELECT quote FROM dw.btc_quotes WHERE currency_code = 'USD' ) as btc_usd
+  ( SELECT quote FROM dw.bat_quotes WHERE currency_code = 'USD' ) as bat_usd
 FROM
 ( SELECT
   SUM(wallets)               AS wallets,
@@ -74,13 +74,13 @@ const commonDaysParamsBuilder = (request) => {
 }
 
 // Default success handler
-const commonSuccessHandler = (reply, results, request) => {
+const commonSuccessHandler = ( results, request) => {
   results.rows.forEach((row) => row.count = parseFloat(row.count))
   results.rows = common.potentiallyFilterToday(
     results.rows,
     request.query.showToday === 'true'
   )
-  reply(results.rows)
+  return (results.rows)
 }
 
 // Endpoint definitions
@@ -153,12 +153,12 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       EYESHADE_WALLETS_TOTAL,
-      (reply, results) => {
-        reply({
+      ( results) => {
+        return ({
           wallets: parseInt(results.rows[0].wallets),
           balance: parseInt(results.rows[0].balance),
           funded: parseInt(results.rows[0].funded),
-          btc_usd: parseFloat(results.rows[0].btc_usd)
+          bat_usd: parseFloat(results.rows[0].bat_usd)
         })
       }
     )

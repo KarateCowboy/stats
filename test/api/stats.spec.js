@@ -10,27 +10,19 @@ const WeekOfInstall = require('../../src/models/retention').WeekOfInstall
 const UsageAggregateWOI = require('../../src/models/usage_aggregate_woi').UsageAggregateUtil
 const main = require('../../src/index')
 const _ = require('underscore')
+let params = {
+  method : 'GET',
+  url :  '/api/1/campaigns',
+  auth: {
+    strategy: 'session',
+    credentials: {
+      'user': 'admin',
+      'password': process.env.ADMIN_PASSWORD
+    }
+  }
+}
 
 describe('/retention_week', async function () {
-  it('allows filtering by ref', async function () {
-    this.timeout(10000)
-    let excluded_retention_woi = await factory.build('fc_retention_woi', {ref: 'none'})
-    await excluded_retention_woi.save()
-    let included_retention_woi = await factory.build('fc_retention_woi', {ref: '123ABC'})
-    await included_retention_woi.save()
-    await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_retention_week_mv')
-    const server = await main.setup({pg: pg_client, mg: mongo_client})
-
-    // execution
-    let params = {
-      method: 'GET',
-      url: `/api/1/retention_week?platformFilter=winx64&channelFilter=dev&ref=123ABC`
-    }
-    //validation
-    let response = await server.inject(params)
-    let payload = JSON.parse(response.payload)
-    expect(payload[0].starting).to.equal(included_retention_woi.total)
-  })
   it.skip('returns twelve rows/three months of data', async function () {
     this.timeout(30000)
     // Setup
@@ -69,10 +61,7 @@ describe('/retention_week', async function () {
     const server = await main.setup({pg: pg_client, mg: mongo_client})
 
     // execution
-    const params = {
-      method: 'GET',
-      url: `/api/1/retention_week?platformFilter=androidbrowser&channelFilter=stable`
-    }
+    params.url = `/api/1/retention_week?platformFilter=androidbrowser&channelFilter=stable`
     const response = await server.inject(params)
     const payload = JSON.parse(response.payload)
     expect(payload.length).to.be.above(10)
@@ -102,15 +91,12 @@ describe('/retention_week', async function () {
     expect(week.retained_percentage.toFixed(2) * 100).to.be.closeTo(16, 17)
   })
 })
-describe('/monthly_average_stats_platform', async function(){
-  it('returns a bunch of things', async function(){
+describe('/monthly_average_stats_platform', async function () {
+  it('returns a bunch of things', async function () {
     const server = await main.setup({pg: pg_client, mg: mongo_client})
 
     // execution
-    let params = {
-      method: 'GET',
-      url: `/api/1/monthly_average_stats_platform?platformFilter=winx64&channelFilter=dev&ref=123ABC`
-    }
+    params.url = `/api/1/monthly_average_stats_platform?platformFilter=winx64&channelFilter=dev&ref=123ABC`
     let response = await server.inject(params)
     //validation
     let payload = JSON.parse(response.payload)

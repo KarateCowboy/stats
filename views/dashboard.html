@@ -1,82 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-  {{> head }}
-  <body>
-    {{> navbar }}
-    <div class="container-fluid" id="app">
-      <div class="row">
-        {{> sidebar }}
-        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
-          <h1 class="page-header" id="contentTitle">{{name}}</h1>
-          <div class="content-subtitle" id="contentSubtitle"></div>
-
-          {{> controls }}
-
-          <div id="searchContent" style="display: none;">
-            {{> searchContent }}
-          </div>
-
-          <div id="overviewContent" style="display: none;">
-            {{> overviewContent }}
-          </div>
-
-          <div id="usageContent" style="display: none;">
-            {{> usageContent }}
-          </div>
-
-          <div id="DNUDAUContent" style="display: none;">
-            {{> DNUDAUContent }}
-          </div>
-
-          <div id="retentionContent" style="display: none;">
-            {{> retentionContent }}
-          </div>
-
-          <div id="retentionMonthContent" style="display: none;">
-            {{> retentionMonthContent }}
-          </div>
-
-          <div id="weeklyRetentionContent" style="display: none;">
-            {{> weeklyRetentionContent }}
-          </div>
-
-          <div id="publisherContent" style="display: none;">
-            {{> publisherContent }}
-          </div>
-
-          <div id="usageTelemetry" style="display: none;">
-            {{> telemetryContent }}
-          </div>
-
-          <div id="statsContent" style="display: none;">
-            {{> statsContent }}
-          </div>
-
-          <div id="topCrashContent" style="display: none;">
-            {{> topCrashTable }}
-            {{> crashListTable }}
-            {{> crashDetail }}
-          </div>
-
-          <div id="crashRatioContent" style="display: none;">
-            {{> crashRatioTable }}
-            {{> crashRatioDetailTable }}
-          </div>
-
-          <div id="recentCrashContent" style="display: none;">
-            {{> recentCrashListTable }}
-          </div>
-
-          <div id="developmentCrashContent" style="display: none;">
-            {{> developmentCrashListTable }}
-          </div>
-          <div id="downloadsContent">
-            {{> downloadsContent }}
-          </div>
-
-        </div>
-      </div>
+{{> head }}
+<body>
+{{> navbar }}
+<div class="container-fluid" id="app">
+  <div class="row">
+    <div class="col-sm-3 col-md-2 sidebar">
+      <ul class="nav nav-sidebar" id="sideBar">
+      </ul>
     </div>
-    {{> jsIncludes }}
-  </body>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+      <h1 class="page-header" id="contentTitle">{{name}}</h1>
+      <div class="content-subtitle" id="contentSubtitle"></div>
+
+      {{> controls }}
+      <div id="report-view"></div>
+
+      <div id="searchContent" style="display: none;">
+        {{> searchContent }}
+      </div>
+
+      <div id="overviewContent" style="display: none;">
+        {{> overviewContent }}
+      </div>
+
+      <div id="usageContent" style="display: none;">
+        {{> usageContent }}
+      </div>
+
+      <div id="DNUDAUContent" style="display: none;">
+        {{> DNUDAUContent }}
+      </div>
+
+      <div id="retentionContent" style="display: none;">
+        {{> retentionContent }}
+      </div>
+
+      <div id="retentionMonthContent" style="display: none;">
+        {{> retentionMonthContent }}
+      </div>
+
+      <div id="weeklyRetentionContent" style="display: none;">
+        {{> weeklyRetentionContent }}
+      </div>
+
+      <div id="publisherContent" style="display: none;">
+        {{> publisherContent }}
+      </div>
+
+      <div id="statsContent" style="display: none;">
+        {{> statsContent }}
+      </div>
+
+      <div id="topCrashContent" style="display: none;">
+        {{> topCrashTable }}
+        {{> crashListTable }}
+        {{> crashDetail }}
+      </div>
+
+      <div id="crashRatioContent" style="display: none;">
+        {{> crashRatioTable }}
+        {{> crashRatioDetailTable }}
+      </div>
+
+      <div id="recentCrashContent" style="display: none;">
+        {{> recentCrashListTable }}
+      </div>
+
+      <div id="developmentCrashContent" style="display: none;">
+        {{> developmentCrashListTable }}
+      </div>
+      <div id="downloadsContent">
+        {{> downloadsContent }}
+      </div>
+
+    </div>
+  </div>
+</div>
+{{> jsIncludes }}
+  <script type="text/javascript">
+    $(document).ready(() => {
+      window.init()
+    })
+
+  </script>
+  <div id="page-load-status"></div>
+</body>
 </html>

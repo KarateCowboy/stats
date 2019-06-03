@@ -13,7 +13,7 @@ Feature: Filter by referral code
     When I clear the ref filter box
     Then I should see MAU for all referral codes
 
-  @smoketest-pass
+  @smoketest-pass 
   Scenario: Use with MAU by platform
     And I view the Monthly Active Users by Platform report
     Then the ref select should be visible and have no ref entered

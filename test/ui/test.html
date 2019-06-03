@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mocha</title>
+  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <link href="./node_modules/mocha/mocha.css" rel="stylesheet"/>
+  <script src="/test/test.build.js"></script>
+</head>
+<body>
+<div id="sandBox">
+  <div id="report-view">
+
+  </div>
+  <div id="sideBar">
+
+  </div>
+  <ul class="dropdown-menu" id="controls-days-menu">
+    <li><a data-days="10000" id="days-10000"><i class="fa fa-check fa-blank"></i> All</a></li>
+    <li><a data-days="365" id="days-365"><i class="fa fa-check fa-blank"></i> 365 Days</a></li>
+    <li><a data-days="120" id="days-120"><i class="fa fa-check fa-blank"></i> 120 Days</a></li>
+    <li><a data-days="90" id="days-90"><i class="fa fa-check fa-blank"></i> 90 Days</a></li>
+    <li><a data-days="60" id="days-60"><i class="fa fa-check fa-blank"></i> 60 Days</a></li>
+    <li><a data-days="30" id="days-30"><i class="fa fa-check fa-blank"></i> 30 Days</a></li>
+    <li><a data-days="14" id="days-14"><i class="fa fa-check"></i> 14 Days</a></li>
+    <li><a data-days="7" id="days-7"><i class="fa fa-check fa-blank"></i> 7 Days</a></li>
+    <li class="divider" role="separator"></li>
+    <li><a data-days="0"><i class="fa fa-check fa-blank"></i> Show today / this month</a></li>
+  </ul>
+  <h4 id="controls-selected-days"></h4>
+
+
+  <h1 id="contentTitle"></h1>
+  <h2 id="contentSubtitle"></h2>
+
+  <div id="sample-menu-items-for-manipulation">
+    <li class="dropdown braveMenu" data-api="/api/1/wois"
+        data-page-state="wois"
+        data-placeholder="Search"
+        data-show-id="false"
+        data-show-none="true"
+        data-show-search="true"
+        data-show-selected-count="true"
+        data-title="Week of install"
+        id="woi_menu"
+    ></li>
+    <div id="cc_menu">CC Menu</div>
+    <div id="days-menu">Days Menu</div>
+    <div id="usageContent"></div>
+  </div>
+  <div id="sampleContent">Sample Report content</div>
+  <div id="controls">
+    <ul class="dropdown-menu" id="controls-muon-menu-container">
+      <li><a data-platform="muon:all">All</a></li>
+      <li><a data-platform="muon:none">None</a></li>
+      <li class="divider" role="separator"></li>
+      <li><a data-platform="muon:only">Only Muon</a></li>
+      <li class="divider" role="separator"></li>
+      <li><a data-platform="winx64"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                              src='/local/img/platform-icons/winx64.png'
+                                                                              width="16">
+        Windows x64</a></li>
+      <li><a data-platform="winia32"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                               src='/local/img/platform-icons/winia32.png'
+                                                                               width="16">
+        Window ia32</a></li>
+      <li><a data-platform="osx"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                           src='/local/img/platform-icons/osx.png'
+                                                                           width="16">
+        OSX</a></li>
+      <li><a data-platform="linux"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                             src='/local/img/platform-icons/linux.png'
+                                                                             width="16">
+        Linux</a></li>
+    </ul>
+    <ul class="dropdown-menu" id="controls-core-menu">
+      <li><a data-platform="core:all">All</a></li>
+      <li><a data-platform="core:none">None</a></li>
+      <li class="divider" role="separator"></li>
+      <li><a data-platform="core:only">Only Core</a></li>
+      <li class="divider" role="separator"></li>
+      <li><a data-platform="winx64-bc"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                                 src='/local/img/platform-icons/winx64.png'
+                                                                                 width="16">
+        Windows x64</a></li>
+      <li><a data-platform="winia32-bc"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                                  src='/local/img/platform-icons/winia32.png'
+                                                                                  width="16">
+        Window ia32</a></li>
+      <li><a data-platform="osx-bc"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                              src='/local/img/platform-icons/osx.png'
+                                                                              width="16">
+        OSX</a></li>
+      <li><a data-platform="linux-bc"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                                src='/local/img/platform-icons/linux.png'
+                                                                                width="16">
+        Linux</a></li>
+    </ul>
+    <ul class="dropdown-menu" id="controls-mobile-menu-container">
+      <li><a data-platform="mobile:all">All</a></li>
+      <li><a data-platform="mobile:none">None</a></li>
+      <li class="divider" role="separator"></li>
+      <li><a data-platform="mobile:only">Only Mobile</a></li>
+      <li class="divider" role="separator"></li>
+      <li><a data-platform="androidbrowser"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                                      src='/local/img/platform-icons/android.png'
+                                                                                      width="16">
+        Android</a></li>
+      <li><a data-platform="ios"><i class="fa fa-check fa-blank"></i> <img height="16"
+                                                                           src='/local/img/platform-icons/ios.png'
+                                                                           width="16">
+        iOS</a></li>
+    </ul>
+
+    <li class="navbar-form">
+      <select class="form-control" id="ref-filter" multiple="multiple" name="ref_codes[]"></select>
+      <button class="form-control" id="clear-ref">Clear</button>
+    </li>
+  </div>
+</div>
+</body>
+</html>

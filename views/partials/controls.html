@@ -4,8 +4,8 @@
       <div class="collapse navbar-collapse">
 
         <ul class="nav navbar-nav">
-          <li class="dropdown">
-            <a class="dropdown-toggle" type="button" data-toggle="dropdown"><span
+          <li class="dropdown" id="days-menu">
+            <a class="dropdown-toggle" data-toggle="dropdown" type="button"><span
                 id="controls-selected-days">14 days</span><span class="caret"></span></a>
             <ul class="dropdown-menu" id="controls-days-menu">
               <li><a data-days="10000" id="days-10000"><i class="fa fa-check fa-blank"></i> All</a></li>
@@ -16,96 +16,119 @@
               <li><a data-days="30" id="days-30"><i class="fa fa-check fa-blank"></i> 30 Days</a></li>
               <li><a data-days="14" id="days-14"><i class="fa fa-check"></i> 14 Days</a></li>
               <li><a data-days="7" id="days-7"><i class="fa fa-check fa-blank"></i> 7 Days</a></li>
-              <li role="separator" class="divider"></li>
+              <li class="divider" role="separator"></li>
               <li><a data-days="0"><i class="fa fa-check fa-blank"></i> Show today / this month</a></li>
             </ul>
           </li>
 
-          <li class="dropdown">
-            <a class="dropdown-toggle" type="button" data-toggle="dropdown">
+          <li class="dropdown" id="controls-muon-menu-container">
+            <a class="dropdown-toggle" data-toggle="dropdown" type="button">
               Muon
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" id="controls-muon-menu">
               <li><a data-platform="muon:all">All</a></li>
               <li><a data-platform="muon:none">None</a></li>
-              <li role="separator" class="divider"></li>
+              <li class="divider" role="separator"></li>
               <li><a data-platform="muon:only">Only Muon</a></li>
-              <li role="separator" class="divider"></li>
-              <li><a data-platform="winx64"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                      src='/local/img/platform-icons/winx64.png'>
+              <li class="divider" role="separator"></li>
+              <li><a data-platform="winx64"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/winx64.png'
+                                                                                      width="16">
                 Windows x64</a></li>
-              <li><a data-platform="winia32"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                       src='/local/img/platform-icons/winia32.png'>
+              <li><a data-platform="winia32"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/winia32.png'
+                                                                                       width="16">
                 Window ia32</a></li>
-              <li><a data-platform="osx"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                   src='/local/img/platform-icons/osx.png'>
+              <li><a data-platform="osx"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/osx.png'
+                                                                                   width="16">
                 OSX</a></li>
-              <li><a data-platform="linux"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                     src='/local/img/platform-icons/linux.png'>
+              <li><a data-platform="linux"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/linux.png'
+                                                                                     width="16">
                 Linux</a></li>
             </ul>
           </li>
 
           <li class="dropdown">
-            <a class="dropdown-toggle" type="button" data-toggle="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" type="button">
               Core
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" id="controls-core-menu">
               <li><a data-platform="core:all">All</a></li>
               <li><a data-platform="core:none">None</a></li>
-              <li role="separator" class="divider"></li>
+              <li class="divider" role="separator"></li>
               <li><a data-platform="core:only">Only Core</a></li>
-              <li role="separator" class="divider"></li>
-              <li><a data-platform="winx64-bc"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                         src='/local/img/platform-icons/winx64.png'>
+              <li class="divider" role="separator"></li>
+              <li><a data-platform="winx64-bc"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/winx64.png'
+                                                                                         width="16">
                 Windows x64</a></li>
-              <li><a data-platform="winia32-bc"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                          src='/local/img/platform-icons/winia32.png'>
+              <li><a data-platform="winia32-bc"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/winia32.png'
+                                                                                          width="16">
                 Window ia32</a></li>
-              <li><a data-platform="osx-bc"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                      src='/local/img/platform-icons/osx.png'>
+              <li><a data-platform="osx-bc"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/osx.png'
+                                                                                      width="16">
                 OSX</a></li>
-              <li><a data-platform="linux-bc"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                        src='/local/img/platform-icons/linux.png'>
+              <li><a data-platform="linux-bc"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/linux.png'
+                                                                                        width="16">
                 Linux</a></li>
             </ul>
           </li>
 
-          <li class="dropdown">
-            <a class="dropdown-toggle" type="button" data-toggle="dropdown">
+          <li class="dropdown" id="controls-mobile-menu-container">
+            <a class="dropdown-toggle" data-toggle="dropdown" type="button">
               Mobile
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" id="controls-mobile-menu">
               <li><a data-platform="mobile:all">All</a></li>
               <li><a data-platform="mobile:none">None</a></li>
-              <li role="separator" class="divider"></li>
+              <li class="divider" role="separator"></li>
               <li><a data-platform="mobile:only">Only Mobile</a></li>
-              <li role="separator" class="divider"></li>
-              <li><a data-platform="androidbrowser"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                              src='/local/img/platform-icons/android.png'>
+              <li class="divider" role="separator"></li>
+              <li><a data-platform="androidbrowser"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/android.png'
+                                                                                              width="16">
                 Android</a></li>
-              <li><a data-platform="ios"><i class="fa fa-check fa-blank"></i> <img width="16" height="16"
-                                                                                   src='/local/img/platform-icons/ios.png'>
+              <li><a data-platform="ios"><i class="fa fa-check fa-blank"></i> <img height="16" src='/local/img/platform-icons/ios.png'
+                                                                                   width="16">
                 iOS</a></li>
             </ul>
           </li>
           <li class="dropdown">
-            <a class="dropdown-toggle" type="button" data-toggle="dropdown" id="controls-channels-dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" id="controls-channels-dropdown" type="button">
               Channels
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" id="controls-channels-menu">
+              <li id="nightly"><a data-channel="nightly"><i class="fa fa-check fa-blank"></i> Nightly</a></li>
               <li id="dev"><a data-channel="dev"><i class="fa fa-check fa-blank"></i> Developer</a></li>
               <li id="beta"><a data-channel="beta"><i class="fa fa-check fa-blank"></i> Beta</a></li>
               <li id="release"><a data-channel="release"><i class="fa fa-check fa-blank"></i> Release / Stable</a></li>
             </ul>
           </li>
+          <li class="dropdown braveMenu" data-api="/api/1/wois"
+              data-page-state="wois"
+              data-placeholder="Search"
+              data-show-id="false"
+              data-show-none="true"
+              data-show-search="true"
+              data-show-selected-count="true"
+              data-title="Week of install"
+              id="woi_menu"
+          >
+          </li>
+          <li class="dropdown braveMenu" data-api="/api/1/countries"
+              data-page-state="countryCodes"
+              data-placeholder="Country or region"
+              data-show-id="true"
+              data-show-none="true"
+              data-show-search="true"
+              data-show-selected-count="true"
+              data-title="Countries / Regions"
+              id="cc_menu"
+          >
+          </li>
           <li class="navbar-form">
-            <select id="ref-filter" multiple="multiple" name="ref_codes[]" class="form-control"></select>
-            <button id="clear-ref" class="form-control">Clear</button>
+            <select class="form-control" id="ref-filter" multiple="multiple" name="ref_codes[]"></select>
+            <button class="form-control" id="clear-ref">Clear</button>
           </li>
         </ul>
 
@@ -113,28 +136,39 @@
           <li><a class="fa fa-bolt" id="hourglassIndicator"></a></li>
         </ul>
 
+
       </div>
       <div>
         <h5 class="platform-list text-center">
-          <span class="osx"><img width="12" height="12" src='/local/img/platform-icons/osx.png'> Muon osx</span>
-          <span class="winx64"><img width="12" height="12" src='/local/img/platform-icons/winx64.png'> Muon Win64</span>
-          <span class="winia32"><img width="12" height="12"
-                                     src='/local/img/platform-icons/winia32.png'> Muon Win32</span>
-          <span class="linux"><img width="12" height="12" src='/local/img/platform-icons/linux.png'> Muon Linux</span>
-          <span class="osx-bc"><img width="12" height="12" src='/local/img/platform-icons/osx.png'> Core osx</span>
-          <span class="winx64-bc"><img width="12" height="12"
-                                       src='/local/img/platform-icons/winx64.png'> Core Win64</span>
-          <span class="winia32-bc"><img width="12" height="12"
-                                        src='/local/img/platform-icons/winia32.png'> Core Win32</span>
-          <span class="linux-bc"><img width="12" height="12"
-                                      src='/local/img/platform-icons/linux.png'> Core Linux</span>
-          <span class="androidbrowser"><img width="12" height="12" src='/local/img/platform-icons/android.png'> Android</span>
-          <span class="ios"><img width="12" height="12" src='/local/img/platform-icons/ios.png'> iOS</span>
+          <span class="osx"><img height="12" src='/local/img/platform-icons/osx.png' width="12"> Muon osx</span>
+          <span class="winx64"><img height="12" src='/local/img/platform-icons/winx64.png' width="12"> Muon Win64</span>
+          <span class="winia32"><img height="12" src='/local/img/platform-icons/winia32.png'
+                                     width="12"> Muon Win32</span>
+          <span class="linux"><img height="12" src='/local/img/platform-icons/linux.png' width="12"> Muon Linux</span>
+          <span class="osx-bc"><img height="12" src='/local/img/platform-icons/osx.png' width="12"> Core osx</span>
+          <span class="winx64-bc"><img height="12" src='/local/img/platform-icons/winx64.png'
+                                       width="12"> Core Win64</span>
+          <span class="winia32-bc"><img height="12" src='/local/img/platform-icons/winia32.png'
+                                        width="12"> Core Win32</span>
+          <span class="linux-bc"><img height="12" src='/local/img/platform-icons/linux.png'
+                                      width="12"> Core Linux</span>
+          <span class="androidbrowser"><img height="12" src='/local/img/platform-icons/android.png' width="12"> Android</span>
+          <span class="ios"><img height="12" src='/local/img/platform-icons/ios.png' width="12"> iOS</span>
+          <span class="nightly label label-warning">Nightly</span>
           <span class="dev label label-primary">Developer</span>
           <span class="beta label label-success">Beta</span>
           <span class="release label label-info">Release / Stable</span>
+          <span class="wois label label-warning"></span>
+          <span class="countries label label-danger"></span>
         </h5>
       </div>
+      <nav id="controls-pagination">
+        <ul class="pager">
+          <li class="previous"><a class="pagination-first pointer"><span>&larr;</span> First</a></li>
+          <li class="previous"><a class="pagination-previous pointer"><span>&larr;</span> Previous</a></li>
+          <li class="next"><a class="pagination-next pointer">Next <span>&rarr;</span></a></li>
+        </ul>
+      </nav>
     </div>
   </nav>
 </div>

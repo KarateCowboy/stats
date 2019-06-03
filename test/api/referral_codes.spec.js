@@ -7,15 +7,24 @@
 require('../test_helper')
 const main = require('../../src/index')
 
+let params = {
+  method : 'GET',
+  url :  '/api/1/campaigns',
+  auth: {
+    strategy: 'session',
+    credentials: {
+      'user': 'admin',
+      'password': process.env.ADMIN_PASSWORD
+    }
+  }
+}
+
 describe('crud endpoints', async function () {
 
   describe('index/list', async function () {
     //TODO: fix this. it works in prod but not in the tests for some reason
     it('returns a bunch of referral codes', async function () {
-      let params = {
-        method: 'GET',
-        url: '/api/1/referral_codes'
-      }
+      params.url = '/api/1/referral_codes'
       for (let i = 1; i <= 5; i++) {
         let ref_code = await factory.create('ref_code_pg')
       }

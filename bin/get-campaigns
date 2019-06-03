@@ -9,7 +9,7 @@ const ProxyAgent = require('proxy-agent')
 
 class GetCampaignsAndRefs extends Script {
   constructor () {
-    super()
+    super('get-campaigns')
   }
 
   async transferFromMongo () {

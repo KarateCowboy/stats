@@ -6,6 +6,7 @@ var common = require('./common')
 var _ = require('underscore')
 const ChannelTotal = require('../models/channel_total.model')()
 const PublisherTotal = require('../models/publisher_total.model')()
+const moment = require('moment')
 const PUBLISHERS_OVERVIEW = `
 SELECT
   (select count(1) from dtl.publishers) as total, 
@@ -65,12 +66,12 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_OVERVIEW,
-      (reply, results, request) => {
+      (results, request) => {
         var row = results.rows[0]
         _.keys(row).forEach((k) => {
           row[k] = parseFloat(row[k])
         })
-        reply(row)
+        return (row)
       },
       (request) => { return [] }
     )
@@ -82,7 +83,7 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_DAILY,
-      (reply, results, request) => {
+      (results, request) => {
         var rows = _.map(results.rows, (row) => {
           _.keys(row).forEach((k) => {
             if (k !== 'ymd') {
@@ -91,7 +92,7 @@ exports.setup = (server, client, mongo) => {
           })
           return row
         })
-        reply(rows)
+        return (rows)
       },
       commonDaysParamsBuilder
     )
@@ -103,14 +104,14 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_BUCKETED,
-      (reply, results, request) => {
+      (results, request) => {
         var rows = _.map(results.rows, (row) => {
           _.keys(row).forEach((k) => {
             row[k] = parseFloat(row[k])
           })
           return row
         })
-        reply(rows)
+        return (rows)
       },
       emptyParamsBuilder
     )
@@ -122,8 +123,8 @@ exports.setup = (server, client, mongo) => {
     handler: common.buildQueryReponseHandler(
       client,
       PUBLISHERS_DETAILS,
-      (reply, results, request) => {
-        reply(results.rows)
+      (results, request) => {
+        return (results.rows)
       },
       emptyParamsBuilder
     )
@@ -132,33 +133,60 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/publishers/platforms',
-    handler: common.buildQueryReponseHandler(
-      client,
-      PUBLISHER_PLATFORMS,
-      (reply, results, request) => {
-        reply(results.rows)
-      },
-      emptyParamsBuilder
-    )
+    handler: async () => {
+      return await knex('dtl.publisher_platforms').select('*').orderBy('ord', 'asc')
+    }
   })
 
   server.route({
     method: 'GET',
     path: '/api/1/publishers/channel_totals',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
       const result = await ChannelTotal.find({}).sort({createdAt: -1}).limit(1)
       const channel_total = result !== undefined && result.length > 0 ? _.first(result) : (new ChannelTotal())
-      reply(channel_total.toObject())
+      return (channel_total.toObject())
     }
   })
   server.route({
     method: 'GET',
     path: '/api/1/publishers/publisher_totals',
-    handler: async function (request, reply) {
+    handler: async function (request, h) {
+      const daysAgo = parseInt(request.query.days || 7, 10)
+      let result
+      try {
+        result = await db.PublisherSignupDay.query()
+          .orderBy('created_at', 'desc')
+          .andWhere('ymd', '>', moment().subtract(daysAgo, 'days').format('YYYY-MM-DD'))
+        return _.flatten(result.map(r => r.asYmd()))
+      } catch (e) {
+        console.log(e.message)
+        throw e
+      }
+    }
+  })
+  server.route({
+    method: 'GET',
+    path: '/api/1/publishers/daily_aggregate',
+    handler: async function (request, h) {
+      let result
+      try {
+        result = await db.PublisherSignupDay.dailyTotalAgg()
+        const flattenedYmds = _.flatten(result.map(r => r.asYmd()))
+        return flattenedYmds
+      } catch (e) {
+        console.log(e.message)
+        throw e
+      }
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/api/1/publishers/totals',
+    handler: async function (request, h) {
       const result = await PublisherTotal.find({}).sort({createdAt: -1}).limit(1)
       const publisher_total = result !== null && result.length > 0 ? _.first(result) : (new PublisherTotal())
-      reply(publisher_total.toObject())
-
+      return (publisher_total.toObject())
     }
   })
 

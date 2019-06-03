@@ -11,7 +11,7 @@ const factory = require('factory-girl').factory
 const mongoose = require('mongoose')
 const Sequelize = require('sequelize')
 const DbUtil = require('../src/models')
-const MongoSeed = require('../db/mongo/seed')
+const PsqlSeed = require('../db/psql/seed')
 require('./fixtures/fc_retention_woi').define()
 require('./fixtures/android_usage').define()
 require('./fixtures/ios_usage_record').define()
@@ -27,14 +27,15 @@ require('./fixtures/fc_usage_month').define()
 require('./fixtures/fc_usage_month_exception').define()
 require('./fixtures/wallets').define()
 require('./fixtures/channel_total').define()
-require('./fixtures/publisher_total').define()
 require('./fixtures/ledger/wallets').define()
 const fixtures = {
+  publisher_signup_day: require('./fixtures/publisher_signup_day'),
   fc_usage: require('./fixtures/fc_usage'),
   download: require('./fixtures/download'),
   campaigns: require('./fixtures/campaign'),
-  referral_codes: require('./fixtures/referral_code_pg')
-
+  referral_codes: require('./fixtures/referral_code_pg'),
+  platform: require('./fixtures/platform'),
+  channel: require('./fixtures/channel')
 }
 
 class TestHelper {
@@ -74,13 +75,28 @@ class TestHelper {
         'fc_retention_woi',
         'fc_usage_month',
         'downloads',
+        'publisher_signup_days',
         'fc_usage_month_exceptions',
+        'fc_usage_exceptions',
         'fc_usage',
-        'fc_wallets'
+        'fc_wallets',
+        'fc_crashes',
+        'fc_ios_usage',
+        'fc_ios_usage_month',
+        'fc_fastly_calendar_month_usage',
+        'fc_fastly_usage',
+        'fc_agg_usage_weekly',
+        'fc_agg_usage_daily',
+        'fc_agg_usage_monthly'
       ],
       'dtl': [
         'campaigns',
-        'referral_codes'
+        'promotions',
+        'publishers',
+        'referral_codes',
+        'platforms',
+        'channels',
+        'publisher_platforms'
       ]
     }
     this.materialized_views = {
@@ -113,10 +129,6 @@ class TestHelper {
     global.factory = factory
   }
 
-  async load_fixtures () {
-
-  }
-
   async truncate () {
     await Promise.all(this.mongo_collections.map(async (collection) => {
       if ((await mongo_client.collection(collection))) {
@@ -125,16 +137,16 @@ class TestHelper {
         await mongo_client.createCollection(collection)
       }
     }))
-    await MongoSeed.exec()
     for (let schema in this.postgres_tables) {
       let self = this
       await Promise.all(self.postgres_tables[schema].map(async (relation) => {
         if (!relation.toString().includes('undefined')) {
           const sql_string = `${schema}.${relation}`
-          await knex(sql_string).truncate()
+          await knex(sql_string).delete()
         }
       }))
     }
+    await PsqlSeed.exec()
   }
 
   async refresh_views () {
@@ -152,6 +164,7 @@ class TestHelper {
     global.pg_client = null
     await global.knex.destroy()
     await mongoose.connection.close()
+    await global.db.sequelize.close()
   }
 }
 

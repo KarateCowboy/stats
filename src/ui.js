@@ -8,7 +8,7 @@ if (process.env.LOCAL) {
 }
 
 // Setup authentication and user interface components
-exports.setup = (server, db) => {
+exports.setup = async (server, db) => {
   // The ADMIN_PASSWORD environment variable must be set
   if (!process.env.ADMIN_PASSWORD) {
     throw new Error('ADMIN_PASSWORD not set')
@@ -18,26 +18,21 @@ exports.setup = (server, db) => {
   if (!process.env.SESSION_SECRET) {
     throw new Error('SESSION_SECRET not set')
   }
+  server.register(require('hapi-auth-basic'))
 
   // Register the server side templates
-  server.register(require('vision'), (err) => {
-    if (err) {
-      throw new Error('vision template handler could not be registered')
-    }
-
-    server.views({
-      engines: {
-        html: require('handlebars')
-      },
-      isCached: shouldCache,
-      relativeTo: path.join(__dirname, '..'),
-      path: './views',
-      partialsPath: './views/partials',
-      layoutPath: './views/layout',
-      helpersPath: './views/helpers'
-    })
+  server.register(require('vision'))
+  server.views({
+    engines: {
+      html: require('handlebars')
+    },
+    isCached: shouldCache,
+    relativeTo: path.join(__dirname, '..'),
+    path: './views',
+    partialsPath: './views/partials',
+    layoutPath: './views/layout',
+    helpersPath: './views/helpers'
   })
-
   // Single user for now
   const users = {
     admin: {
@@ -48,9 +43,9 @@ exports.setup = (server, db) => {
   }
 
   // Login handler
-  const login = function (request, reply) {
+  const login = async function (request, h) {
     if (request.auth.isAuthenticated) {
-      return reply.redirect('/dashboard#overview')
+      return h.redirect('/dashboard#overView')
     }
 
     let message = ''
@@ -68,82 +63,89 @@ exports.setup = (server, db) => {
     }
 
     if (request.method === 'get' || message) {
-      return reply.view('signin', { message: message })
+      return h.view('signin', {message: message})
     }
 
     const uuid4 = UUID.create()
     const sid = String(uuid4.toString())
     const accountToStore = _.clone(account)
     delete accountToStore.password
-    request.server.app.cache.set(sid, { account: accountToStore }, 0, (err) => {
-      if (err) {
-        reply(err)
-      }
-      request.cookieAuth.set({ sid: sid })
-      return reply.redirect('/dashboard#overview')
-    })
+    await request.server.app.cache.set(sid, {account: accountToStore}, 0)
+    request.cookieAuth.set({sid: sid})
+    return h.redirect('/dashboard#overView')
   }
 
-  const logout = function (request, reply) {
+  const logout = function (request, h) {
     request.cookieAuth.clear()
-    return reply.redirect('/dashboard#overview')
+    return h.redirect('/dashboard#overView')
   }
 
   // Static directory handling
-  server.register(require('inert'), () => {})
+  server.register(require('inert'))
 
   // Auth library
-  server.register(require('hapi-auth-cookie'), (err) => {
-    if (err) {
-      throw new Error(err)
-    }
+  server.register(require('hapi-auth-cookie'))
 
-    let cache = require('./catbox-pg').setup(server, { db })
-    server.app.cache = cache
+  let cache = require('./catbox-pg').setup(server, {db})
+  server.app.cache = cache
 
-    // For local development set LOCAL to true
-    var secure = true
-    if (process.env.LOCAL) {
-      secure = false
-    }
+  // For local development set LOCAL to true
+  var secure = true
+  if (process.env.LOCAL) {
+    secure = false
+  }
 
-    // Auth strategy
-    server.auth.strategy('session', 'cookie', true, {
-      password: process.env.SESSION_SECRET,
-      cookie: 'sid',
-      redirectTo: '/login',
-      isSecure: secure,
-      validateFunc: (request, session, callback) => {
-        cache.get(session.sid, (err, cached) => {
-          if (err) {
-            return callback(err, false)
-          }
-          if (!cached) {
-            return callback(null, false)
-          }
-          return callback(null, true, cached.account)
-        })
+  // Auth strategy
+  server.auth.strategy('session', 'cookie', {
+    password: process.env.SESSION_SECRET,
+    cookie: 'sid',
+    redirectTo: '/login',
+    isSecure: secure,
+    validateFunc: async (request, session) => {
+
+      const cached = await cache.get(session.sid)
+      const out = {
+        valid: !!cached
       }
-    })
 
-    server.route([
-      { method: ['GET', 'POST'],
-        path: '/login',
-        config: {
-          handler: login,
-          auth: { mode: 'try' },
-          plugins: { 'hapi-auth-cookie': { redirectTo: false } } } },
-      { method: 'GET',
-        path: '/logout',
-        config: { handler: logout }}
-    ])
+      if (out.valid) {
+        out.credentials = cached.account
+      }
+
+      return out
+    }
   })
+  if(process.env.TEST){
+    const scheme = () => {
+      return {
+        authenticate: (request,h) => {
+          return h.authenticated({credentials: { user: 'admin'}})
+        }
+      }
+    }
+    server.auth.scheme('test', scheme)
+    const validate = (request, username, password ) => { 
+      return { isValid: true, credentials: {id: users.admin.id, name: users.admin.name } }
+    }
+    server.auth.strategy('test', 'test')
+     server.auth.default('test', 'test', validate)
+  } else {
+     server.auth.default('session')
+  }
+  server.route([
+    {
+      method: ['GET', 'POST'],
+      path: '/login',
+      options: {handler: login, auth: {mode: 'try'}, plugins: {'hapi-auth-cookie': {redirectTo: false}}}
+    },
+    {method: 'GET', path: '/logout', options: {handler: logout}}
+  ])
 
   server.route({
     method: 'GET',
     path: '/dashboard',
-    handler: function (request, reply) {
-      reply.view('dashboard', {
+    handler: function (request, h) {
+      return h.view('dashboard', {
         name: request.auth.credentials.name
       })
     }
@@ -152,19 +154,19 @@ exports.setup = (server, db) => {
   server.route({
     method: 'GET',
     path: '/',
-    handler: function (request, reply) {
-      reply().redirect('/dashboard#overview')
+    handler: function (request, h) {
+      return h.redirect('/dashboard#overView')
     }
   })
 
   // List of static directories and endpoints
   var statics = [
-    [ '/bootstrap/{param*}', './node_modules/bootstrap/dist' ],
-    [ '/jquery/{param*}', './node_modules/jquery/dist' ],
-    [ '/local/{param*}', './local' ],
-    [ '/dist/{param*}','./dist'],
-    [ '/bower/{param*}', './bower_components' ],
-    [ '/ss/{param*}', './node_modules/simple-statistics/dist' ]
+    ['/bootstrap/{param*}', './node_modules/bootstrap/dist'],
+    ['/jquery/{param*}', './node_modules/jquery/dist'],
+    ['/local/{param*}', './local'],
+    ['/dist/{param*}', './dist'],
+    ['/bower/{param*}', './bower_components'],
+    ['/ss/{param*}', './node_modules/simple-statistics/dist']
   ]
 
   statics.forEach((stat) => {
