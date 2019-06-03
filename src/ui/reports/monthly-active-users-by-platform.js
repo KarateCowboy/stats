@@ -11,9 +11,10 @@ class MonthlyActiveUsersByPlatform extends BaseReportComponent {
         this.menuId = 'usageMonth'
         this.reportContent = `<marquee>Monthly Active Users Content</marquee>`
         this.contentTagId = 'usageContent'
+        this.csvFilename = 'monthly-active-users-by-platform'
+        this.csvDownloadable = true
         this.menuConfig.showWOISFilter = false
         this.menuConfig.showCountryCodeFilter = false
-
     }
 
     async retriever() {
@@ -29,7 +30,8 @@ class MonthlyActiveUsersByPlatform extends BaseReportComponent {
 
     handler(data) {
         const handler = BaseReportComponent.buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true})
-        handler(data)
+        const results = handler(data)
+        this.csvData = results.csv
         $(`#${this.contentTagId}`).show()
     }
 }

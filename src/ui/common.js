@@ -45,16 +45,23 @@
     return n / d
   }
 
-  var downloadObjectAs = (exportObj, exportName, mime) => {
-    var dataStr = "data:" + mime + ";charset=utf-8," + encodeURIComponent(exportObj)
-    var downloadAnchorNode = document.createElement('a')
-    downloadAnchorNode.setAttribute("href", dataStr)
-    downloadAnchorNode.setAttribute("download", exportName)
-    downloadAnchorNode.click()
-    downloadAnchorNode.remove()
-  }
+const formatArrayForCSVDownload = (lst) => {
+  return lst.map((row) => {
+    return row.join(',')
+  }).join('\n')
+}
+
+var downloadObjectAs = (exportObj, exportName, mime) => {
+  var dataStr = "data:" + mime + ";charset=utf-8," + encodeURIComponent(exportObj)
+  var downloadAnchorNode = document.createElement('a')
+  downloadAnchorNode.setAttribute("href", dataStr)
+  downloadAnchorNode.setAttribute("download", exportName)
+  downloadAnchorNode.click()
+  downloadAnchorNode.remove()
+}
 
 module.exports.standardYAxisOptions = standardYAxisOptions
 module.exports.standardYAxisOptionsBar =  standardYAxisOptionsBar
 module.exports.safeDivide = safeDivide
 module.exports.downloadObjectAs =  downloadObjectAs
+module.exports.formatArrayForCSVDownload = formatArrayForCSVDownload

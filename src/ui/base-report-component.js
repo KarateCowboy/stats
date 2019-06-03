@@ -26,6 +26,9 @@ module.exports = class BaseReportComponent {
     this.menuId = 'basicReportId'
     this.reportContent = `<marquee>hello, Brave new world</marquee>`
     this.contentTagId = 'usageContent'
+    this.csvFilename = 'basic-csv-filename'
+    this.csvDownloadable = false
+    this.csvData = null
     this.app = app
   }
 
@@ -165,6 +168,7 @@ module.exports = class BaseReportComponent {
       var table = $('#usageDataTable tbody')
 
       const pivot = () => {
+        let csvRows = []
         table.empty()
 
         let tableHeader = table.parent().find('thead')
@@ -189,17 +193,22 @@ module.exports = class BaseReportComponent {
         })
 
         // build the table headers
+        let csvHeader = [x_label]
         let tableHeaderBuffer = `<tr><th>${x_label}</th>`
         for (let column of columns) {
           tableHeaderBuffer += `<th>${column}</th>`
+          csvHeader.push(column)
         }
         tableHeaderBuffer += `<th>Total</th></tr>`
         tableHeader.html(tableHeaderBuffer)
+        csvHeader.push('Total')
+        csvRows.push(csvHeader)
 
         table.parent().addClass('table-striped')
 
         let buffer = ''
         for (let k of ks) {
+          let dataRow = [k]
           buffer += `<tr><td>${k}</td>`
           // calculate the total for the row
           let rowTotal = _.reduce(groups[k], (memo, row) => {
@@ -214,10 +223,14 @@ module.exports = class BaseReportComponent {
               count: 0
             }
             buffer += `<td>${value_func(record, record.count)} <small class='text-muted'>${stp(record.count / rowTotal)}</small></td>`
+            dataRow.push(record.count)
           }
           buffer += `<td>${st(rowTotal)}</td></tr>`
+          dataRow.push(rowTotal)
+          csvRows.push(dataRow)
         }
         table.append(buffer)
+        return csvRows
       }
 
       const standardTable = () => {
@@ -260,8 +273,9 @@ module.exports = class BaseReportComponent {
         })
       }
 
+      let csv = null
       if (opts.pivot) {
-        pivot()
+        csv = pivot()
       } else {
         standardTable()
       }
@@ -379,6 +393,7 @@ module.exports = class BaseReportComponent {
           options: opts.chartType === 'line' ? COMMON.standardYAxisOptions : COMMON.standardYAxisOptionsBar
         }
       )
+      return { csv }
     }
   }
 
@@ -440,7 +455,13 @@ module.exports = class BaseReportComponent {
 
   async retriever () {
     console.log('running basic retriever stub')
+  }
 
+  downloadCSV () {
+    if (!this.csvDownloadable) return
+
+    const filename = `${this.csvFilename}-${moment().format('YYYY-MM-DD_HH:mm:ss')}.csv`
+    COMMON.downloadObjectAs(COMMON.formatArrayForCSVDownload(this.csvData), filename, 'text/csv')
   }
 
   handler () {}

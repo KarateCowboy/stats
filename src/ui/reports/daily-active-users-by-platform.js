@@ -11,6 +11,8 @@ class DailyActiveUsersByPlatform extends BaseReportComponent {
     this.menuId = 'usage'
     this.reportContent = `<marquee>Daily Active Users Content</marquee>`
     this.contentTagId = 'usageContent'
+    this.csvFilename = 'daily-active-users-by-platform'
+    this.csvDownloadable = true
     this.menuConfig.showWOISFilter = false
     this.menuConfig.showCountryCodeFilter = false
   }
@@ -28,7 +30,8 @@ class DailyActiveUsersByPlatform extends BaseReportComponent {
 
   handler (data) {
     const handler = BaseReportComponent.buildSuccessHandler('ymd', 'platform', 'Date', 'Platform', {colourBy: 'label', pivot: true })
-    handler(data)
+    const resultData = handler(data)
+    this.csvData = resultData.csv
     $(`#${this.contentTagId}`).show()
   }
 }
