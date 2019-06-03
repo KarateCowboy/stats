@@ -75,6 +75,12 @@ module.exports = class Application {
       $('#controls-selected-days').html(this.pageState.days + ' days')
     }
 
+    if (this.pageState.showCSV) {
+      $('#downloadCSV').prop('disabled', false)
+    } else {
+      $('#downloadCSV').prop('disabled', true)
+    }
+
     if (this.pageState.showToday) {
       $(`#controls`).find(`a[data-days="0"] i`).removeClass('fa-blank')
       $('#controls-selected-days').html($('#controls-selected-days').html() + ' + Now')
@@ -226,6 +232,12 @@ module.exports = class Application {
     })
 
     searchLinks.focus()
+
+    $('#downloadCSV').on('click', () => {
+      if (this.reports[this.currentlySelected]) {
+        this.reports[this.currentlySelected].downloadCSV()
+      }
+    })
   }
 
   register (reportComponent) {
@@ -249,6 +261,7 @@ module.exports = class Application {
 
     this.currentlySelected = reportComponent.menuId
     Object.assign(this.menuState, reportComponent.menuConfig)
+    this.pageState.showCSV = this.reports[this.currentlySelected].csvDownloadable
     await this.persistPageState()
     await this.updateUiState()
     await reportComponent.retriever(req)
