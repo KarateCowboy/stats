@@ -23,10 +23,10 @@ class CrashExpirationService {
       throw new Error('The crash provided must have an id')
     }
     try {
-      await this.S3.deleteObject({
+      const result = await this.S3.deleteObject({
         Bucket: process.env.S3_CRASH_BUCKET,
         Key: crash.id
-      })
+      }).promise()
       await knex('dtl.crashes').where('id', crash.id).delete()
       this.elasticClient.delete({id: crash.id, type: 'crash', index: 'crashes'})
     } catch (e) {
