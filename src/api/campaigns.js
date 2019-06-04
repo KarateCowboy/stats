@@ -16,7 +16,7 @@ exports.setup = (server, client, mongo) => {
     handler: async (request, h) => {
       if (request.query.q && request.query.q.length < 2) return []
 
-      let q = request.query.q || null
+      let q = (request.query.q || null).toLowerCase()
       let campaigns = (await client.query("SELECT id, name as label, 0 as ord FROM dtl.campaigns ORDER BY name")).rows
       for (let campaign of campaigns) {
         campaign.subitems = (await client.query("SELECT code_text as id, code_text as label FROM dtl.referral_codes WHERE campaign_id = $1", [campaign.id])).rows
