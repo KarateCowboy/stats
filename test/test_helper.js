@@ -95,7 +95,6 @@ class TestHelper {
         'promotions',
         'publishers',
         ['crashes', 'delete'],
-        'crashes_archive',
         'referral_codes',
         ['platforms', 'delete'],
         ['channels','delete'],

@@ -18,7 +18,6 @@ class CrashExpirationService {
   }
 
   async expire (crash = null) {
-
     if (crash.id === undefined || crash.id === null) {
       throw new Error('The crash provided must have an id')
     }
@@ -27,14 +26,18 @@ class CrashExpirationService {
         Bucket: process.env.S3_CRASH_BUCKET,
         Key: crash.id
       }).promise()
+      const symResult = await this.S3.deleteObject({
+        Bucket: process.env.S3_CRASH_BUCKET,
+        Key: crash.id + '.symbolized.txt'
+      }).promise()
+
       await knex('dtl.crashes').where('id', crash.id).delete()
-      this.elasticClient.delete({id: crash.id, type: 'crash', index: 'crashes'})
+      await this.elasticClient.delete({id: crash.id, type: 'crash', index: 'crashes'})
     } catch (e) {
       console.log(`Error deleting crash with id ${crash.id}`)
       console.log(`   Message: ${e.message}`)
     }
   }
-
 }
 
 module.exports = CrashExpirationService

@@ -5,7 +5,7 @@
 const amqp = require('amqplib/callback_api')
 
 // RabbitMQ connection parameters
-const MQ_URL = process.env.RABBITMQ_BIGWIG_RX_URL || process.env.AMQP_URL || 'amqp://localhost:5672'
+const MQ_URL = process.env.MQ_URL || process.env.AMQP_URL || 'amqp://localhost:5672'
 const MQ_QUEUE = process.env.MQ_QUEUE || 'crashes'
 
 // Connect to messaging system and return a communication channel
@@ -24,7 +24,7 @@ exports.setup = function (cb) {
       // install the queue name on the channel object
       ch.queueName = MQ_QUEUE
       ch.prefetch(1)
-      ch.assertQueue(MQ_QUEUE, { durable: true })
+      ch.assertQueue(MQ_QUEUE, {durable: true})
       cb(err, ch)
     }
     conn.createChannel(on_open)
@@ -36,7 +36,7 @@ exports.send = function (msg, ch) {
   ch.sendToQueue(
     MQ_QUEUE,
     Buffer(JSON.stringify(msg)),
-    { persistent: true }
+    {persistent: true}
   )
 }
 
@@ -46,6 +46,40 @@ exports.sendToVersionQueue = function (msg, ch, version) {
   ch.sendToQueue(
     queueName,
     Buffer(JSON.stringify(msg)),
-    { persistent: true }
+    {persistent: true}
   )
 }
+
+class PromiseQueue {
+  async setup (queueName) {
+    this.queueName = queueName
+    try {
+      const rabbit = require('amqplib')
+      this.conn = await rabbit.connect(MQ_URL)
+      this.channel = await this.conn.createChannel()
+      this.channel.queueName = this.queueName
+      this.channel.prefetch(1)
+      this.channel.assertQueue(this.queueName, {durable: true})
+      return this.channel
+    } catch (e) {
+      console.log(e)
+      console.log(e.message)
+      throw e
+    }
+  }
+
+  async send (message) {
+    console.log(`Message sent to '${this.queueName}'`)
+    await this.channel.sendToQueue(this.queueName, Buffer.from(JSON.stringify(message)), {persistent: true})
+  }
+
+  async sendToVersionQueue () {
+    const queueName = this.queueName + ':' + version
+    await this.channel.sendToQueue(queueName, Buffer.from(JSON.stringify(msg)), {persistent: true})
+    console.log(`Message sent to '${queueName}'`)
+  }
+
+}
+
+exports.PromiseQueue = PromiseQueue
+

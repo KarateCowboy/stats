@@ -25,7 +25,7 @@
   "license": "ISC",
   "dependencies": {
     "@hapi/boom": "^7.4.2",
-    "amqplib": "0.4.1",
+    "amqplib": "0.5.3",
     "async": "1.5.2",
     "awis": "1.0.9",
     "aws-sdk": "^2.467.0",
@@ -76,6 +76,7 @@
     "sequelize": "4.42.0",
     "simple-statistics": "2.2.0",
     "smooth-progress": "1.1.0",
+    "throng": "^4.0.0",
     "underscore": "1.8.3",
     "uuid": "2.0.2",
     "uuid-js": "0.7.5",
