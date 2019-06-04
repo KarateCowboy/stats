@@ -37,6 +37,8 @@ module.exports.setup = async (connections) => {
   await server.register(Inert)
   if (!process.env.TEST) {
     server.register(blipp)
+    console.log('registering http -> https')
+    server.register({ plugin: require('hapi-require-https'), options: {} })
   }
 
   // Setup the APIs

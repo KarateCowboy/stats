@@ -44,6 +44,7 @@
     "handlebars": "4.0.5",
     "hapi": "18.x.x",
     "hapi-auth-cookie": "9.1.0",
+    "hapi-require-https": "^3.0.1",
     "hapi-set-header": "1.0.0",
     "inert": "5.1.x",
     "joi": "7.0.1",
