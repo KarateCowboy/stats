@@ -126,40 +126,41 @@
               id="cc_menu"
           >
           </li>
-          <li class="navbar-form">
-            <select class="form-control" id="ref-filter" multiple="multiple" name="ref_codes[]"></select>
-            <button class="form-control" id="clear-ref">Clear</button>
+          <li class="dropdown braveMenuAPI" data-api="/api/1/referrals_campaigns"
+              data-page-state="ref"
+              data-placeholder="Refs / Campaigns"
+              data-show-id="false"
+              data-show-none="true"
+              data-show-selected-count="true"
+              data-title="Refs / Campaigns"
+              id="ref_menu"
+          >
           </li>
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
           <li><a class="fa fa-bolt" id="hourglassIndicator"></a></li>
         </ul>
-
-
       </div>
       <div>
         <h5 class="platform-list text-center">
           <span class="osx"><img height="12" src='/local/img/platform-icons/osx.png' width="12"> Muon osx</span>
           <span class="winx64"><img height="12" src='/local/img/platform-icons/winx64.png' width="12"> Muon Win64</span>
-          <span class="winia32"><img height="12" src='/local/img/platform-icons/winia32.png'
-                                     width="12"> Muon Win32</span>
+          <span class="winia32"><img height="12" src='/local/img/platform-icons/winia32.png' width="12"> Muon Win32</span>
           <span class="linux"><img height="12" src='/local/img/platform-icons/linux.png' width="12"> Muon Linux</span>
           <span class="osx-bc"><img height="12" src='/local/img/platform-icons/osx.png' width="12"> Core osx</span>
-          <span class="winx64-bc"><img height="12" src='/local/img/platform-icons/winx64.png'
-                                       width="12"> Core Win64</span>
-          <span class="winia32-bc"><img height="12" src='/local/img/platform-icons/winia32.png'
-                                        width="12"> Core Win32</span>
-          <span class="linux-bc"><img height="12" src='/local/img/platform-icons/linux.png'
-                                      width="12"> Core Linux</span>
+          <span class="winx64-bc"><img height="12" src='/local/img/platform-icons/winx64.png' width="12"> Core Win64</span>
+          <span class="winia32-bc"><img height="12" src='/local/img/platform-icons/winia32.png' width="12"> Core Win32</span>
+          <span class="linux-bc"><img height="12" src='/local/img/platform-icons/linux.png' width="12"> Core Linux</span>
           <span class="androidbrowser"><img height="12" src='/local/img/platform-icons/android.png' width="12"> Android</span>
           <span class="ios"><img height="12" src='/local/img/platform-icons/ios.png' width="12"> iOS</span>
           <span class="nightly label label-warning">Nightly</span>
           <span class="dev label label-primary">Developer</span>
           <span class="beta label label-success">Beta</span>
           <span class="release label label-info">Release / Stable</span>
-          <span class="wois label label-warning"></span>
+          <span class="wois label label-danger"></span>
           <span class="countries label label-danger"></span>
+          <span class="refs label label-danger"></span>
         </h5>
       </div>
       <nav id="controls-pagination">

@@ -5,7 +5,6 @@ const _ = require('underscore')
 const COMMON = require('../common')
 const ReferralWidget = require('./referral')
 
-let publisherPlatforms
 const overviewPublisherHandler = function (channel_totals, publisher_totals) {
   let publishersOverview = $('#publishers_overview')
   const ratio_of_pubs = (n) => { return parseInt(publisher_totals[n] / publisher_totals.email_verified * 100)}
@@ -32,18 +31,26 @@ const overviewPublisherHandler = function (channel_totals, publisher_totals) {
       <div class="panel-body">
         <table class="table table-striped" id="channels_table">
           <thead>
-            <tr><th>All</th>
-            <th><img src="/local/img/publisher-icons/youtube.svg" height="24" /></th>
-            <th><img src="/local/img/publisher-icons/internet.svg" height="24" /></th>
-            <th><img src="/local/img/publisher-icons/twitch.svg" height="24" /></th>
+            <tr><th class="all_channels">All</th>
+            <th class="youtube"><img src="/local/img/publisher-icons/youtube.svg" height="24" /></th>
+            <th class="site"><img src="/local/img/publisher-icons/internet.svg" height="24" /></th>
+            <th class="twitch"><img src="/local/img/publisher-icons/twitch.svg" height="24" /></th>
+            <th class="twitter"><img src="/local/img/publisher-icons/twitter.svg" height="24" /></th>
+            <th class="github"><img src="/local/img/publisher-icons/github.svg" height="24" /></th>
+            <th class="reddit"><img src="/local/img/publisher-icons/reddit.svg" height="24" /></th>
+            <th class="vimeo"><img src="/local/img/publisher-icons/vimeo.svg" height="24" /></th>
             </tr>
           </thead>
           <tbody>
           <tr>
-          <td>${ channel_totals.all_channels.toLocaleString()}</td>
-          <td>${ channel_totals.youtube.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('youtube')}%</span></td>
-          <td>${ channel_totals.site.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('site')}%</span></td>
-          <td>${ channel_totals.twitch.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('twitch')}%</span></td>
+          <td class="all_channels">${ channel_totals.all_channels.toLocaleString()}</td>
+          <td class="youtube">${ channel_totals.youtube.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('youtube')}%</span></td>
+          <td class="site">${ channel_totals.site.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('site')}%</span></td>
+          <td class="twitch">${ channel_totals.twitch.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('twitch')}%</span></td>
+          <td class="twitter">${ channel_totals.twitter.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('twitter')}%</span></td>
+          <td class="github">${ channel_totals.github.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('github')}%</span></td>
+          <td class="reddit">${ channel_totals.reddit.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('reddit')}%</span></td>
+          <td class="vimeo">${ channel_totals.vimeo.toLocaleString()}<span class="subvalue"> ${ratio_of_channels('vimeo')}%</span></td>
           </tr>
           </tbody>
         </table>
@@ -57,7 +64,6 @@ const OVERVIEW = {
   ledger: function (bat, b) {
     let overviewTable = $('#overview-ledger-table tbody')
     overviewTable.empty()
-
     overviewTable.append(tr([
       b.td(''),
       b.th('<img src="/local/img/token-icons/bat.svg" height="18"> BAT', 'right'),
@@ -353,46 +359,43 @@ class Overview extends BaseReportComponent {
   }
 
   async retriever () {
-    publisherPlatforms = await $.ajax('/api/1/publishers/platforms')
-    let downloads = await $.ajax('/api/1/dau_platform_first_summary')
-    try {
-      OVERVIEW.firstRun(downloads, builders)
-    } catch (e) {
-      console.log('Error running #firstRun')
-      console.log(e.message)
-    }
+    let downloads = $.ajax('/api/1/dau_platform_first_summary', {
+      success: (downloads) => {
+        OVERVIEW.firstRun(downloads, builders)
+      }
+    })
 
-    let [dauAverageRegion, dauAverageCountry, countries] = await Promise.all([
+    Promise.all([
       $.ajax('/api/1/dau_average_region'),
       $.ajax('/api/1/dau_average_country'),
       $.ajax('/api/1/countries')
-    ])
-    OVERVIEW.dauAverageRegion(dauAverageRegion, dauAverageCountry, countries)
+    ]).then((results) => {
+      let [dauAverageRegion, dauAverageCountry, countries] = results
+      OVERVIEW.dauAverageRegion(dauAverageRegion, dauAverageCountry, countries)
+    })
 
-    var platformStats = await $.ajax('/api/1/monthly_average_stats_platform')
-    OVERVIEW.monthAveragesHandler(platformStats, builders)
+    $.ajax('/api/1/monthly_average_stats_platform', {
+      success: (platformStats) => {
+        OVERVIEW.monthAveragesHandler(platformStats, builders)
+      }
+    })
 
-    try {
-      let [channel_totals, publisher_totals] = await Promise.all([
-        $.ajax('/api/1/publishers/channel_totals'),
-        $.ajax('/api/1/publishers/totals')
-      ])
-      overviewPublisherHandler(channel_totals, publisher_totals)
-    } catch (e) {
-      console.log('problem getting publisher information')
-      console.log(e)
-    }
+    Promise.all([
+      $.ajax('/api/1/publishers/channel_totals'),
+      $.ajax('/api/1/publishers/totals')
+    ]).then((results) => {
+      let [channelTotals, publisherTotals] = results
+      overviewPublisherHandler(channelTotals, publisherTotals)
+    })
 
-    let bat = await $.ajax('/api/1/ledger_overview')
-    OVERVIEW.ledger(bat, builders)
+    $.ajax('/api/1/ledger_overview', {
+      success: (bat) => {
+        OVERVIEW.ledger(bat, builders)
+      }
+    })
 
     ReferralWidget()
     $(`#${this.contentTagId}`).show()
-    $('#monthly-averages-whats-this').on('click', function (e) {
-      e.preventDefault()
-      $('#monthly-averages-instructions').show('slow')
-    })
-
   }
 }
 

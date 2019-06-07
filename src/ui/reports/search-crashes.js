@@ -1,4 +1,5 @@
 const BaseReportComponent = require('../base-report-component')
+const { td, th, tr, st, st1, stp, std } = require('../builders')
 const $ = require('jquery')
 
 class SearchCrashes extends BaseReportComponent {

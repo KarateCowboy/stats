@@ -1,8 +1,7 @@
 const $ = require('jquery')
-require('select2')
 const uiChange = require('./ui-change-event')
 const dataChange = require('./data-change-event')
-let campaigns = []
+
 module.exports = class PageState {
   constructor () {
     this.currentlySelected = null
@@ -61,20 +60,32 @@ module.exports = class PageState {
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
     })
+
+    // callback from brave-menu
     $('#woi_menu').on('selection', (evt, wois) => {
       this.wois = wois
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
     })
+
     // callback from brave-menu
     $('#cc_menu').on('selection', (evt, countryCodes) => {
       this.countryCodes = countryCodes
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
     })
+
+    // callback from brave-menu-api
+    $('#ref_menu').on('selection', (evt, ref) => {
+      this.ref = ref
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
+
     $('#controls-muon-menu').on('click', 'a', (e) => { this.productMenuHandler(e)})
     $('#controls-core-menu').on('click', 'a', (e) => { this.productMenuHandler(e)})
     $('#controls-mobile-menu').on('click', 'a', (e) => { this.productMenuHandler(e)})
+
     $('#controls-channels-menu').on('click', 'a', (evt) => {
       const target = $(evt.target)
       const channel = target.data('channel')
@@ -82,66 +93,6 @@ module.exports = class PageState {
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
     })
-    $.ajax('/api/1/campaigns', {
-      success: (response) => {
-        campaigns = response
-        const compiled = _.template(`
-            <% _.forEach(groups, function(group) { %>
-              <optgroup label="<%- group.name %>">
-              <% _.forEach(group.referralCodes, function(o) { %>
-                <option id=<%- o.id%>><%- o.code_text%></option>
-              <% }) %>
-              </optgroup>
-            <% }) %>
-          `)
-        const ref_filter = $('#ref-filter')
-        ref_filter.empty()
-        ref_filter.append(compiled({'groups': campaigns }))
-        ref_filter.select2({
-          width: 300,
-          placeholder: 'Campaign / referral codes'
-        })
-        $('body').bind('DOMSubtreeModified', async () => {
-          const select = $('.select2-results__option[role=group]')
-          if (select.length > 0) {
-            if (select.hasClass('bound') === false) {
-              select.addClass('bound')
-              this.addCampaignClickListener()
-            }
-          }
-        })
-        ref_filter.val(this.ref).trigger('change')
-        ref_filter.on('change', () => {
-          let referral_codes = []
-          const ref_filter = $('#ref-filter')
-          if (ref_filter.hasClass('select2-hidden-accessible')) {
-            referral_codes = ref_filter.select2('data').map(i => i.id)
-          }
-          this.ref = referral_codes
-          document.dispatchEvent(uiChange)
-          document.dispatchEvent(dataChange)
-        })
-        $('#clear-ref').on('click', () => {
-          ref_filter.val(null).trigger('change')
-        })
-      }
-    })
-  }
-
-  addCampaignClickListener () {
-    setTimeout(() => {
-      $('li[role=group]').on('click', (obj) => {
-        let campaignName = $(obj.target).html()
-        if (campaignName !== 'No Campaign') {
-          let campaign = _.find(campaigns, {
-            'name': campaignName
-          })
-          const current = $('#ref-filter').select2('data').map(i => i.text)
-          $('#ref-filter').val(current.concat(campaign.referralCodes.map(r => r.code_text)))
-          $('#ref-filter').trigger('change')
-        }
-      })
-    }, 300)
   }
 
   productMenuHandler (evt) {
@@ -207,5 +158,4 @@ module.exports = class PageState {
     if (this.channelFilter.release) filterChannels.push('stable')
     return filterChannels.join(',')
   }
-
 }

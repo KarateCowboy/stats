@@ -1,5 +1,5 @@
 const common = require('./common')
-const Boom = require('boom')
+const Boom = require('@hapi/boom')
 
 const MAU_PLATFORM = `
 SELECT

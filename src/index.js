@@ -26,12 +26,19 @@ let server
 module.exports.setup = async (connections) => {
   server = new Hapi.Server({
     host: config.host,
-    port: config.port
+    port: config.port,
+    routes: {
+      security: {
+        hsts: true
+      }
+    }
   })
   await mongoose.connect(process.env.MLAB_URI)
   await server.register(Inert)
   if (!process.env.TEST) {
     server.register(blipp)
+    console.log('registering http -> https')
+    server.register({ plugin: require('hapi-require-https'), options: {} })
   }
 
   // Setup the APIs

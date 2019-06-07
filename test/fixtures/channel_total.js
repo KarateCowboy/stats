@@ -17,6 +17,10 @@ const define = () => {
   factory.define('channel_total', ChannelTotal, {
     _id: () => (new ObjectID()),
     twitch: () => _.random(500, 20000),
+    vimeo: () => _.random(500, 20000),
+    github: () => _.random(500, 20000),
+    twitter: () => _.random(500, 20000),
+    reddit: () => _.random(500, 20000),
     youtube: () => _.random(500, 20000),
     site: () => _.random(500, 20000),
     all_channels: () => _.random(500, 20000),

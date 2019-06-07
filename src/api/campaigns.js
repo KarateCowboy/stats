@@ -14,10 +14,12 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/referrals_campaigns',
     handler: async (request, h) => {
-      let q = request.query.q || null
+      if (request.query.q && request.query.q.length < 2) return []
+
+      let q = (request.query.q || '').toLowerCase()
       let campaigns = (await client.query("SELECT id, name as label, 0 as ord FROM dtl.campaigns ORDER BY name")).rows
       for (let campaign of campaigns) {
-        campaign.subitems = (await client.query("SELECT id, code_text as label FROM dtl.referral_codes WHERE campaign_id = $1", [campaign.id])).rows
+        campaign.subitems = (await client.query("SELECT code_text as id, code_text as label FROM dtl.referral_codes WHERE campaign_id = $1", [campaign.id])).rows
       }
       if (q) {
         let results = []

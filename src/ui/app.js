@@ -5,7 +5,8 @@ global.menu = {
 }
 require('./color')
 require('./brave-menu')
-require('./referral')
+require('./brave-menu-api')
+require('./reports/referral')
 const Application = require('./application')
 
 const OverviewReport = require('./reports/overview')
