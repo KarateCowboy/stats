@@ -34,7 +34,6 @@ class AggregationScript extends Script {
 
     await this.shutdown()
   }
-
 }
 
 const aggregationScript = new AggregationScript()
