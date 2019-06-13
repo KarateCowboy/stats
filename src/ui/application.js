@@ -19,7 +19,7 @@ module.exports = class Application {
     this.pageState = new PageState()
     if (pageState) {
       Object.assign(this.pageState, pageState)
-      $('ref-filter').val(this.pageState.ref)
+      $('ref_menu').val(this.pageState.ref)
 
     }
     this.router = new Grapnel()
@@ -143,9 +143,9 @@ module.exports = class Application {
       }
     })
     if (this.menuState.showRefFilter) {
-      $('#ref-filter').parent().show()
+      $('#ref_menu').show()
     } else {
-      $('#ref-filter').parent().hide()
+      $('#ref_menu').hide()
     }
 
   }
