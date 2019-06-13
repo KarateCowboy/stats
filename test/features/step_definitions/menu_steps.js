@@ -23,7 +23,7 @@ Then(/^the "([^"]*)" channels should be checked$/, async function (buttons) {
   }
 })
 Then(/^the ref select should be visible and have no ref entered$/, async function () {
-  const ref_filter_html = await browser.get_html_when_visible('#ref-filter')
+  const ref_filter_html = await browser.get_html_when_visible('#ref_menu')
   expect(ref_filter_html).to.not.contain('select2-selection__choice')
 })
 Then(/^the this month button should "([^"]*)" be visible$/, async function (visible) {
@@ -92,7 +92,7 @@ Given(/^I view the Daily Crashes by Platform report$/, async function () {
 })
 
 Then(/^the ref select should not be visible$/, async function () {
-  const result = await browser.isVisible(`#ref-filter`)
+  const result = await browser.isVisible(`#ref_menu`)
   expect(result).to.equal(true)
 })
 

@@ -15,7 +15,7 @@ module.exports = class MenuConfig {
       showWOISFilter: '#woi_menu',
       showCountryCodeFilter: '#cc_menu',
       showDaysSelector: '#days-menu',
-      showRefFilter: '#ref-filter',
+      showRefFilter: '#ref_menu',
       showMobile: '#controls-mobile-menu-container',
       showMuon: '#controls-muon-menu-container',
       showPagination: '#controls-pagination'
