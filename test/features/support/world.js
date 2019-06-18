@@ -28,12 +28,10 @@ class CustomWorld {
         await browser.keys(text)
         await browser.pause(50)
         await browser.keys('\uE007')
-        await browser.pause(100)
         await browser.click('#contentTitle')// remove from focus
       },
       async setDaysBack (days) {
         await browser.execute(() => { $("#controls-selected-days").click()})
-        // await browser.click('#controls-selected-days')
         await browser.pause(500)
         await browser.waitForVisible(`#days-${days}`, 2000)
         await browser.click_when_visible(`#days-${days}`)

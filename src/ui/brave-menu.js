@@ -22,7 +22,7 @@ class BraveMenu {
     $('.braveMenu').each(function () {
       window.menus = []
       const pageStateAttr = $(this).data('pageState')
-      let menu = new BraveMenu($(this), pageState[pageStateAttr])
+      let menu = new BraveMenu($(this), pageState[pageStateAttr] || [])
       menu.init()
       menu.updateMenuUI()
     })

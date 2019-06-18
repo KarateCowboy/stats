@@ -177,7 +177,8 @@ WHERE
   AND C.contents->>'channel' = ANY($2)
   AND C.contents->>'platform' = ANY($3)
   AND C.contents->>'muon-version' IS NULL
-group by ymd DESC, platform
+GROUP BY ymd, platform
+ORDER BY ymd, platform
 `
 // COUNT(platform) AS count
 // GROUP BY C.contents->>'year_month_day', platform, C.contents->>'_version'
@@ -192,7 +193,7 @@ WHERE
   contents->>'_version' IS NOT NULL AND
   sp.to_ymd((contents->>'year_month_day'::text)) >= current_date - CAST($1 as INTERVAL)
 GROUP BY contents->>'_version'
-ORDER BY sp.comparable_version(contents->>'_version') DESC
+ORDER BY contents->>'_version' DESC
 `
 
 const CRASH_ELECTRON_VERSIONS = `
@@ -208,7 +209,6 @@ ORDER BY sp.comparable_version(contents->>'ver') DESC
 `
 
 exports.setup = (server, client, mongo) => {
-
   // Crash reports
   server.route({
     method: 'GET',
@@ -278,25 +278,18 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_ratios',
-    handler: function (request, h) {
+    handler: async function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
-      let channels = common.channelPostgresArray(request.query.channelFilter)
       let version = request.query.version || null
-      return client.query(CRASH_RATIO, [days, platforms, version], (err, results) => {
-        if (err) {
-          console.log(err)
-          return h.response(err.toString()).code(500)
-        } else {
-          results.rows.forEach((row) => {
-            row.crashes = parseInt(row.crashes)
-            row.total = parseInt(row.total)
-            row.crash_rate = parseFloat(row.crash_rate)
-          })
-          return (results.rows)
-        }
+      const results = await pg_client.query(CRASH_RATIO, [days, platforms, version])
+      results.rows.forEach((row) => {
+        row.crashes = parseInt(row.crashes)
+        row.total = parseInt(row.total)
+        row.crash_rate = parseFloat(row.crash_rate)
       })
+      return (results.rows)
     }
   })
 
@@ -425,17 +418,18 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_versions',
-    handler: function (request, h) {
+    handler: async function (request, h) {
       let days = parseInt(request.query.days || 14, 10)
       days += ' days'
-      return client.query(CRASH_VERSIONS, [days], (err, results) => {
-        if (err) {
-          return h.response(err.toString()).code(500)
-        } else {
-          results.rows.forEach((row) => common.formatPGRow(row))
-          return (results.rows)
-        }
-      })
+      let results = {rows: []}
+      try {
+        results = await pg_client.query(CRASH_VERSIONS, [days])
+      } catch (e) {
+        console.log(e.message)
+        throw e
+      }
+      results.rows.forEach((row) => common.formatPGRow(row))
+      return (results.rows)
     }
   })
 

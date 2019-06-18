@@ -16,6 +16,18 @@ module.exports = function (knex) {
       return Schema
     }
 
+    static get jsonSchema () {
+      return {
+        id: {type: 'string'},
+        ts: {type: 'date'},
+        contents: {type: 'object'}
+      }
+    }
+
+    static get idColumn () {
+      return 'id'
+    }
+
     static get tableName () {
       return 'dtl.crashes'
     }
@@ -34,26 +46,32 @@ module.exports = function (knex) {
       }, [])
       return _.compact(_.flatten(returnedFilters))
     }
-    static reverseMapPlatformFilters(givenPlatforms) {
+
+    static reverseMapPlatformFilters (givenPlatforms) {
       let mappings = {
         'linux': 'linux',
-        'Win64' :'winx64-bc',
-        'Win32': 'winia32' ,
-        'win32':'winia32' ,
-        'OS X' : 'osx-bc',
+        'Win64': 'winx64-bc',
+        'Win32': 'winia32',
+        'win32': 'winia32',
+        'OS X': 'osx-bc',
         'darwin': 'osx-bc',
         'unknown': 'unknown'
       }
       return givenPlatforms.map(p => mappings[p])
     }
 
-    /*
-  static get idColumn(){
-    //return 'channel'
-  }
-  */
+    static async totals () {
+      return this.knex().select().from('dw.fc_crashes_dau_mv')
+    }
+
+    get canonPlatform () {
+      return Crash.reverseMapPlatformFilters([this.contents.platform]).pop()
+    }
+
+    get version () {
+      return this.contents._version
+    }
   }
 
   return Crash
 }
-

@@ -14,18 +14,6 @@ const ObjectionAdapter = require('factory-girl-objection-adapter')
 const define = () => {
   factory.setAdapter(new ObjectionAdapter(), 'crash')
 
-  class Download {
-    async save () {
-      await knex('dtl.crashes').insert({})
-    }
-
-    async destroy () {
-      await knex('dtl.crashes').delete({
-        id: this.id
-      })
-    }
-  }
-
   factory.define('crash', db.Crash, {
     id: () => {
       let o = new ObjectID()

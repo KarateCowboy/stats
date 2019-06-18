@@ -36,7 +36,8 @@ const fixtures = {
   referral_codes: require('./fixtures/referral_code_pg'),
   platform: require('./fixtures/platform'),
   channel: require('./fixtures/channel'),
-  crash: require('./fixtures/crash')
+  crash: require('./fixtures/crash'),
+  version: require('./fixtures/version')
 }
 
 class TestHelper {
@@ -98,7 +99,8 @@ class TestHelper {
         'platforms',
         'channels',
         'publisher_platforms',
-        'crashes'
+        'crashes',
+        'versions'
       ]
     }
     this.materialized_views = {
