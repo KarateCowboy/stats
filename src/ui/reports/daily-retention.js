@@ -19,7 +19,6 @@ class DailyRetention extends BaseReportComponent {
     this.contentTagId = 'DNUDAUContent'
     this.menuConfig.showWOISFilter = true
     this.menuConfig.showCountryCodeFilter = true
-
   }
 
   async retriever () {
@@ -78,6 +77,21 @@ class DailyRetention extends BaseReportComponent {
         return modifiedRow
       }
     })(flattenedRows)
+
+    let countryDAU = []
+    if (campaignNames.length === 1) {
+      $('#daily-retention-dau-country').show()
+      countryDAU = _.flatten(campaignToRowsMap[campaignNames[0]].map((r) => {
+        return r.dauByCountry
+      }))
+      BaseReportComponent.buildMultiValueChartHandler('dauCountryChartContainer', 'ymd', 'country_code', 'count', 'Country', 'DAU', {
+        colourBy: 'hashedLabel',
+        yaxisLog: true,
+        legend: false
+      })(countryDAU)
+    }  else {
+      $('#daily-retention-dau-country').hide()
+    }
 
     let tbl = $('#DNUDAUDataTable tbody')
     tbl.empty()
@@ -168,7 +182,6 @@ class DailyRetention extends BaseReportComponent {
 
     for (let campaignName of campaignNames) {
       let firstRows = firstRecords(campaignToRowsMap[campaignName].reverse())
-      console.log(firstRows)
       let firstRowValues = {
         dau: STATS.avg(_.pluck(firstRows, 'dau')),
         dru: STATS.avg(_.pluck(firstRows, 'dru')),
@@ -197,6 +210,20 @@ class DailyRetention extends BaseReportComponent {
         buffer += [q(row.campaign), q(row.ymd), q(row.dau), q(row.dnu), q(row.dru), q(row.dnuSum), q(row.retained * 100)].join(',') + '\n'
       }
       COMMON.downloadObjectAs(buffer, 'daily-retention-summary.csv', 'text/csv')
+    })
+
+    $('#dau-country-download').off('click')
+    $('#dau-country-download').on('click', (evt) => {
+      let data = JSON.parse(JSON.stringify(countryDAU))
+      data = data.sort((a, b) => {
+        return b.ymd.localeCompare(a.ymd) || a.country_code.localeCompare(b.country_code)
+      })
+      let buffer = 'YMD,COUNTRY,DAU\n'
+      let q = (v) => { return `"${v}"` }
+      for (let row of data) {
+        buffer += [q(row.ymd), q(row.country_code), q(row.count)].join(',') + '\n'
+      }
+      COMMON.downloadObjectAs(buffer, 'daily-retention-country-dau.csv', 'text/csv')
     })
 
     $(`#${this.contentTagId}`).show()

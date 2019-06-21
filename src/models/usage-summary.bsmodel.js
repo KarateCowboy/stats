@@ -7,6 +7,8 @@ const moment = require('moment')
 const _ = require('lodash')
 const Joi = require('joi')
 const Schema = require('./validators/usage-summary')
+const dataset = require('../api/dataset')
+
 module.exports = (knex) => {
   const BaseModel = require('./base_model')(knex)
 
@@ -153,7 +155,6 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
   }
 
   UsageSummary.dauCampaignAgg = async (args) => {
-    console.log(args)
     const QUERY = `
     SELECT
       TO_CHAR(ymd, 'YYYY-MM-DD') AS ymd,
@@ -335,6 +336,32 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
         args.channel
       ]
     )).rows
+  }
+
+  UsageSummary.dauByCountry = async (args) => {
+    const DAU_QUERY = `
+    SELECT
+      TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
+      COALESCE(CMP.name, 'unknown') AS campaign,
+      FC.country_code,
+      SUM(FC.total) AS count
+    FROM
+      dw.fc_agg_usage_daily FC                              LEFT JOIN
+      dtl.referral_codes    REF ON FC.ref = REF.code_text   LEFT JOIN
+      dtl.campaigns         CMP ON REF.campaign_id = CMP.id
+    WHERE
+      FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2019-02-21'::date) AND
+      FC.platform = ANY ($2) AND
+      FC.channel = ANY ($3) AND
+      FC.ref = ANY (COALESCE($4, ARRAY[FC.ref])) AND
+      FC.woi = ANY (COALESCE($5, ARRAY[FC.woi])) AND
+      FC.country_code = ANY (COALESCE($6, ARRAY[FC.country_code]))
+    GROUP BY FC.ymd, COALESCE(CMP.name, 'unknown'), FC.country_code
+    ORDER BY FC.ymd DESC, COALESCE(CMP.name, 'unknown'), FC.country_code
+    `
+    const dbParams = [`${args.daysAgo} days`, args.platforms, args.channels, args.ref, args.wois, args.countryCodes]
+    const results = await pg_client.query(DAU_QUERY, dbParams)
+    return results
   }
 
   UsageSummary.dauVersion = async function (args) {

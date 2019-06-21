@@ -14,7 +14,7 @@ exports.setup = (server, client, mongo) => {
 
         if (!ref) return []
 
-        let [dau, dnu] = await Promise.all([db.UsageSummary.dauCampaignAgg({
+        const databaseParams = {
           common: true,
           daysAgo: parseInt(days.replace(' days', '')),
           platforms: platforms,
@@ -22,21 +22,23 @@ exports.setup = (server, client, mongo) => {
           ref: ref,
           wois: wois,
           countryCodes: countryCodes
-        }), db.UsageSummary.dnuCampaignAgg({
-          common: true,
-          daysAgo: parseInt(days.replace(' days', '')),
-          platforms: platforms,
-          channels: channels,
-          ref: ref,
-          wois: wois,
-          countryCodes: countryCodes
-        })])
+        }
+
+        // retrieve the data
+        let [dau, dnu, dauByCountry] = await Promise.all([
+          db.UsageSummary.dauCampaignAgg(databaseParams),
+          db.UsageSummary.dnuCampaignAgg(databaseParams),
+          db.UsageSummary.dauByCountry(databaseParams)
+        ])
 
         dau.rows.forEach((row) => common.formatPGRow(row))
         dau.rows = common.potentiallyFilterToday(dau.rows, request.query.showToday === 'true')
 
         dnu.rows.forEach((row) => common.formatPGRow(row))
         dnu.rows = common.potentiallyFilterToday(dnu.rows, request.query.showToday === 'true')
+
+        dauByCountry.rows.forEach((row) => common.formatPGRow(row))
+        dauByCountry.rows = common.potentiallyFilterToday(dauByCountry.rows, request.query.showToday === 'true')
 
         if (wois) {
           const firstWOI = wois.sort()[0]
@@ -50,6 +52,7 @@ exports.setup = (server, client, mongo) => {
 
         const dauGroupedByCampaign = _.groupBy(dau.rows, (row) => { return row.campaign })
         const dnuGroupedByCampaign = _.groupBy(dnu.rows, (row) => { return row.campaign })
+        const dauByCountryGroupedByCampaign = _.groupBy(dauByCountry.rows, (row) => { return row.campaign })
 
         const campaignSummary = (campaign, dau, dnu) => {
           let s = 0
@@ -71,6 +74,7 @@ exports.setup = (server, client, mongo) => {
               retained = Math.round(retained * 10000) / 10000
             }
             dnuSum += dnuTotal
+
             return {
               ymd,
               campaign,
@@ -78,9 +82,13 @@ exports.setup = (server, client, mongo) => {
               dnu: dnuTotal,
               dru: dauTotal - dnuTotal,
               dnuSum,
+              dauByCountry: dauByCountryGroupedByCampaign[campaign].filter((r) => {
+               return r.ymd === ymd
+              }),
               retained
             }
           })
+
           return combined
         }
 
