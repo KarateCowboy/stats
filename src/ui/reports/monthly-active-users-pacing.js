@@ -7,7 +7,7 @@ class MonthlyActiveUsersPacing extends BaseReportComponent {
     this.title = 'Monthly Active Users (Pacing) (MAU)'
     this.subtitle = ''
     this.path = 'usage_month_pacing'
-    this.menuTitle = 'Monthly Active Users (Pacing) - MAU'
+    this.menuTitle = 'Monthly Active Users - Pacing - MAU'
     this.menuId = 'usageMonthPacing'
     this.reportContent = `<marquee>Monthly Active Users Content</marquee>`
     this.contentTagId = 'usageContent'
