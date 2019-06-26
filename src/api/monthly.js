@@ -36,6 +36,22 @@ ORDER BY
   left(ymd::text, 7)
 `
 
+const MAU_PACING = `
+select
+  to_char(ymd, 'Mon-DD') as month_day,
+  sum(total) as total
+from dw.fc_usage_month
+where
+  ymd >= date_trunc('month', current_date)::date - '4 months'::interval and
+  to_char(ymd, 'DD') <= to_char(current_date, 'DD') AND
+  platform = ANY ($1) AND
+  channel = ANY ($2) AND
+  ref = ANY(COALESCE($3, ARRAY[ref])) AND
+  ymd > '2016-01-31'
+group by to_char(ymd, 'Mon-DD')
+order by to_char(ymd, 'Mon-DD') asc
+`
+
 const MRU = `
 SELECT
   LEFT(ymd::text, 7) || '-01' AS ymd,
@@ -155,6 +171,37 @@ exports.setup = (server, client, mongo) => {
       results.rows.forEach((row) => common.formatPGRow(row))
       results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
       return (results.rows)
+    }
+  })
+
+  // Monthly active users - pacing
+  server.route({
+    method: 'GET',
+    path: '/api/1/mau_pacing',
+    handler: async (request, h) => {
+      let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
+      let results = await client.query(MAU_PACING, [platforms, channels, ref])
+      results.rows.forEach((row) => common.formatPGRow(row))
+      results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
+
+      let monthSum = 0
+      let monthControl = ''
+      let finalRows = []
+      for (let row of results.rows) {
+        let [month, day] = row.month_day.split('-')
+        if (monthControl !== month) {
+          monthSum = 0
+          monthControl = month
+        }
+        monthSum += parseInt(row.total)
+        finalRows.push({
+          month,
+          day,
+          count: monthSum
+        })
+      }
+
+      return finalRows
     }
   })
 
