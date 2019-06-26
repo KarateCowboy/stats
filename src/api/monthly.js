@@ -182,7 +182,6 @@ exports.setup = (server, client, mongo) => {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let results = await client.query(MAU_PACING, [platforms, channels, ref])
       results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterThisMonth(results.rows, request.query.showToday === 'true')
 
       let monthSum = 0
       let monthControl = ''
