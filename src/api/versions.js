@@ -5,8 +5,14 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/versions',
     handler: async function (request, h) {
-      const versions = await db.Version.query().orderBy('num')
-      return versions
+      try {
+        const versions = await db.Version.query().orderBy('num')
+        return (versions)
+
+      } catch (e) {
+        console.log(e)
+        return h.response(e.toString()).code(500)
+      }
     }
   })
 }

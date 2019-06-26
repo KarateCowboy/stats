@@ -11,12 +11,10 @@ class UpdateVersions extends Script {
 
   async run () {
     await this.setup('update-versions-from-crashes')
-    const versions = (await db.Crash.query().distinct(knex.raw('contents->>\'_version\' as _version'))).map(c => c._version)
+    const existingVersions = await db.Version.query()
+    let versions = await knex('dtl.crashes').distinct(knex.raw('contents->>\'_version\' as version')).whereRaw('contents->>\'_version\' NOT IN (?)', existingVersions.map(i => i.num))
     await Promise.all(versions.map(async (version) => {
-      const res = await db.Version.query().where('num', version)
-      if (_.isEmpty(res)) {
-        await db.Version.query().insert({num: version})
-      }
+      await db.Version.query().insert({num: version})
     }))
 
     await this.shutdown()

@@ -51,8 +51,8 @@ module.exports = function (knex) {
       let mappings = {
         'linux': 'linux',
         'Win64': 'winx64-bc',
-        'Win32': 'winia32',
-        'win32': 'winia32',
+        'Win32': 'winia32-bc',
+        'win32': 'winia32-bc',
         'OS X': 'osx-bc',
         'darwin': 'osx-bc',
         'unknown': 'unknown'

@@ -10,7 +10,7 @@ BEGIN
     IF _cpu = 'amd64' THEN
       RETURN 'winx64-bc';
     ELSE
-      RETURN 'winia32';
+      RETURN 'winia32-bc';
     END IF;
   ELSIF _platform = 'darwin' THEN
     RETURN 'osx';

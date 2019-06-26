@@ -22,7 +22,7 @@ class DailyCrashesByPlatform extends BaseReportComponent {
     let results
     try {
       results = await $.ajax('/api/1/dc_platform?' + $.param(this.app.pageState.standardParams()))
-      this.handler(results.rows)
+      this.handler(results)
     } catch (e) {
       console.log(`Error running retriever for ${this.title}`)
       console.log(e)

@@ -41,7 +41,7 @@ describe('crud endpoints', async function () {
       let response = await server.inject(params)
       let payload = JSON.parse(response.payload)
 
-      expect(payload.rows).to.have.property('length', 0)
+      expect(payload).to.have.property('length', 0)
     })
     it('returns a bunch of crash counts', async function () {
       const sampleCrashes = await factory.buildMany('crash', 7)
@@ -56,9 +56,9 @@ describe('crud endpoints', async function () {
       let payload = JSON.parse(response.payload)
 
       const platforms = db.Crash.reverseMapPlatformFilters(_.uniq(sampleCrashes.map(c => c.contents.platform))).sort()
-      const returnedPlatforms = payload.rows.map(r => r.platform).sort()
+      const returnedPlatforms = payload.map(r => r.platform).sort()
       expect(returnedPlatforms).to.have.members(_.uniq(platforms))
-      const totalSum = payload.rows.reduce((acc, val) => {
+      const totalSum = payload.reduce((acc, val) => {
         acc += parseInt(val.count)
         return acc
       }, 0)
@@ -78,7 +78,7 @@ describe('crud endpoints', async function () {
       let payload = JSON.parse(response.payload)
 
       const expectedTotal = sampleCrashes.filter((i) => { return i.contents.channel === channelFilter }).length
-      const totalFromPayload = payload.rows.reduce((acc, val) => {
+      const totalFromPayload = payload.reduce((acc, val) => {
         acc += parseInt(val.count)
         return acc
       }, 0)
@@ -100,7 +100,7 @@ describe('crud endpoints', async function () {
       let payload = JSON.parse(response.payload)
 
       const expectedRowCount = sampleCrashes.filter((c) => { return db.Crash.reverseMapPlatformFilters([c.contents.platform]).includes(platformFilter) }).length
-      expect(payload.rows[0]).to.have.property('count', expectedRowCount.toString())
+      expect(payload[0]).to.have.property('count', expectedRowCount.toString())
     })
   })
   describe('crash_versions', async function () {

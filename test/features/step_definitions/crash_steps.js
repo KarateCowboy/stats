@@ -35,7 +35,7 @@ Given(/^there is crash ratio data for the last forty days$/, async function () {
   let daysBack = 0
   let crashes
   while (daysBack <= 60) {
-    crashes = await factory.buildMany('crash', 60)
+    crashes = await factory.buildMany('crash', 20)
     const ymd = moment().subtract(daysBack, 'days').format('YYYY-MM-DD')
     crashes.forEach((c) => {
       c.contents.year_month_day = ymd
@@ -52,7 +52,5 @@ Given(/^there is crash ratio data for the last forty days$/, async function () {
 Given(/^I should see the crash ratios chart and table for the last forty days$/, async function () {
 
   const crashRatioChartIsVisible = await browser.isVisible('#crash-ratio-table')
-  const crashRatioTableIsVisible = await browser.isVisible('#crash-ratio-table-detail')
   expect(crashRatioChartIsVisible).to.equal(true, 'crash ratio table should be visible')
-  expect(crashRatioTableIsVisible).to.equal(true, 'crash ratio detail table should be visible')
 })
