@@ -27,10 +27,13 @@ describe('PublisherSignupDay', async function () {
     specify('email_verified : {type: Number},', async function () {
       expect(publisherSignupDay).to.have.property('email_verified', publisherSignupDayAttrs.email_verified)
     })
+    specify('kyc_uphold_and_email_verified : {type: Number},', async function () {
+      expect(publisherSignupDay).to.have.property('kyc_uphold_and_email_verified', publisherSignupDayAttrs.kyc_uphold_and_email_verified)
+    })
   })
   describe('#dailyTotalAgg', async function () {
     it('returns the total up to that day', async function () {
-      const attrs = _.range(1, 20).map((i) => { return {ymd: moment().subtract(i, 'days').format('YYYY-MM-DD')}})
+      const attrs = _.range(1, 20).map((i) => { return { ymd: moment().subtract(i, 'days').format('YYYY-MM-DD') } })
       const publisherSignupDays = await factory.createMany('publisher_signup_day', attrs)
       const result = await db.PublisherSignupDay.dailyTotalAgg()
       const aggregatedTotals = []
@@ -41,9 +44,9 @@ describe('PublisherSignupDay', async function () {
         acc.ymd = val.ymd
         aggregatedTotals.push(_.clone(acc))
         return acc
-      }, {email_verified: 0, email_channel_verified: 0, email_channel_and_uphold_verified: 0})
+      }, { email_verified: 0, email_channel_verified: 0, email_channel_and_uphold_verified: 0 })
       expect(true).to.equal(true)
-      expect(result.map(i => i.email_verified)).to.have.members(aggregatedTotals.map((i) => {return i.email_verified}))
+      expect(result.map(i => i.email_verified)).to.have.members(aggregatedTotals.map((i) => { return i.email_verified }))
       expect(result.map(i => i.email_channel_verified)).to.have.members(aggregatedTotals.map(i => i.email_channel_verified))
       expect(result.map(i => i.email_channel_and_uphold_verified)).to.have.members(aggregatedTotals.map(i => i.email_channel_and_uphold_verified))
     })
@@ -62,19 +65,21 @@ describe('PublisherSignupDay', async function () {
       expect(verificationStatuses).to.have.members([
         'E-mail, channel, and basic uphold identity verified',
         'Verified e-mail with verified channel',
-        'Verified e-mail'
+        'Verified e-mail',
+        'KYC and uphold verified'
       ])
-
     })
   })
   describe('buildFromRemote', async function () {
-    let channelUpholdEmailVerifiedUrl, channelEmailVerifiedUrl, emailVerifiedUrl
-    let channelUpholdEmailVerifiedExpectedResult, channelEmailVerifiedExpectedResult, emailVerifiedExpectedResult
+    let channelUpholdEmailVerifiedUrl, channelEmailVerifiedUrl, emailVerifiedUrl, kycVerifiedUrl
+    let channelUpholdEmailVerifiedExpectedResult, channelEmailVerifiedExpectedResult, emailVerifiedExpectedResult, kycVerifiedExpectedResult
     let threeDaysAgo
     beforeEach(async function () {
       channelUpholdEmailVerifiedUrl = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/channel_uphold_and_email_verified_signups_per_day'
       channelEmailVerifiedUrl = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/channel_and_email_verified_signups_per_day'
       emailVerifiedUrl = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/email_verified_signups_per_day'
+      kycVerifiedUrl = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/channel_and_kyc_uphold_and_email_verified_signups_per_day'
+
       let apiResponseBody = _.range(0, 100)
         .map((i) => {
           return [moment()
@@ -89,7 +94,8 @@ describe('PublisherSignupDay', async function () {
         }
       }
       threeDaysAgo = moment().subtract(3, 'days').format('YYYY-MM-DD')
-      channelUpholdEmailVerifiedExpectedResult = apiResponseBody.find((i) => { return i[0] === threeDaysAgo})
+      channelUpholdEmailVerifiedExpectedResult = apiResponseBody.find((i) => { return i[0] === threeDaysAgo })
+
       const channelEmailVerifiedArgs = {
         method: 'GET',
         url: channelEmailVerifiedUrl,
@@ -111,7 +117,8 @@ describe('PublisherSignupDay', async function () {
       common.prequest
         .withArgs(channelEmailVerifiedArgs)
         .returns(JSON.stringify(apiResponseBody))
-      channelEmailVerifiedExpectedResult = apiResponseBody.find((i) => { return i[0] === threeDaysAgo})
+      channelEmailVerifiedExpectedResult = apiResponseBody.find((i) => { return i[0] === threeDaysAgo })
+
       const emailVerifiedArgs = {
         method: 'GET',
         url: emailVerifiedUrl,
@@ -119,7 +126,6 @@ describe('PublisherSignupDay', async function () {
           Authorization: `Token token=${process.env.PUBLISHERS_TOKEN}`
         }
       }
-
       apiResponseBody = _.range(0, 100)
         .map((i) => {
           return [moment()
@@ -129,7 +135,26 @@ describe('PublisherSignupDay', async function () {
       common.prequest
         .withArgs(emailVerifiedArgs)
         .returns(JSON.stringify(apiResponseBody))
-      emailVerifiedExpectedResult = apiResponseBody.find((i) => { return i[0] === threeDaysAgo})
+      emailVerifiedExpectedResult = apiResponseBody.find((i) => { return i[0] === threeDaysAgo })
+
+      const kycVerifiedArgs = {
+        method: 'GET',
+        url: kycVerifiedUrl,
+        headers: {
+          Authorization: `Token token=${process.env.PUBLISHERS_TOKEN}`
+        }
+      }
+      apiResponseBody = _.range(0, 100)
+        .map((i) => {
+          return [moment()
+            .subtract(i, 'days')
+            .format('YYYY-MM-DD'), _.random(100, 2000)]
+        })
+
+      common.prequest
+        .withArgs(kycVerifiedArgs)
+        .returns(JSON.stringify(apiResponseBody))
+      kycVerifiedExpectedResult = apiResponseBody.find((i) => { return i[0] === threeDaysAgo })
     })
     it('takes a ymd and populates `email_channel_and_uphold_verified` with endpoint data', async function () {
       const newSignupDay = await db.PublisherSignupDay
@@ -140,12 +165,16 @@ describe('PublisherSignupDay', async function () {
       const newSignupDay = await db.PublisherSignupDay
         .buildFromRemote(threeDaysAgo)
       expect(newSignupDay.email_channel_verified).to.equal(channelEmailVerifiedExpectedResult[1])
-
     })
     it('takes a ymd and populates `email_verified`', async function () {
       const newSignupDay = await db.PublisherSignupDay
         .buildFromRemote(threeDaysAgo)
       expect(newSignupDay.email_verified).to.equal(emailVerifiedExpectedResult[1])
+    })
+    it('takes a ymd and populates `kyc_uphold_and_email_verified`', async function () {
+      const newSignupDay = await db.PublisherSignupDay
+        .buildFromRemote(threeDaysAgo)
+      expect(newSignupDay.kyc_uphold_and_email_verified).to.equal(kycVerifiedExpectedResult[1])
     })
     it('adds the ymd', async function () {
       const newSignupDay = await db.PublisherSignupDay

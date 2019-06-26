@@ -58,7 +58,7 @@ class FetchPublishers extends Script {
     try {
       if (args.end) {
         console.log('running for set')
-        attrsSet = await db.PublisherSignupDay.buildFromRemote(today, args.end)
+        attrsSet = await db.PublisherSignupDay.buildFromRemote(args.end, today)
       } else {
         attrsSet = await db.PublisherSignupDay.buildFromRemote(today)
         attrsSet = [attrsSet]

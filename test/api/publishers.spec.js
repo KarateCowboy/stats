@@ -43,14 +43,14 @@ describe('crud endpoints', async function () {
     it('returns a list of publisher totals', async function () {
       let response = await server.inject(params)
       let payload = JSON.parse(response.payload)
-      expect(payload).to.have.property('length', days.length * 3)
+      expect(payload).to.have.property('length', days.length * 4)
     })
     it('works with the days parameter', async function () {
       const daysBackToSearch = 3
       params.url += '?days=' + daysBackToSearch
       let response = await server.inject(params)
       let payload = JSON.parse(response.payload)
-      expect(payload).to.have.property('length', daysBackToSearch * 3)
+      expect(payload).to.have.property('length', daysBackToSearch * 4)
     })
   })
   describe('daily publishers aggregated', async function () {
@@ -63,7 +63,7 @@ describe('crud endpoints', async function () {
     it('returns a list of agggregated publisher signup totals', async function () {
       let response = await server.inject(params)
       let payload = JSON.parse(response.payload)
-      expect(payload).to.have.property('length', days.length * 3)
+      expect(payload).to.have.property('length', days.length * 4)
     })
   })
 })

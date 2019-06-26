@@ -18,6 +18,7 @@ const define = () => {
     'email_channel_and_uphold_verified': _.random(500, 20000),
     'email_channel_verified': _.random(500, 20000),
     'email_verified': _.random(500, 20000),
+    'kyc_uphold_and_email_verified': _.random(500, 2000),
     'ymd': () => moment().toDate(),
     created_at: () => moment().toDate(),
     updated_at: () => moment().toDate()
