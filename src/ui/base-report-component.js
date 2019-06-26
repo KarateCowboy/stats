@@ -36,6 +36,10 @@ module.exports = class BaseReportComponent {
     opts = opts || {}
     x_label = x_label || 'Date'
     y_label = y_label || 'Platform'
+    if (typeof opts.legend === 'undefined') {
+      opts.legend = true
+    }
+    opts.legend = !!opts.legend
     opts.valueClamper = opts.valueClamper || _.identity
 
     return (rows) => {
@@ -135,6 +139,9 @@ module.exports = class BaseReportComponent {
           })
           chart.ticks = ticks
         }
+      }
+      yaxisOptions.legend = {
+        display: opts.legend
       }
 
       new Chart.Line(usageChart.getContext('2d'), {
@@ -290,7 +297,6 @@ module.exports = class BaseReportComponent {
       if (opts.growth_rate && rows[0]) {
         let averageGrowthRate = Math.pow(rows[rows.length - 1].count / rows[0].count, 1 / rows.length) - 1
         let averageGrowthRateDesc = 'Math.pow(' + rows[rows.length - 1].count + '/' + rows[0].count + ', 1 / ' + rows.length + ') - 1'
-        console.log(averageGrowthRate)
         table.append(tr([
           td(),
           td(),
