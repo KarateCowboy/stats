@@ -258,19 +258,16 @@ exports.setup = (server, client, mongo) => {
   server.route({
     method: 'GET',
     path: '/api/1/crash_reports',
-    handler: function (request, h) {
+    handler: async function (request, h) {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
-      let platforms = common.platformPostgresArray(request.query.platformFilter)
-      let channels = common.channelPostgresArray(request.query.channelFilter)
-      return client.query(CRASH_REPORTS_SIGNATURE, [days], (err, results) => {
-        if (err) {
-          console.log(err)
-          return h.response(err.toString()).code(500)
-        } else {
-          return (results.rows)
-        }
-      })
+      try {
+        const results = await client.query(CRASH_REPORTS_SIGNATURE, [days])
+        return (results.rows)
+      } catch
+        (e) {
+        return h.response(err.toString()).code(500)
+      }
     }
   })
 

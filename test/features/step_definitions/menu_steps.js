@@ -95,6 +95,10 @@ Given(/^I view the Crash Ratios report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#crash_ratio')
 })
 
+Given(/^I view the Top Crash Reasons report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#top_crashes')
+})
+
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref_menu`)
   expect(result).to.equal(true)
