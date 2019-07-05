@@ -8,7 +8,6 @@ const {Given, Then} = require('cucumber')
 const {expect} = require('chai')
 const moment = require('moment')
 const _ = require('lodash')
-const apiCommon = require('../../../src/api/common')
 
 Given(/^there are crashes for the last three weeks$/, async function () {
   let ymds = _.range(1, 6).map((i) => { return moment().subtract(i, 'days').format('YYYY-MM-DD') })
@@ -22,7 +21,6 @@ Given(/^there are crashes for the last three weeks$/, async function () {
 })
 
 Then(/^I should see the total crashes for each day grouped by platform$/, async function () {
-
   const results = await db.Crash.query()
   const usageDataTable = await browser.getHTML('#usageDataTable')
   for (let row of results) {
@@ -47,10 +45,21 @@ Given(/^there is crash ratio data for the last forty days$/, async function () {
   }
   await factory.create('version', {num: crashes[0].version})
   await knex.raw('refresh materialized view dw.fc_crashes_dau_mv')
+  await knex.raw('refresh materialized view dw.fc_crashes_mv')
 })
 
 Given(/^I should see the crash ratios chart and table for the last forty days$/, async function () {
-
   const crashRatioChartIsVisible = await browser.isVisible('#crash-ratio-table')
   expect(crashRatioChartIsVisible).to.equal(true, 'crash ratio table should be visible')
+})
+
+Then(/^I should see the Top Crash Reasons report with some numbers$/, async function () {
+  const title = await browser.getText('#contentTitle')
+  expect(title).to.equal('Top Crashes by Platform and Version')
+  const totalCrashes = await knex('dw.fc_crashes_mv').sum('total')
+    .where('ymd', '>=', moment().subtract(14, 'days').format('YYYY-MM-DD'))
+  const tableContent = await browser.getHTML('#top-crash-table')
+  const crashVersion = await knex('dw.fc_crashes_mv').distinct('version')
+  expect(tableContent).to.contain(totalCrashes[0].sum)
+  expect(tableContent).to.contain(crashVersion[0].version)
 })
