@@ -28,7 +28,6 @@ require('./fixtures/fc_usage_month_exception').define()
 require('./fixtures/wallets').define()
 require('./fixtures/channel_total').define()
 require('./fixtures/ledger/wallets').define()
-require('./fixtures/crash').define()
 const fixtures = {
   publisher_signup_day: require('./fixtures/publisher_signup_day'),
   fc_usage: require('./fixtures/fc_usage'),
@@ -36,7 +35,9 @@ const fixtures = {
   campaigns: require('./fixtures/campaign'),
   referral_codes: require('./fixtures/referral_code_pg'),
   platform: require('./fixtures/platform'),
-  channel: require('./fixtures/channel')
+  channel: require('./fixtures/channel'),
+  crash: require('./fixtures/crash'),
+  version: require('./fixtures/version')
 }
 
 class TestHelper {
@@ -47,7 +48,7 @@ class TestHelper {
     }
     this.testDatabaseUrl = process.env.TEST_DATABASE_URL
     global.SQL_ORM_URL = process.env.TEST_DATABASE_URL
-    global.sequelize = new Sequelize(SQL_ORM_URL, {logging: false})
+    global.sequelize = new Sequelize(SQL_ORM_URL, { logging: false })
     if (!process.env.TEST_MLAB_URI) {
       throw Error('Please set TEST_MLAB_URI')
     }
@@ -97,8 +98,9 @@ class TestHelper {
         ['crashes', 'delete'],
         'referral_codes',
         ['platforms', 'delete'],
-        ['channels','delete'],
-       ['publisher_platforms','delete']
+        ['channels', 'delete'],
+        ['publisher_platforms', 'delete'],
+        'versions'
       ]
     }
     this.materialized_views = {
@@ -120,7 +122,7 @@ class TestHelper {
     }
     if (!global.pg_client) {
       global.pg_client = await pg.connect(this.testDatabaseUrl)
-      this.knex = await Knex({client: 'pg', connection: this.testDatabaseUrl})
+      this.knex = await Knex({ client: 'pg', connection: this.testDatabaseUrl })
       global.knex = this.knex
     }
     if (global.db === undefined) {
@@ -143,10 +145,10 @@ class TestHelper {
       let self = this
       await Promise.all(self.postgres_tables[schema].map(async (relation) => {
         if (!relation.toString().includes('undefined')) {
-          if(relation instanceof Array){
+          if (relation instanceof Array) {
             const sql_string = `${schema}.${relation[0]}`
             await knex(sql_string).delete()
-          }else {
+          } else {
             const sql_string = `${schema}.${relation}`
             await knex(sql_string).truncate()
           }

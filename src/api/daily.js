@@ -135,7 +135,7 @@ exports.setup = (server, client, mongo) => {
   // Version for today's daily active users
   server.route({
     method: 'GET',
-    path: '/api/1/versions',
+    path: '/api/1/dau_by_version',
     handler: async function (request, h) {
       let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
       let args = {

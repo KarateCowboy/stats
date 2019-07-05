@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const Script = require('./script')
+const _ = require('lodash')
+const path = require('path')
+
+class UpdateVersions extends Script {
+
+  async run () {
+    await this.setup('update-versions-from-crashes')
+    const existingVersions = await db.Version.query()
+    let versions = await knex('dtl.crashes').distinct(knex.raw('contents->>\'_version\' as version')).whereRaw('contents->>\'_version\' NOT IN (?)', existingVersions.map(i => i.num))
+    await Promise.all(versions.map(async (version) => {
+      await db.Version.query().insert({num: version})
+    }))
+
+    await this.shutdown()
+  }
+}
+
+const update_versions = new UpdateVersions(path.basename(__filename))
+
+update_versions.run()

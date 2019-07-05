@@ -18,7 +18,7 @@ class DailyActiveUsersByVersion extends BaseReportComponent {
   async retriever() {
     let results
     try {
-      results = await $.ajax('/api/1/versions?' + $.param(this.app.pageState.standardParams()))
+      results = await $.ajax('/api/1/dau_by_version?' + $.param(this.app.pageState.standardParams()))
       this.handler(results)
     } catch (e) {
       console.log(`Error running retriever for ${this.title}`)

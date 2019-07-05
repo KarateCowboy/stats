@@ -8,7 +8,7 @@ class DailyPublishersAggregated extends BaseReportComponent {
     this.subtitle = ''
     this.path = 'dailyPublishersAgg'
     this.menuTitle = 'Daily Publishers Aggregated'
-    this.menuId = 'DailyPublishersAggregated'
+    this.menuId = 'dailyPublishersAgg'
     this.reportContent = `<marquee>Daily Active Users Content</marquee>`
     this.contentTagId = 'usageContent'
     this.menuConfig.showControls = true

@@ -1,16 +1,5 @@
 Feature: Intelligent menu
 
-  Scenario: Reload the page and have my settings retained
-    Given I am logged in to the system
-    And there is a campaign with referral code "ABC123"
-    And I view the Daily Active Users by Platform report
-    And I pick "365" days for the date range
-    And I enter in the referal code "ABC123"
-    When I refresh the page
-    Then I should see "365" days for the date range
-    And I should see the code "ABC123" in the referal code box
-
-  @dev
   Scenario Outline: Search, find, and visit the page or report
     Given I am logged in to the system
     And I search the sidebar filter for <sidebar-title>
@@ -49,3 +38,4 @@ Feature: Intelligent menu
       | dauCampaign                 | dauCampaign             | Daily Active Users by Campaign - DAU           | Daily Active Users by Campaign (DAU)                       |
       | dnuCampaign                 | dnuCampaign             | Daily New Users by Campaign - DNU              | Daily New Users by Campaign (DNU)                          |
       | dailyPublishers             | dailyPublishers         | Daily Publishers                               | Daily Publishers                                           |
+      | dailyPublishersAgg          | dailyPublishersAgg      | Daily Publishers Aggregated                    | Daily Publishers Aggregated                                |

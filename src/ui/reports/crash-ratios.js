@@ -1,7 +1,9 @@
 const BaseReportComponent = require('../base-report-component')
 const $ = require('jquery')
+const {round} = require('../builders')
+const _ = require('lodash')
 
-class DevelopmentCrashes extends BaseReportComponent {
+class CrashRatios extends BaseReportComponent {
   constructor () {
     super()
     this.title = 'Crash Ratio by Platform and Version'
@@ -13,7 +15,7 @@ class DevelopmentCrashes extends BaseReportComponent {
     this.contentTagId = 'crashRatioContent'
     this.menuConfig.showWOISFilter = false
     this.menuConfig.showCountryCodeFilter = false
-
+    this.menuConfig.showRefFilter = false
   }
 
   async retriever () {
@@ -23,17 +25,24 @@ class DevelopmentCrashes extends BaseReportComponent {
       await this.handler(results)
     } catch (e) {
       console.log(`Error running retriever for ${this.title}`)
+      console.log(e)
       console.log(e.message)
     }
   }
 
   async handler (rows = []) {
-    const crashVersionResults = await $.ajax('/api/1/crash_versions?' + $.param(this.app.pageState.standardParams()))
-    this.crashVersionHandler(crashVersionResults)
+    let crashVersionResults = []
+    try {
+      crashVersionResults = await $.ajax('/api/1/versions') //?' + $.param(this.app.pageState.standardParams()))
+      this.crashVersionHandler(crashVersionResults)
+    } catch (e) {
+      console.log(`Error fetching crash versions from API`)
+      console.log(e)
+    }
 
     let table = $('#crash-ratio-table tbody')
     table.empty()
-    rows.forEach(function (row) {
+    rows.forEach((row) => {
       let params = [row.platform, row.version, this.app.pageState.days].join('/')
       let buf = '<tr>'
       buf = buf + '<td class="text-right"><a href="#crash_ratio_list/' + params + '">' + round(row.crash_rate * 100, 1) + '</a></td>'
@@ -46,21 +55,22 @@ class DevelopmentCrashes extends BaseReportComponent {
       table.append(buf)
     })
     $(`#${this.contentTagId}`).show()
+    $('#crash-ratio-detail-table').hide()
   }
 
   crashVersionHandler (rows) {
     let s = $('#crash-ratio-versions')
     s.empty()
     s.append('<option value="">All</option>')
-    for(let row in rows){
-      let buf = '<option value="' + row.version + '" '
-      if (this.app.pageState.version === row.version) {
+    for (let row of rows) {
+      let buf = `<option value="${row.num}" `
+      if (this.app.pageState.version === row.num) {
         buf = buf + 'SELECTED'
       }
-      buf = buf + '>' + row.version + '</option>'
+      buf = buf + '>' + row.num + '</option>'
       s.append(buf)
     }
   }
 }
 
-module.exports = DevelopmentCrashes
+module.exports = CrashRatios

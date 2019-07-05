@@ -49,7 +49,7 @@ Given(/^I view the Daily Active Users by Version report$/, async function () {
 })
 
 Given(/^I view the Daily New Users by Platform report$/, async function () {
-  await browser.url('http://localhost:8193/dashboard#daily_new_users')
+  await browser.url('http://localhost:8193/dashboard#daily_new_platform')
 })
 
 Given(/^I view the Monthly Average Daily Active Users report$/, async function () {
@@ -86,6 +86,15 @@ Given(/^I view the Daily Publishers report$/, async function () {
 Given(/^I view the Daily Publishers Agg report$/, async function () {
   await browser.url('http://localhost:8193/dashboard#dailyPublishersAgg')
 })
+
+Given(/^I view the Daily Crashes by Platform report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#crashes_platform')
+})
+
+Given(/^I view the Crash Ratios report$/, async function () {
+  await browser.url('http://localhost:8193/dashboard#crash_ratio')
+})
+
 Then(/^the ref select should not be visible$/, async function () {
   const result = await browser.isVisible(`#ref_menu`)
   expect(result).to.equal(true)
