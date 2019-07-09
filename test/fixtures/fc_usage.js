@@ -20,6 +20,16 @@ const define = () => {
     total: 200,
     ref: () => { return db.ReferralCode.randomCodeText() }
   })
+  factory.extend('fc_usage', 'linux-core-fcusage', {
+      ymd: () => moment().subtract(1, 'months').format(),
+      platform: 'linux-bc',
+      version: '67.12.34',
+      channel: 'dev',
+      first_time: true,
+      total: 200,
+      ref: () => { return db.ReferralCode.randomCodeText() }
+    }
+  )
 }
 
 module.exports.define = define

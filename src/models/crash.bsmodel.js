@@ -16,11 +16,46 @@ module.exports = function (knex) {
       return Schema
     }
 
+    async writeToSearchIndex (elasticClient) {
+      try {
+        const result = await elasticClient.index({
+          index: 'crashes',
+          type: 'crash',
+          id: this.id,
+          body: this.toJSON()
+        })
+      } catch (e) {
+        console.log(`Error: could not write crash ${this.id} to index`)
+        console.log(e)
+        throw e
+      }
+    }
+
+    async writeToAws (S3, bucket) {
+      try {
+        await S3.putObject({
+          Bucket: bucket,
+          Key: this.id,
+          Body: JSON.stringify(this.toJSON())
+        }).promise()
+        await S3.putObject({
+          Bucket: bucket,
+          Key: `${this.id}.symbolized.txt`,
+          Body: JSON.stringify(this.toJSON())
+        }).promise()
+        console.log(`Wrote crash ${this.id} to bucket ${bucket}`)
+      } catch (e) {
+        console.log(e)
+        console.log(e.message)
+        throw e
+      }
+    }
+
     static get jsonSchema () {
       return {
-        id: {type: 'string'},
-        ts: {type: 'date'},
-        contents: {type: 'object'}
+        id: { type: 'string' },
+        ts: { type: 'date' },
+        contents: { type: 'object' }
       }
     }
 
@@ -34,9 +69,11 @@ module.exports = function (knex) {
 
     static mapPlatformFilters (givenFilters) {
       let mappings = {
+        'linux-bc': ['linux'],
         'linux': ['linux'],
         'winx64-bc': ['Win64'],
         'winia32': ['Win32', 'win32'],
+        'winia32-bc': ['Win32', 'win32'],
         'osx-bc': ['OS X', 'darwin'],
         'unknown': ['unknown']
       }
@@ -60,16 +97,12 @@ module.exports = function (knex) {
       return givenPlatforms.map(p => mappings[p])
     }
 
-    static async totals () {
-      return this.knex().select().from('dw.fc_crashes_dau_mv')
-    }
-
     get canonPlatform () {
       return Crash.reverseMapPlatformFilters([this.contents.platform]).pop()
     }
 
     get version () {
-      return this.contents._version
+      return this.contents.ver
     }
   }
 

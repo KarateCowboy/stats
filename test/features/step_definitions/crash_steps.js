@@ -11,11 +11,10 @@ const _ = require('lodash')
 
 Given(/^there are crashes for the last three weeks$/, async function () {
   let ymds = _.range(1, 6).map((i) => { return moment().subtract(i, 'days').format('YYYY-MM-DD') })
-  const sampleCrashes = await factory.buildMany('crash', 5)
+  const sampleCrashes = await factory.buildMany('osx-crash', 5)
   for (let c of sampleCrashes) {
     c.contents.year_month_day = ymds.pop()
     c.contents.channel = 'stable'
-    c.contents.platform = 'Win64'
     await db.Crash.query().insert(c)
   }
 })

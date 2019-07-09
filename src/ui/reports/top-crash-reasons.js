@@ -14,6 +14,9 @@ class TopCrashReasons extends BaseReportComponent {
     this.contentTagId = 'topCrashContent'
     this.menuConfig.showWOISFilter = false
     this.menuConfig.showCountryCodeFilter = false
+    this.menuConfig.showMobile = false
+    this.menuConfig.showMuon = false
+    this.menuConfig.showRefFilter = false
 
   }
 

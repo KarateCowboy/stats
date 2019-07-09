@@ -12,9 +12,23 @@ class UpdateVersions extends Script {
   async run () {
     await this.setup('update-versions-from-crashes')
     const existingVersions = await db.Version.query()
-    let versions = await knex('dtl.crashes').distinct(knex.raw('contents->>\'_version\' as version')).whereRaw('contents->>\'_version\' NOT IN (?)', existingVersions.map(i => i.num))
+    let versions
+    try {
+      const existingVersionNumbers = existingVersions.map(i => i.num) 
+      let result = await pg_client.query("select distinct(contents->>'ver') as num from dtl.crashes where contents->>'ver' NOT IN ($1)",[existingVersionNumbers])
+      versions = result.rows
+    } catch (e) {
+      console.log(e)
+      throw e
+    }
+    versions = versions.filter((v) => { return v.num.match(/^([0-9]+\.[0-9]+(\.[0-9]+)+)$/) })
     await Promise.all(versions.map(async (version) => {
-      await db.Version.query().insert({num: version})
+      try {
+        //console.log(`adding version ${version.num}`)
+        await db.Version.query().insert(version)
+      } catch (e) {
+        console.log(e)
+      }
     }))
 
     await this.shutdown()

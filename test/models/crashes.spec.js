@@ -5,7 +5,9 @@
  */
 
 require('../test_helper')
-const moment = require('moment')
+const ElasticSearch = require('elasticsearch')
+const AWS = require('aws-sdk')
+const _ = require('lodash')
 
 describe('Crash model', async function () {
   let sampleCrash
@@ -62,30 +64,6 @@ describe('Crash model', async function () {
         expect(mappedFilter).to.have.members(['unknown'])
       })
     })
-    describe('reusable queries', async function () {
-      describe('totals', async function () {
-        it('counts the number of crashes, grouped by platform and version', async function () {
-          const sampleCrashes = await factory.buildMany('crash', 100)
-          sampleCrashes.forEach((c) => {
-            c.contents.platform = 'Win64'
-            c.contents.year_month_day = moment().subtract(3, 'days').format('YYYY-MM-DD')
-          })
-          const sampleCrash = sampleCrashes[0]
-          await factory.create('fc_usage', {
-            platform: sampleCrash.canonPlatform,
-            version: sampleCrash.contents._version,
-            ymd: sampleCrash.contents.year_month_day
-          })
-          await Promise.all(sampleCrashes.map(async (c) => { await db.Crash.query().insert(c) }))
-
-          await knex.raw('refresh materialized view dw.fc_crashes_dau_mv')
-
-          const results = await db.Crash.totals()
-          expect(results).to.have.property('length', 1)
-          expect(results[0]).to.have.property('crashes', '100')
-        })
-      })
-    })
   })
   describe('instance methods', async function () {
     describe('canonPlatform', async function () {
@@ -98,7 +76,42 @@ describe('Crash model', async function () {
     describe('version helper', async function () {
       specify('fetches the version from the crash contents', async function () {
         const sampleCrash = await factory.build('crash')
-        expect(sampleCrash.version).to.equal(sampleCrash.contents._version)
+        expect(sampleCrash.version).to.equal(sampleCrash.contents.ver)
+      })
+    })
+    context('elastic search', async function () {
+      describe('writeToSearchIndex', async function () {
+        it('writes the crash as an object in the search index', async function () {
+          const elasticClient = { index: () => {} }
+          const sampleCrash = await factory.build('crash')
+          sinon.stub(elasticClient, 'index')
+          await sampleCrash.writeToSearchIndex(elasticClient)
+          expect(elasticClient.index.calledWith({
+            index: 'crashes',
+            type: 'crash',
+            id: sampleCrash.id,
+            body: sampleCrash.toJSON()
+          })).to.equal(true, 'expected elastic to index the crash')
+        })
+      })
+    })
+    describe('writeToAws', async function () {
+      it.skip('writes the crash to the bucket as an object', async function () {
+        const S3 = new AWS.S3({})
+        // sinon.stub(S3, 'putObject').resolves()
+        const sampleCrash = await factory.build('crash')
+        try {
+          await sampleCrash.writeToAws(S3, 'test-crash-bucket')
+        } catch (e) {
+          console.log(e.message)
+          throw e
+        }
+        const wasCalled = S3.putObject.calledWith({
+          Bucket: 'test-crash-bucket',
+          Key: sampleCrash.id,
+          Body: sampleCrash.toJSON()
+        })
+        expect(wasCalled).to.equal(true, 'S3 should have received putObject with crash params')
       })
     })
   })

@@ -16,6 +16,8 @@ class CrashRatios extends BaseReportComponent {
     this.menuConfig.showWOISFilter = false
     this.menuConfig.showCountryCodeFilter = false
     this.menuConfig.showRefFilter = false
+    this.menuConfig.showMuon = false
+    this.menuConfig.showMobile = false
   }
 
   async retriever () {
