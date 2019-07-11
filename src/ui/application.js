@@ -3,6 +3,7 @@ const BaseReportComponent = require('./base-report-component')
 const MenuConfig = require('./menu-config')
 const BraveMenu = require('./brave-menu')
 const BraveMenuAPI = require('./brave-menu-api')
+const BraveMenuStatic = require('./brave-menu-static')
 const PageState = require('./page-state')
 const $ = require('jquery')
 const _ = require('lodash')
@@ -154,6 +155,7 @@ module.exports = class Application {
     $('#sideBar').empty().html(this.sideBar)
     BraveMenu.init(this.pageState)
     BraveMenuAPI.init(this.pageState)
+    BraveMenuStatic.init(this.pageState)
     this.setupSideFilter()
   }
 

@@ -6,6 +6,7 @@ module.exports = class MenuConfig {
     this.showDaysSelector = true
     this.showCountryCodeFilter = true
     this.showWOISFilter = true
+    this.showMetricFilter = false
     this.showMobile = true
     this.showMuon = true
     this.showCore = true
@@ -16,6 +17,7 @@ module.exports = class MenuConfig {
       showCountryCodeFilter: '#cc_menu',
       showDaysSelector: '#days-menu',
       showRefFilter: '#ref_menu',
+      showMetricFilter: '#metric_menu',
       showMobile: '#controls-mobile-menu-container',
       showMuon: '#controls-muon-menu-container',
       showPagination: '#controls-pagination'

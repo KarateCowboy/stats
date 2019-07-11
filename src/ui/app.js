@@ -43,6 +43,7 @@ const CrashRatios = require('./reports/crash-ratios')
 const DailyCrashesByPlatform = require('./reports/daily-crashes-by-platform')
 const DailyCrashesByVersion = require('./reports/daily-crashes-by-version')
 const Downloads = require('./reports/downloads')
+const P3A = require('./reports/p3a')
 
 global.init = async function () {
 
@@ -86,7 +87,8 @@ global.init = async function () {
     (new CrashRatios()),
     (new DailyCrashesByPlatform()),
     (new DailyCrashesByVersion()),
-    (new Downloads())
+    (new Downloads()),
+    (new P3A())
   ], priorState)
 
 }
