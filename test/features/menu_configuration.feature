@@ -39,3 +39,4 @@ Feature: Intelligent menu
       | dnuCampaign                 | dnuCampaign             | Daily New Users by Campaign - DNU              | Daily New Users by Campaign (DNU)                          |
       | dailyPublishers             | dailyPublishers         | Daily Publishers                               | Daily Publishers                                           |
       | dailyPublishersAgg          | dailyPublishersAgg      | Daily Publishers Aggregated                    | Daily Publishers Aggregated                                |
+      | usage_month_pacing          | usageMonthPacing        | Monthly Active Users - Pacing - MAU            | Monthly Active Users (Pacing) (MAU)                        |

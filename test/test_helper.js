@@ -49,6 +49,7 @@ class TestHelper {
     this.testDatabaseUrl = process.env.TEST_DATABASE_URL
     global.SQL_ORM_URL = process.env.TEST_DATABASE_URL
     global.sequelize = new Sequelize(SQL_ORM_URL, { logging: false })
+
     if (!process.env.TEST_MLAB_URI) {
       throw Error('Please set TEST_MLAB_URI')
     }

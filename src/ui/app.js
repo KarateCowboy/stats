@@ -14,6 +14,7 @@ const DailyRetention = require('./reports/daily-retention')
 const WeeklyRetention = require('./reports/weekly-retention')
 const ThirtyDayRetention = require('./reports/thirty-day-retention')
 const MonthlyActiveUsers = require('./reports/monthly-active-users')
+const MonthlyActiveUsersPacing = require('./reports/monthly-active-users-pacing')
 const MonthlyReturningUsers = require('./reports/monthly-returning-users')
 const MonthlyReturningUsersByPlatform = require('./reports/monthly-returning-users-by-platform')
 const MonthlyActiveUsersByPlatform = require('./reports/monthly-active-users-by-platform')
@@ -46,7 +47,7 @@ const Downloads = require('./reports/downloads')
 global.init = async function () {
 
   let priorState = null
-  
+
   let storedStateData = await window.localStorage.getItem('pageState')
   if (storedStateData) {
     priorState = JSON.parse(storedStateData)
@@ -57,6 +58,7 @@ global.init = async function () {
     (new WeeklyRetention()),
     (new ThirtyDayRetention()),
     (new MonthlyActiveUsers()),
+    (new MonthlyActiveUsersPacing()),
     (new MonthlyActiveUsersByPlatform()),
     (new MonthlyAverageDailyActiveUsers()),
     (new MonthlyAverageDailyActiveUsersByPlatform()),

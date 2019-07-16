@@ -36,6 +36,10 @@ module.exports = class BaseReportComponent {
     opts = opts || {}
     x_label = x_label || 'Date'
     y_label = y_label || 'Platform'
+    if (typeof opts.legend === 'undefined') {
+      opts.legend = true
+    }
+    opts.legend = !!opts.legend
     opts.valueClamper = opts.valueClamper || _.identity
 
     return (rows) => {
@@ -136,6 +140,9 @@ module.exports = class BaseReportComponent {
           chart.ticks = ticks
         }
       }
+      yaxisOptions.legend = {
+        display: opts.legend
+      }
 
       new Chart.Line(usageChart.getContext('2d'), {
         data: data,
@@ -149,6 +156,7 @@ module.exports = class BaseReportComponent {
     x_label = x_label || 'Date'
     y_label = y_label || 'Platform'
     opts.chartType = opts.chartType || 'line'
+    if (typeof opts.showTotalColumn == 'undefined') opts.showTotalColumn = true
 
     var value_func = function (row, value) {
       var formatter = st
@@ -199,9 +207,12 @@ module.exports = class BaseReportComponent {
           tableHeaderBuffer += `<th>${column}</th>`
           csvHeader.push(column)
         }
-        tableHeaderBuffer += `<th>Total</th></tr>`
+        if (opts.showTotalColumn) {
+          tableHeaderBuffer += `<th>Total</th>`
+          csvHeader.push('Total')
+        }
+        tableHeaderBuffer += '</tr>'
         tableHeader.html(tableHeaderBuffer)
-        csvHeader.push('Total')
         csvRows.push(csvHeader)
 
         table.parent().addClass('table-striped')
@@ -225,8 +236,11 @@ module.exports = class BaseReportComponent {
             buffer += `<td>${value_func(record, record.count)} <small class='text-muted'>${stp(record.count / rowTotal)}</small></td>`
             dataRow.push(record.count)
           }
-          buffer += `<td>${st(rowTotal)}</td></tr>`
-          dataRow.push(rowTotal)
+          if (opts.showTotalColumn) {
+            buffer += `<td>${st(rowTotal)}</td>`
+            dataRow.push(rowTotal)
+          }
+          buffer += '</tr>'
           csvRows.push(dataRow)
         }
         table.append(buffer)
@@ -283,7 +297,6 @@ module.exports = class BaseReportComponent {
       if (opts.growth_rate && rows[0]) {
         let averageGrowthRate = Math.pow(rows[rows.length - 1].count / rows[0].count, 1 / rows.length) - 1
         let averageGrowthRateDesc = 'Math.pow(' + rows[rows.length - 1].count + '/' + rows[0].count + ', 1 / ' + rows.length + ') - 1'
-        console.log(averageGrowthRate)
         table.append(tr([
           td(),
           td(),

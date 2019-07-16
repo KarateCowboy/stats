@@ -40,6 +40,9 @@ module.exports = function (knex) {
       let channelEmailVerified = await this.safeFetch(requestParams, ymd)
       requestParams.url = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/email_verified_signups_per_day'
       let emailVerified = await this.safeFetch(requestParams, ymd)
+      requestParams.url = 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/channel_and_kyc_uphold_and_email_verified_signups_per_day'
+      let kycVerified = await this.safeFetch(requestParams, ymd)
+
       if (endYmd) {
         const start = moment(ymd)
         const end = moment(endYmd)
@@ -51,6 +54,7 @@ module.exports = function (knex) {
             email_channel_and_uphold_verified: this._findInPubResults(channelUpholdVerified, workingYmd),
             email_channel_verified: this._findInPubResults(channelEmailVerified, workingYmd),
             email_verified: this._findInPubResults(emailVerified, workingYmd),
+            kyc_uphold_and_email_verified: this._findInPubResults(kycVerified, workingYmd),
             ymd: workingYmd
           }
           results.push(psd)
@@ -62,6 +66,7 @@ module.exports = function (knex) {
           email_channel_and_uphold_verified: this._findInPubResults(channelUpholdVerified, ymd),
           email_channel_verified: this._findInPubResults(channelEmailVerified, ymd),
           email_verified: this._findInPubResults(emailVerified, ymd),
+          kyc_uphold_and_email_verified: this._findInPubResults(kycVerified, ymd),
           ymd: ymd
         }
         return psd
@@ -69,7 +74,7 @@ module.exports = function (knex) {
     }
 
     static _findInPubResults (collection, ymd) {
-      const findFunc = (i) => { return i[0] === ymd}
+      const findFunc = (i) => { return i[0] === ymd }
       return _.last(_.find(collection, findFunc))
     }
 
@@ -110,23 +115,29 @@ module.exports = function (knex) {
           ymd: this.formattedYmd(),
           count: this.email_verified,
           verificationStatus: 'Verified e-mail'
+        },
+        {
+          ymd: this.formattedYmd(),
+          count: this.kyc_uphold_and_email_verified,
+          verificationStatus: 'KYC and uphold verified'
         }
       ]
     }
 
     static async dailyTotalAgg (lastDay = moment().format('YYYY-MM-DD')) {
-      const dailyTotals = await this.query().where('ymd', '<=', lastDay).orderBy('ymd','asc')
+      const dailyTotals = await this.query().where('ymd', '<=', lastDay).orderBy('ymd', 'asc')
       const aggregatedTotals = []
       dailyTotals.reduce((acc, val) => {
         acc.email_verified += val.email_verified
         acc.email_channel_verified += val.email_channel_verified
         acc.email_channel_and_uphold_verified += val.email_channel_and_uphold_verified
+        acc.kyc_uphold_and_email_verified += val.kyc_uphold_and_email_verified
         acc.ymd = val.ymd
         let newSignupDay = new db.PublisherSignupDay()
         newSignupDay = _.assign(newSignupDay, acc)
         aggregatedTotals.push(newSignupDay)
         return acc
-      }, {email_verified: 0, email_channel_verified: 0, email_channel_and_uphold_verified: 0})
+      }, { email_verified: 0, email_channel_verified: 0, email_channel_and_uphold_verified: 0, kyc_uphold_and_email_verified: 0 })
       return aggregatedTotals
     }
 
@@ -142,7 +153,6 @@ module.exports = function (knex) {
       //   }
       // }
     }
-
   }
 
   return PublisherSignupDay
