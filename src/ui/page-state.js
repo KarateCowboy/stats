@@ -93,6 +93,14 @@ module.exports = class PageState {
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
     })
+
+    $('#crash-ratio-versions').on('change', (evt) => {
+      const target = $(evt.target)
+      this.version = target.val()
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
+
   }
 
   productMenuHandler (evt) {
@@ -136,7 +144,7 @@ module.exports = class PageState {
       platformFilter: this.serializePlatformParams(),
       channelFilter: this.serializeChannelParams(),
       showToday: this.showToday,
-      version: null,
+      version: this.version,
       ref: (this.ref || []).join(','),
       wois: this.wois.join(','),
       countryCodes: this.countryCodes.join(','),

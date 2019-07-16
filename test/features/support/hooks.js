@@ -39,8 +39,7 @@ Before(async function () {
   await test_helper.truncate()
   await server.setup({pg: global.pg_client, mg: global.mongo_client})
   //for chrome
-  const options = {desiredCapabilities: {browserName: 'chrome', 'chromeOptions': {args: ['--headless']}}}
-
+  const options = {desiredCapabilities: {browserName: 'chrome', 'chromeOptions': {args: []}}}
   //keep around for testing with firefox
   //const options = {desiredCapabilities: {browserName: 'firefox', 'moz:firefoxOptions': {args: ['-headless']}}}
   global.browser = webdriver.remote(options)

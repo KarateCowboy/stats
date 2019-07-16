@@ -1,5 +1,6 @@
 const BaseReportComponent = require('../base-report-component')
 const $ = require('jquery')
+const {round} = require('../builders')
 
 class TopCrashReasons extends BaseReportComponent {
   constructor () {
@@ -13,6 +14,9 @@ class TopCrashReasons extends BaseReportComponent {
     this.contentTagId = 'topCrashContent'
     this.menuConfig.showWOISFilter = false
     this.menuConfig.showCountryCodeFilter = false
+    this.menuConfig.showMobile = false
+    this.menuConfig.showMuon = false
+    this.menuConfig.showRefFilter = false
 
   }
 
@@ -20,6 +24,7 @@ class TopCrashReasons extends BaseReportComponent {
     let results
     try {
       results = await $.ajax('/api/1/crash_reports?' + $.param(this.app.pageState.standardParams()))
+      console.log(results)
       this.handler(results)
     } catch (e) {
       console.log(`Error running retriever for ${this.title}`)
@@ -31,8 +36,8 @@ class TopCrashReasons extends BaseReportComponent {
     let table = $('#top-crash-table tbody')
     table.empty()
     const sum = _.reduce(rows, function (memo, row) { return memo + parseInt(row.total) }, 0)
-    rows.forEach(function (row) {
-      let params = [row.platform, row.version, pageState.days, encodeURIComponent(row.crash_reason), row.cpu, encodeURIComponent(row.signature)].join('/')
+    rows.forEach((row) => {
+      let params = [row.platform, row.version, this.app.pageState.days, encodeURIComponent(row.crash_reason), row.cpu, encodeURIComponent(row.signature)].join('/')
       let buf = '<tr>'
       let percentage = round(row.total / sum * 100, 1)
       buf = buf + '<td class="text-right"><a href="#crash_list/' + params + '">' + row.total + '</a><br/><span class="ago">' + percentage + '%</span></td>'
@@ -44,6 +49,8 @@ class TopCrashReasons extends BaseReportComponent {
       table.append(buf)
     })
     $(`#${this.contentTagId}`).show()
+    $('#crash-detail').hide()
+    $('#crash-list-table').hide()
   }
 }
 
