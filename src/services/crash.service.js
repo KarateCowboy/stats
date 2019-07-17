@@ -1,5 +1,6 @@
 const ElasticSearch = require('elasticsearch')
 const AWS = require('aws-sdk')
+const { PromiseQueue } = require('../amqpc')
 
 class CrashExpirationService {
   constructor () {
@@ -32,10 +33,26 @@ class CrashExpirationService {
       }).promise()
 
       await knex('dtl.crashes').where('id', crash.id).delete()
-      await this.elasticClient.delete({id: crash.id, type: 'crash', index: 'crashes'})
+      await this.elasticClient.delete({ id: crash.id, type: 'crash', index: 'crashes' })
     } catch (e) {
       console.log(`Error deleting crash with id ${crash.id}`)
       console.log(`   Message: ${e.message}`)
+    }
+  }
+
+  async queueExpiration (crash) {
+    const expirationQueue = 'crash-expiration'
+    try {
+      const amqp = new PromiseQueue()
+      const channel = await amqp.setup(expirationQueue)
+      await channel.sendToQueue(expirationQueue,
+        Buffer.from(JSON.stringify(crash)),
+        { persistent: true })
+    } catch (e) {
+      console.log('Error sending crash to crash-expiration queue')
+      console.log(e.message)
+      console.dir(crash)
+      throw e
     }
   }
 }

@@ -5,11 +5,17 @@ const CrashExpirationService = require('../src/services/crash.service')
 const commander = require('commander')
 
 class ExpireCrash extends Script {
-  async run(){
+  async run () {
     await this.setup()
-    commander.option('-i, --id [id]', '24 char id of the crash to delete').parse(process.argv)
+    commander.option('-i, --id [id]', '24 char id of the crash to delete')
+      .option('-q, --queue', 'Queue with RabbitMQ rather than attempt immediately via script')
+      .parse(process.argv)
     const service = new CrashExpirationService()
-    await service.expire({ id: commander.id })
+    if (commander.queue) {
+      await service.queueExpiration({ id: commander.id })
+    } else {
+      await service.expire({ id: commander.id })
+    }
 
     await this.shutdown()
   }
