@@ -3,6 +3,7 @@
  *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+/* global db */
 
 const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
@@ -21,14 +22,14 @@ const define = () => {
     ref: () => { return db.ReferralCode.randomCodeText() }
   })
   factory.extend('fc_usage', 'linux-core-fcusage', {
-      ymd: () => moment().subtract(1, 'months').format(),
-      platform: 'linux-bc',
-      version: '67.12.34',
-      channel: 'dev',
-      first_time: true,
-      total: 200,
-      ref: () => { return db.ReferralCode.randomCodeText() }
-    }
+    ymd: () => moment().subtract(1, 'months').format(),
+    platform: 'linux-bc',
+    version: '67.12.34',
+    channel: 'dev',
+    first_time: true,
+    total: 200,
+    ref: () => { return db.ReferralCode.randomCodeText() }
+  }
   )
 }
 

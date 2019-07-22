@@ -51,7 +51,13 @@ describe('UsageSummary model', async function () {
         let refs = _.range(1, 101).map((u) => {
           return _.random(100000, 999999).toString()
         })
-        fixture_params = fixture_params.concat(_.uniq(refs).map((u) => { return {ymd: ymd, ref: u, version: version} }))
+        fixture_params = fixture_params.concat(_.uniq(refs).map((u) => {
+          return {
+            ymd: ymd,
+            ref: u,
+            version: version
+          }
+        }))
       })
       const usage_summaries = await factory.createMany('fc_usage', fixture_params)
       const DAU_VERSION = `SELECT
@@ -79,7 +85,7 @@ ORDER BY FC.ymd DESC, FC.version`
       expect(oldResults.length).to.equal(newResults.length, 'old and new results should return the same number of rows')
 
       oldResults.forEach(old => {
-        const newer = _.find(newResults, {ymd: old.ymd, version: old.version})
+        const newer = _.find(newResults, { ymd: old.ymd, version: old.version })
         expect(newer).to.not.equal(null)
         expect(newer.count).to.equal(old.count, 'the counts should be equal')
       })
@@ -179,7 +185,7 @@ ORDER BY ymd DESC
 `
       await factory.createMany('fc_usage', ymds)
       const queryResults = await pg_client.query(DAU, ['20 days', platforms, channels, ref])
-      const ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 20, platforms: platforms, channels, ref})
+      const ormResults = await db.UsageSummary.dailyActiveUsers({ daysAgo: 20, platforms: platforms, channels, ref })
       expect(queryResults.rows).to.have.property('length', ymds.length)
       expect(ormResults.rows).to.have.property('length', ymds.length)
       const querySample = queryResults.rows[0]
@@ -190,9 +196,9 @@ ORDER BY ymd DESC
     })
     it('appends the ref argument optionally', async function () {
       await factory.createMany('fc_usage', ymds)
-      let ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 20, platforms: platforms, channels})
+      let ormResults = await db.UsageSummary.dailyActiveUsers({ daysAgo: 20, platforms: platforms, channels })
       expect(ormResults.rows).to.have.property('length', ymds.length)
-      ormResults = await db.UsageSummary.dailyActiveUsers({daysAgo: 20, platforms: platforms, channels, ref: []})
+      ormResults = await db.UsageSummary.dailyActiveUsers({ daysAgo: 20, platforms: platforms, channels, ref: [] })
       expect(ormResults.rows).to.have.property('length', ymds.length)
     })
     context('group by', async function () {
@@ -222,9 +228,9 @@ ORDER BY ymd DESC
     })
     it('includes and groups by platform, ymd, version, and accurate count', async function () {
       const yesterday = moment().subtract(1, 'days')
-      await factory.create('fc_usage', {ymd: yesterday.format('YYYY-MM-DD')})
-      await factory.create('fc_usage', {ymd: yesterday.format('YYYY-MM-DD')})
-      await factory.create('fc_usage', {ymd: yesterday.format('YYYY-MM-DD')})
+      await factory.create('fc_usage', { ymd: yesterday.format('YYYY-MM-DD') })
+      await factory.create('fc_usage', { ymd: yesterday.format('YYYY-MM-DD') })
+      await factory.create('fc_usage', { ymd: yesterday.format('YYYY-MM-DD') })
       const dauQuery = db.UsageSummary.basicDau()
       dauQuery.where('ymd', yesterday.format('YYYY-MM-DD'))
       const result = await dauQuery
@@ -236,11 +242,11 @@ ORDER BY ymd DESC
     describe('dauCampaign', async function () {
       context('columns/attributes returned', async function () {
         beforeEach(async function () {
-          const attrs = _.range(0, 10).map((i) => { return {ymd: moment().subtract(i, 'days').format('YYYY-MM-DD')}})
+          const attrs = _.range(0, 10).map((i) => { return { ymd: moment().subtract(i, 'days').format('YYYY-MM-DD') }})
           await factory.createMany('fc_usage', attrs)
         })
         it('includes the campaign, ymd, and count', async function () {
-          const results = await db.UsageSummary.dauCampaign({daysAgo: 10})
+          const results = await db.UsageSummary.dauCampaign({ daysAgo: 10 })
           expect(_.every(results, ['ymd', 'campaign', 'count'])).to.equal(true)
         })
       })
@@ -250,5 +256,15 @@ ORDER BY ymd DESC
     // context('dnuCampaign')
     // context('druCampaign')
 
+  })
+  describe('relations', async function () {
+    specify('belongs to release', async function () {
+      const release = await factory.build('release')
+      const usageSummary = await factory.build('linux-core-fcusage', { version: release.braveVersion })
+      await db.UsageSummary.query().insert(usageSummary)
+      await db.Release.query().insert(release)
+      const fetchedRelease = await usageSummary.$relatedQuery('release')
+      expect(fetchedRelease.id).to.equal(release.id)
+    })
   })
 })

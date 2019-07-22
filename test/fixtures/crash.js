@@ -77,7 +77,7 @@ const define = () => {
       'ts': () => { return '14311029860' },
       '_id': '5cdb5b07342004001f6e6ea6',
       'pid': '15901',
-      'ver': '67.67.33.11',
+      'ver': () => { return `0.${_.random(50, 99)}.${_.random(10, 99)}.${_.random(10, 99)}` },
       'prod': 'Brave',
       'ptime': '141620562',
       'ptype': 'browser',

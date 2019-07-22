@@ -4,17 +4,16 @@ module.exports = function (knex) {
   Model.knex(knex)
 
   class BaseModel extends Model {
-    $beforeInsert() {
+    $beforeInsert () {
       const { error, value } = this.validate()
-      if(error !== null){
+      if (error !== null) {
         throw new Error(error.message)
       }
     }
-    validate(){
+    validate () {
       const json_format = this.toJSON()
       return Joi.validate(json_format, this.schema )
     }
-
   }
 
   return BaseModel
