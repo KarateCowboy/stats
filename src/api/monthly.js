@@ -43,7 +43,6 @@ select
 from dw.fc_usage_month
 where
   ymd >= date_trunc('month', current_date)::date - '4 months'::interval and
-  to_char(ymd, 'DD') <= to_char(current_date, 'DD') AND
   platform = ANY ($1) AND
   channel = ANY ($2) AND
   ref = ANY(COALESCE($3, ARRAY[ref])) AND
@@ -186,13 +185,21 @@ exports.setup = (server, client, mongo) => {
       let monthSum = 0
       let monthControl = ''
       let finalRows = []
+      let lastDay = 31, lastMonth
       for (let row of results.rows) {
         let [month, day] = row.month_day.split('-')
         if (monthControl !== month) {
+          let fillDay = 31
+          while (fillDay > lastDay) {
+            finalRows.push({ month: lastMonth, day: fillDay.toString(), count: monthSum })
+            fillDay -= 1
+          }
           monthSum = 0
           monthControl = month
         }
         monthSum += parseInt(row.total)
+        lastDay = day
+        lastMonth = month
         finalRows.push({
           month,
           day,
