@@ -104,7 +104,8 @@ module.exports = class BaseReportComponent {
             data: dataset,
             borderColor: colourer(idx, 1),
             pointColor: colourer(idx, 0.5),
-            backgroundColor: colourer(idx, 0.05)
+            backgroundColor: colourer(idx, 0.05),
+            spanGaps: false
           }
         })
       }
@@ -361,7 +362,11 @@ module.exports = class BaseReportComponent {
       ys.forEach(function (platform) {
         var dataset = []
         labels.forEach(function (label) {
-          dataset.push(product[label][platform] || 0)
+          if (opts.allowNaN) {
+            dataset.push(product[label][platform])
+          } else {
+            dataset.push(product[label][platform] || 0)
+          }
         })
         datasets.push(dataset)
       })
