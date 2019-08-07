@@ -174,12 +174,13 @@ describe('crud endpoints', async function () {
       params.url += `?version=${release.braveVersion}`
       // execution
       let response = await server.inject(params)
-      let payload = _.sortBy(JSON.parse(response.payload), 'name')
+      let payload = _.sortBy(JSON.parse(response.payload), 'version')
 
       // validation
       expect(payload[0]).to.have.property('version', usage.version)
       expect(payload[0]).to.have.property('platform', usage.platform)
       expect(payload[0]).to.have.property('total', usage.total)
+      expect(payload[0]).to.have.property('chromium_version', release.chromium_version)
       // expect(payload[0]).to.have.property('crashes', sampleCrashes.length)
       expect(payload[0]).to.have.property('crash_rate', payload[0].crashes / payload[0].total)
     })

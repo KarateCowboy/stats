@@ -62,8 +62,9 @@ const CRASH_REPORTS_SIGNATURE = `
 `
 
 const CRASH_RATIO = `
-    SELECT version, platform, crashes, total, crashes / total AS crash_rate
+    SELECT version, chromium_version, platform, crashes, total, crashes / total AS crash_rate
     FROM (SELECT version,
+                 chromium_version,
                  platform,
                  SUM(crashes) as crashes,
                  SUM(usage)   as total
@@ -72,7 +73,8 @@ const CRASH_RATIO = `
             AND platform = ANY ($2)
             AND version = COALESCE($3, version)
           GROUP BY version,
-                   platform
+                   platform,
+                   chromium_version
           HAVING SUM(usage) > 50) CR
     ORDER BY version DESC, crashes / total DESC
 `

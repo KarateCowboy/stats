@@ -49,6 +49,7 @@ class CrashRatios extends BaseReportComponent {
       let buf = '<tr>'
       buf = buf + '<td class="text-right"><a href="#crash_ratio_list/' + params + '">' + round(row.crash_rate * 100, 1) + '</a></td>'
       buf = buf + '<td class="text-left">' + row.version + '</td>'
+      buf = buf + '<td class="text-left">' + row.chromium_version + '</td>'
       buf = buf + '<td class="text-left">' + row.platform + '</td>'
       buf = buf + '<td class="text-right">' + row.crashes + '</td>'
       buf = buf + '<td class="text-right">' + row.total + '</td>'

@@ -1,9 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* global db */
-
-const _ = require('lodash')
+/* global db, knex */
 
 exports.setup = (server, client, mongo) => {
   // Crash reports
@@ -29,7 +27,7 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/releases',
     handler: async function (request, h) {
       try {
-        const releases = await db.Release.query().orderBy('brave_version')
+        const releases = await knex('dtl.releases').distinct('brave_version').orderBy('brave_version', 'desc')
         return (releases.map(i => { return { brave_version: i.brave_version } }))
       } catch (e) {
         console.log(e)

@@ -8,6 +8,7 @@ exports.up = async function (knex, Promise) {
 select
   CRS.ymd,
   CRS.version,
+  CRS.chromium_version,
   CRS.platform,
   crashes,
   total as usage,
@@ -16,6 +17,7 @@ from
 ( select
   sp.to_ymd((contents->>'year_month_day'::text)) AS ymd,
   dtl.releases.brave_version as version,
+  dtl.releases.chromium_version as chromium_version,
   sp.canonical_platform(
     COALESCE(contents->>'platform', 'unknown'),
     COALESCE(contents->'metadata'->>'cpu', 'unknown')
@@ -28,6 +30,7 @@ WHERE
 group by
   sp.to_ymd((contents->>'year_month_day'::text)),
   dtl.releases.brave_version,
+  dtl.releases.chromium_version,
   sp.canonical_platform(
     COALESCE(contents->>'platform', 'unknown'),
     COALESCE(contents->'metadata'->>'cpu', 'unknown')
