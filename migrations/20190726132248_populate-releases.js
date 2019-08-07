@@ -1,8 +1,6 @@
-const DbUtil = require('../src/models')
 const _ = require('lodash')
 
 exports.up = async function (knex) {
-  const db = new DbUtil(process.env.DATABASE_URL)
   const data = [['0.50.13', '67.0.3396.103'],
     ['0.50.14', '67.0.3396.103'],
     ['0.53.0', '68.0.3440.68'],
@@ -958,10 +956,6 @@ exports.up = async function (knex) {
   ]
   for (let release of data) {
     await knex('dtl.releases').insert({ 'brave_version': release[0], 'chromium_version': release[1] })
-  }
-  const crashVersions = _.uniq(await knex('dtl.crashes').select(knex.raw('contents->>\'ver\'')))
-  for (let version of crashVersions) {
-    await db.Release.query().insert({ chromium_version: version })
   }
 }
 

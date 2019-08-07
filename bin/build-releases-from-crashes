@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* global db, knex */
+
+const Script = require('./script')
+const _ = require('lodash')
+const path = require('path')
+const ProgressBar = require('smooth-progress')
+
+class BuildReleasesScript extends Script {
+  async run () {
+    await this.setup('build-releases-from-crashes')
+
+    const crashes = await knex('dtl.crashes').where(knex.raw('contents->>\'ver\' ~ \'^[0-9]+\\.[0-9]+\\.[0-9]{2,2}\\.\'')).distinct(knex.raw('contents->>\'ver\''))
+    const bar = ProgressBar({
+      tmpl: `Aggregating ${crashes.length} ... :bar :percent :eta`,
+      width: 100,
+      total: crashes.length
+    })
+    for (let crash of crashes) {
+      let releaseAttrs = {
+        chromium_version: _.values(crash)[0]
+      }
+      await db.Release.query().insert(releaseAttrs)
+
+      bar.tick(1)
+    }
+
+    await this.shutdown()
+  }
+}
+
+const buildReleasesScript = new BuildReleasesScript(path.basename(__filename))
+
+buildReleasesScript.run()

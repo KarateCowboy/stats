@@ -36,8 +36,4 @@ describe('dw.fc_crashes_dau_mv', async function () {
       expect(fetchedDau.crash_rate).to.contain('0.0001')
     })
   })
-  describe('included subdata', async function () {
-    specify('includes usage data with no crashes', async function () {
-    })
-  })
 })

@@ -6,7 +6,7 @@ exports.up = async function (knex, Promise) {
   await knex.schema.withSchema('dtl').createTable('releases', async (table) => {
     table.increments('id')
     table.string('chromium_version')
-    table.string('brave_version').unique()
+    table.string('brave_version')
     table.boolean('uses_hybrid_format').default(false)
     table.timestamps(true, true)
   })
