@@ -38,6 +38,7 @@ group by
   GROUP BY ymd, version, platform
 ) USG ON CRS.ymd = USG.ymd AND CRS.version = USG.version AND CRS.platform = USG.platform
 WHERE total > 10
+ORDER BY total desc
 ;`
   await knex.raw(QUERY)
 }
