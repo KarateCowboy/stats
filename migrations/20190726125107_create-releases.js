@@ -9,6 +9,7 @@ exports.up = async function (knex, Promise) {
     table.string('brave_version')
     table.boolean('uses_hybrid_format').default(false)
     table.timestamps(true, true)
+    table.unique(['chromium_version', 'brave_version'])
   })
 }
 
