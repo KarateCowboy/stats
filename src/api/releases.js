@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* global db */
 
 const _ = require('lodash')
 
@@ -19,6 +20,19 @@ exports.setup = (server, client, mongo) => {
         })
         return newRelease.toJSON()
       } catch (e) {
+        return h.response(e.toString()).code(500)
+      }
+    }
+  })
+  server.route({
+    method: 'GET',
+    path: '/api/1/releases',
+    handler: async function (request, h) {
+      try {
+        const releases = await db.Release.query().orderBy('brave_version')
+        return (releases.map(i => { return { brave_version: i.brave_version } }))
+      } catch (e) {
+        console.log(e)
         return h.response(e.toString()).code(500)
       }
     }

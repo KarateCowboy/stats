@@ -35,7 +35,7 @@ class CrashRatios extends BaseReportComponent {
   async handler (rows = []) {
     let crashVersionResults = []
     try {
-      crashVersionResults = await $.ajax('/api/1/versions') //?' + $.param(this.app.pageState.standardParams()))
+      crashVersionResults = await $.ajax('/api/1/releases')
       this.crashVersionHandler(crashVersionResults)
     } catch (e) {
       console.log(`Error fetching crash versions from API`)
@@ -65,11 +65,11 @@ class CrashRatios extends BaseReportComponent {
     s.empty()
     s.append('<option value="">All</option>')
     for (let row of rows) {
-      let buf = `<option value="${row.num}" `
-      if (this.app.pageState.version === row.num) {
+      let buf = `<option value="${row.brave_version}" `
+      if (this.app.pageState.version === row.brave_version) {
         buf = buf + 'SELECTED'
       }
-      buf = buf + '>' + row.num + '</option>'
+      buf = buf + '>' + row.brave_version + '</option>'
       s.append(buf)
     }
   }
