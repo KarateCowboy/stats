@@ -21,7 +21,7 @@ module.exports = function () {
       platform: {
         type: Schema.Types.String,
         validate: {
-          validator: function (v) { return ['osx-bc', 'linux-bc', 'winia32-bc', 'winx64-bc'].includes(v) }
+          validator: function (v) { return ['osx-bc', 'linux-bc', 'winia32-bc', 'winx64-bc', 'android-bc'].includes(v) }
         }
       },
       channel: {

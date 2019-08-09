@@ -22,12 +22,13 @@ module.exports = class PageState {
       'osx-bc': true,
       'winx64-bc': true,
       'winia32-bc': true,
-      'linux-bc': true
+      'linux-bc': true,
+      'android-bc': true
     }
     this.productPlatforms = {
       muon: ['winx64', 'winia32', 'osx', 'linux'],
       core: ['winx64-bc', 'winia32-bc', 'osx-bc', 'linux-bc'],
-      mobile: ['androidbrowser', 'ios', 'android']
+      mobile: ['androidbrowser', 'ios', 'android', 'android-bc']
     }
     this.channelFilter = {
       'dev': true,

@@ -74,7 +74,7 @@ Then(/^I should see the "([^"]*)" MAU for the prior month on winx64\-bc$/, async
 })
 
 Given(/^there is complete monthly usage data in the tables$/, async function () {
-  const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc']
+  const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc', 'android-bc']
   const today = moment()
   for (let platform of platforms) {
     const usages = await factory.createMany('fc_usage_month', _.range(1, 91).map((i) => {

@@ -29,7 +29,7 @@ module.exports = function () {
       type: Schema.Types.String,
       required: true,
       validate: {
-        validator: function (v) { return ['osx-bc', 'linux-bc', 'winia32-bc', 'winx64-bc'].includes(v) }
+        validator: function (v) { return ['osx-bc', 'linux-bc', 'winia32-bc', 'winx64-bc', 'android-bc'].includes(v) }
       }
     },
     version: {

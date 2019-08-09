@@ -51,7 +51,8 @@
       'android': 5,
       'Link Bubble': 5,
       'androidbrowser': 5,
-      'Android Browser': 5
+      'Android Browser': 5,
+      'android-bc': 5
     }[label] || 0, opacity)
   }
 

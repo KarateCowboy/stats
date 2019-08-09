@@ -9,5 +9,6 @@
   "ios",
   "winia32-bc",
   "unknown",
-  "linux-bc"
+  "linux-bc",
+  "android-bc"
 ]
