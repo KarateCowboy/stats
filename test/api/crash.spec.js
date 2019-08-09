@@ -206,7 +206,6 @@ describe('crud endpoints', async function () {
       expect(payload[0]).to.have.property('crash_rate', payload[0].crashes / payload[0].total)
     })
     it('filters channels', async function () {
-      await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_crashes_dau_mv')
       params.url += `?channelFilter=stable`
       // execution
       let response = await server.inject(params)
@@ -214,6 +213,16 @@ describe('crud endpoints', async function () {
 
       // validation
       expect(payload[0].crashes).to.equal(stableCrashes.length)
+    })
+    it('filters by version', async function () {
+      params.url += `?version=${stableUsage.version}`
+      // execution
+      let response = await server.inject(params)
+      let payload = JSON.parse(response.payload)
+
+      // validation
+      expect(payload[0].crashes).to.equal(stableCrashes.length)
+      expect(payload).to.have.property('length', 1)
     })
   })
   describe('crash_reports', async function () {
@@ -279,5 +288,6 @@ describe('crud endpoints', async function () {
       expect(payload).to.have.property('length', 1)
       expect(payload[0].channel).to.equal('dev')
     })
+
   })
 })
