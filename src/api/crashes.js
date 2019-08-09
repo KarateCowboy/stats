@@ -4,14 +4,10 @@
 
 /* global pg_client, db */
 
-var _ = require('underscore')
-var Joi = require('joi')
-
 var retriever = require('../retriever')
 var crash = require('../crash')
 var mini = require('../mini')
 var common = require('./common')
-const moment = require('moment')
 
 const CRASHES_PLATFORM_VERSION = `
     SELECT TO_CHAR(FC.ymd, 'YYYY-MM-DD')                                                                       AS ymd,
@@ -72,6 +68,7 @@ const CRASH_RATIO = `
           WHERE ymd >= current_date - cast($1 AS interval)
             AND platform = ANY ($2)
             AND version = COALESCE($3, version)
+            AND channel = ANY ($4)
           GROUP BY version,
                    platform,
                    chromium_version
@@ -281,9 +278,10 @@ exports.setup = (server, client, mongo) => {
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let version = request.query.version || null
+      let channels = common.channelPostgresArray(request.query.channelFilter)
 
       try {
-        const results = await pg_client.query(CRASH_RATIO, [days, platforms, version])
+        const results = await pg_client.query(CRASH_RATIO, [days, platforms, version, channels])
         results.rows.forEach((row) => {
           row.crashes = parseInt(row.crashes)
           row.total = parseInt(row.total)
@@ -291,6 +289,7 @@ exports.setup = (server, client, mongo) => {
         })
         return (results.rows)
       } catch (err) {
+        console.dir(err, { colors: true })
         return h.response(err.toString()).code(500)
       }
     }

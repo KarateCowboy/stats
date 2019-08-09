@@ -1,9 +1,9 @@
-/* global describe, specify, beforeEach, it, context, expect, factory, db, pg_client, mongo_client, knex */
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+/* global describe, specify, beforeEach, it, context, expect, factory, db, pg_client, mongo_client, knex */
 
 require('../test_helper')
 const _ = require('lodash')
@@ -145,12 +145,14 @@ describe('crud endpoints', async function () {
     })
   })
   describe('crash_ratios', async function () {
-    let sampleCrashes, server, usages, release, usage
+    let sampleCrashes, server, release, usage
+    let stableCrashes, stableRelease, stableUsage
     beforeEach(async function () {
       // setup
       usage = await factory.create('linux-core-fcusage', {
         total: 10000,
-        ymd: moment().subtract(2, 'days').format('YYYY-MM-DD')
+        ymd: moment().subtract(2, 'days').format('YYYY-MM-DD'),
+        channel: 'dev'
       })
       await db.UsageSummary.query().insert(usage)
 
@@ -163,9 +165,29 @@ describe('crud endpoints', async function () {
       sampleCrashes.forEach((c) => {
         c.contents.year_month_day = usage.ymd
         c.contents.ver = release.chromiumVersion
+        c.contents.channel = usage.channel
       })
 
       await db.Crash.query().insert(sampleCrashes)
+
+      stableUsage = await factory.create('linux-core-fcusage', {
+        total: 10000,
+        channel: 'stable',
+        ymd: moment().subtract(2, 'days').format('YYYY-MM-DD')
+      })
+      await db.UsageSummary.query().insert(stableUsage)
+
+      stableRelease = await factory.build('release', { brave_version: stableUsage.version })
+      await db.Release.query().insert(stableRelease)
+      stableCrashes = await factory.buildMany('linux-crash', 500)
+
+      stableCrashes.forEach((c) => {
+        c.contents.year_month_day = stableUsage.ymd
+        c.contents.ver = stableRelease.chromiumVersion
+        c.contents.channel = stableUsage.channel
+      })
+
+      await db.Crash.query().insert(stableCrashes)
 
       await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_crashes_dau_mv')
       server = await main.setup({ pg: pg_client, mg: mongo_client })
@@ -181,8 +203,17 @@ describe('crud endpoints', async function () {
       expect(payload[0]).to.have.property('platform', usage.platform)
       expect(payload[0]).to.have.property('total', usage.total)
       expect(payload[0]).to.have.property('chromium_version', release.chromium_version)
-      // expect(payload[0]).to.have.property('crashes', sampleCrashes.length)
       expect(payload[0]).to.have.property('crash_rate', payload[0].crashes / payload[0].total)
+    })
+    it('filters channels', async function () {
+      await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_crashes_dau_mv')
+      params.url += `?channelFilter=stable`
+      // execution
+      let response = await server.inject(params)
+      let payload = JSON.parse(response.payload)
+
+      // validation
+      expect(payload[0].crashes).to.equal(stableCrashes.length)
     })
   })
   describe('crash_reports', async function () {
