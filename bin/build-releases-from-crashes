@@ -25,8 +25,14 @@ class BuildReleasesScript extends Script {
       let releaseAttrs = {
         chromium_version: _.values(crash)[0]
       }
-      await db.Release.query().insert(releaseAttrs)
-
+      try {
+        await db.Release.query().insert(releaseAttrs)
+      } catch (err) {
+        const errString = err.toString()
+        if (errString.includes('duplicate key value violates') === false) {
+          throw err
+        }
+      }
       bar.tick(1)
     }
 
