@@ -22,7 +22,21 @@ module.exports = (knex) => {
     }
 
     static basicDau () {
-      return this.query().select('ymd', 'platform', 'version').sum({count: 'total'}).groupBy('ymd', 'platform', 'version')
+      return this.query().select('ymd', 'platform', 'version').sum({ count: 'total' }).groupBy('ymd', 'platform', 'version')
+    }
+
+    static get relationMappings () {
+      return {
+        release: {
+          relation: BaseModel.BelongsToOneRelation,
+          modelClass: db.Release,
+          join: {
+            from: 'dw.fc_usage.version',
+            to: 'dtl.releases.brave_version'
+          }
+        }
+      }
+
     }
   }
 
@@ -89,7 +103,7 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
 
   UsageSummary.dailyActiveUsers = async function (args, group = []) {
     const tableName = args.common ? 'dw.fc_agg_usage_daily' : 'dw.fc_usage'
-    const query = knex(tableName).select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
+    const query = knex(tableName).select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({ count: 'total' })
       .where('ymd', '>=', moment().subtract(args.daysAgo, 'days').format('YYYY-MM-DD'))
       .whereIn('channel', args.channels)
       .whereIn('platform', args.platforms)
@@ -113,7 +127,7 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
         query.select('version').groupBy('version')
       }
       const results = await pg_client.query(query.toString())
-      results.rows.forEach(r => { r.daily_percentage = (_.toNumber(r.count) / _.toNumber(_.find(day_totals.rows, {'ymd': r.ymd}).count)) * 100 })
+      results.rows.forEach(r => { r.daily_percentage = (_.toNumber(r.count) / _.toNumber(_.find(day_totals.rows, { 'ymd': r.ymd }).count)) * 100 })
       return results
     } else {
       return await pg_client.query(query.toString())
@@ -122,7 +136,7 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
 
   UsageSummary.dailyNewUsers = async function (args, group = []) {
     const tableName = args.common ? 'dw.fc_agg_usage_daily' : 'dw.fc_usage'
-    const query = knex(tableName).select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({count: 'total'})
+    const query = knex(tableName).select(knex.raw(`TO_CHAR(ymd, 'YYYY-MM-DD') as ymd`)).sum({ count: 'total' })
       .where('ymd', '>=', moment().subtract(args.daysAgo, 'days').format('YYYY-MM-DD'))
       .where('first_time', true)
       .whereIn('channel', args.channels)
@@ -147,7 +161,7 @@ ORDER BY USAGE.ymd DESC, USAGE.platform
         query.select('version').groupBy('version')
       }
       const results = await pg_client.query(query.toString())
-      results.rows.forEach(r => { r.daily_percentage = (_.toNumber(r.count) / _.toNumber(_.find(day_totals.rows, {'ymd': r.ymd}).count)) * 100 })
+      results.rows.forEach(r => { r.daily_percentage = (_.toNumber(r.count) / _.toNumber(_.find(day_totals.rows, { 'ymd': r.ymd }).count)) * 100 })
       return results
     } else {
       return await pg_client.query(query.toString())

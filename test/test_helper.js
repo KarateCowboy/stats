@@ -37,7 +37,8 @@ const fixtures = {
   platform: require('./fixtures/platform'),
   channel: require('./fixtures/channel'),
   crash: require('./fixtures/crash'),
-  version: require('./fixtures/version')
+  version: require('./fixtures/version'),
+  release: require('./fixtures/release')
 }
 
 class TestHelper {
@@ -101,7 +102,9 @@ class TestHelper {
         ['platforms', 'delete'],
         ['channels', 'delete'],
         ['publisher_platforms', 'delete'],
-        'versions'
+        'versions',
+        'releases',
+        'release_crashes'
       ]
     }
     this.materialized_views = {

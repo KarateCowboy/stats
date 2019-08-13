@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var _ = require('underscore')
-var Joi = require('joi')
+/* global pg_client, db */
 
 var retriever = require('../retriever')
 var crash = require('../crash')
@@ -25,7 +24,7 @@ const CRASHES_PLATFORM_VERSION = `
     GROUP BY FC.ymd, FC.platform || ' ' || FC.version
     ORDER BY FC.ymd DESC, FC.platform || ' ' || FC.version
 `
-//~ 
+// ~
 const CRASH_REPORTS_SIGNATURE = `
 
     SELECT version,
@@ -59,19 +58,22 @@ const CRASH_REPORTS_SIGNATURE = `
 `
 
 const CRASH_RATIO = `
-    SELECT version, platform, crashes, total, crashes / total AS crash_rate
+    SELECT version, chromium_version, platform, crashes, total, crashes / total AS crash_rate
     FROM (SELECT version,
+                 chromium_version,
                  platform,
                  SUM(crashes) as crashes,
-                 SUM(total)   as total
+                 SUM(usage)   as total
           FROM dw.fc_crashes_dau_mv
           WHERE ymd >= current_date - cast($1 AS interval)
             AND platform = ANY ($2)
             AND version = COALESCE($3, version)
+            AND channel = ANY ($4)
           GROUP BY version,
-                   platform
-          HAVING SUM(total) > 50) CR
-    ORDER BY sp.comparable_version(version) DESC, crashes / total DESC
+                   platform,
+                   chromium_version
+          HAVING SUM(usage) > 50) CR
+    ORDER BY version DESC, crashes / total DESC
 `
 
 const CRASH_REPORT_DETAILS_PLATFORM_VERSION = `
@@ -171,9 +173,12 @@ const CRASHES_PLATFORM = `
     FROM dtl.crashes C
     WHERE sp.to_ymd((contents ->> 'year_month_day'::text)) >= current_date - CAST($1 as INTERVAL)
       AND C.contents ->> 'channel' = ANY ($2)
-      AND C.contents ->> 'platform' = ANY ($3)
-      AND C.contents ->> 'ver' ~ '^[0-9]+\.[0-9]+\.[0-9]+'
-      AND C.contents->>'ver' ~ '^[6789]{1,1}[0-9]{1,1}.[0-9]+'
+      AND sp.canonical_platform(C.contents ->> 'platform', C.contents->'metadata'->>'cpu') = ANY ($3)
+      AND C.contents->> 'ver' ~ '^[0-9]+\.[0-9]+\.[0-9]+'
+      AND C.contents->>'ver' ~ '^[0-9]{1,2}\.[0-9]{1,4}\.[0-9]+'
+      AND c.contents->>'ver' NOT LIKE '0.2%'
+      AND C.contents->>'ver' NOT LIKE '0.3%'
+      AND C.contents->>'ver' NOT LIKE '0.4%'
     GROUP BY ymd, platform
     ORDER BY ymd, platform`
 
@@ -207,7 +212,7 @@ exports.setup = (server, client, mongo) => {
     handler: async (request, h) => {
       let days = parseInt(request.query.days || 7, 10)
       days += ' days'
-      let platforms = db.Crash.mapPlatformFilters(common.platformPostgresArray(request.query.platformFilter))
+      let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
       try {
         const results = await client.query(CRASHES_PLATFORM, [days, channels, platforms])
@@ -273,13 +278,20 @@ exports.setup = (server, client, mongo) => {
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let version = request.query.version || null
-      const results = await pg_client.query(CRASH_RATIO, [days, platforms, version])
-      results.rows.forEach((row) => {
-        row.crashes = parseInt(row.crashes)
-        row.total = parseInt(row.total)
-        row.crash_rate = parseFloat(row.crash_rate)
-      })
-      return (results.rows)
+      let channels = common.channelPostgresArray(request.query.channelFilter)
+
+      try {
+        const results = await pg_client.query(CRASH_RATIO, [days, platforms, version, channels])
+        results.rows.forEach((row) => {
+          row.crashes = parseInt(row.crashes)
+          row.total = parseInt(row.total)
+          row.crash_rate = parseFloat(row.crash_rate)
+        })
+        return (results.rows)
+      } catch (err) {
+        console.dir(err, { colors: true })
+        return h.response(err.toString()).code(500)
+      }
     }
   })
 

@@ -3,21 +3,23 @@
  *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+/* global db */
 
 const FactoryGirl = require('factory-girl')
 const factory = FactoryGirl.factory
 const moment = require('moment')
 const _ = require('lodash')
-const { ObjectID } = require('mongodb')
 const ObjectionAdapter = require('factory-girl-objection-adapter')
+const ObjectID = require('mongodb').ObjectID
+const crypto = require('crypto')
 
 const define = () => {
   factory.setAdapter(new ObjectionAdapter(), 'crash')
 
   factory.define('crash', db.Crash, {
     id: () => {
-      let o = new ObjectID()
-      return _.shuffle(o.toString()).join('').slice(0, 24).toLowerCase()
+      const id = crypto.randomBytes(12).toString('hex')
+      return id
     },
     contents: {
       'ts': () => { return '14311029860' },
@@ -77,7 +79,7 @@ const define = () => {
       'ts': () => { return '14311029860' },
       '_id': '5cdb5b07342004001f6e6ea6',
       'pid': '15901',
-      'ver': '67.67.33.11',
+      'ver': () => { return `0.${_.random(50, 99)}.${_.random(10, 99)}.${_.random(10, 99)}` },
       'prod': 'Brave',
       'ptime': '141620562',
       'ptype': 'browser',
