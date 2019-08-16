@@ -32,7 +32,8 @@ class MonthlyActiveUsersPacing extends BaseReportComponent {
     const handler = BaseReportComponent.buildSuccessHandler('day', 'month', 'Day', 'Month', {
       colourBy: 'hashedLabel',
       pivot: true,
-      showTotalColumn: false
+      showTotalColumn: false,
+      allowNaN: true
     })
     this.csvData = handler(data).csv
     $(`#${this.contentTagId}`).show()

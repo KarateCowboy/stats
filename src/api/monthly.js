@@ -43,7 +43,6 @@ select
 from dw.fc_usage_month
 where
   ymd >= date_trunc('month', current_date)::date - '4 months'::interval and
-  to_char(ymd, 'DD') <= to_char(current_date, 'DD') AND
   platform = ANY ($1) AND
   channel = ANY ($2) AND
   ref = ANY(COALESCE($3, ARRAY[ref])) AND
