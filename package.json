@@ -8,7 +8,16 @@
     "npm": "5.6.x"
   },
   "stardard": {
-    "globals": ["describe", "expect", "context", "it", "specify", "before", "beforeEach", "db" ] 
+    "globals": [
+      "describe",
+      "expect",
+      "context",
+      "it",
+      "specify",
+      "before",
+      "beforeEach",
+      "db"
+    ]
   },
   "scripts": {
     "ui-tests": "webpack-dev-server --config webpack.test.config.js",
@@ -65,7 +74,7 @@
     "mongoose": "^5.5.12",
     "node-slack": "0.0.7",
     "numeral": "^2.0.6",
-    "objection": "1.5.3",
+    "objection": "1.6.9",
     "pg": "^6.1.6",
     "pg-hstore": "^2.3.2",
     "pg-promise": "8.2.2",

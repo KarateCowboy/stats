@@ -1,8 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* global db, knex */
-
+/* global db  */
+const _ = require('lodash')
+const moment = require('moment')
 exports.setup = (server, client, mongo) => {
   // Crash reports
   server.route({
@@ -27,8 +28,9 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/releases',
     handler: async function (request, h) {
       try {
-        const releases = await knex('dtl.releases').distinct('brave_version').orderBy('brave_version', 'desc')
-        return (releases.map(i => { return { brave_version: i.brave_version } }))
+        const sixtyDaysAgo = moment().subtract(60, 'days').format('YYYY-MM-DD')
+        const validVersions = await db.Release.query().whereExists(db.Release.relatedQuery('crashes').whereRaw(`contents->>'year_month_day' > '${sixtyDaysAgo}'`))
+        return _.sortBy(validVersions, 'brave_version').reverse()
       } catch (e) {
         console.log(e)
         return h.response(e.toString()).code(500)

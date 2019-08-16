@@ -4,10 +4,10 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+/* global specify, db, context, expect, beforeEach, factory, describe */
+
 require('../test_helper')
-const ElasticSearch = require('elasticsearch')
 const AWS = require('aws-sdk')
-const _ = require('lodash')
 
 describe('Crash model', async function () {
   let sampleCrash
@@ -96,9 +96,8 @@ describe('Crash model', async function () {
       })
     })
     describe('writeToAws', async function () {
-      it.skip('writes the crash to the bucket as an object', async function () {
+      specify.skip('writes the crash to the bucket as an object', async function () {
         const S3 = new AWS.S3({})
-        // sinon.stub(S3, 'putObject').resolves()
         const sampleCrash = await factory.build('crash')
         try {
           await sampleCrash.writeToAws(S3, 'test-crash-bucket')
@@ -113,6 +112,16 @@ describe('Crash model', async function () {
         })
         expect(wasCalled).to.equal(true, 'S3 should have received putObject with crash params')
       })
+    })
+  })
+  describe('relations', async function () {
+    specify('belongs to a release', async function () {
+      const release = await factory.create('release')
+      let crash = await factory.create('linux-crash')
+      await release.$relatedQuery('crashes').relate(crash)
+      crash = (await db.Crash.query().select('*'))[0]
+      const fetchedRelease = await crash.$relatedQuery('release')
+      expect(fetchedRelease).to.have.property('id', release.id)
     })
   })
 })

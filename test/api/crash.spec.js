@@ -86,14 +86,13 @@ describe('crud endpoints', async function () {
       expect(totalFromPayload).to.equal(expectedTotal)
     })
     context('filters each platform correctly', async function () {
-      let linCrash, winCrash, win32Crash, osxCrash, server
+      let server
       beforeEach(async function () {
         server = await main.setup({ pg: pg_client, mg: mongo_client })
-        linCrash = await factory.create('linux-crash')
-        winCrash = await factory.create('win64-crash')
-        win32Crash = await factory.create('win32-crash')
-        osxCrash = await factory.create('osx-crash')
-        await db.Crash.query().insert([linCrash, winCrash, win32Crash, osxCrash])
+        await factory.create('linux-crash')
+        await factory.create('win64-crash')
+        await factory.create('win32-crash')
+        await factory.create('osx-crash')
       })
       specify('winx64-bc', async function () {
         params.url += '?platformFilter=winx64-bc'

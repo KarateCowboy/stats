@@ -3,10 +3,12 @@
  *  License, v. 2.0. If a copy of the MPL was not distributed with this file,
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+/* global db */
 
 const Joi = require('joi')
 const Schema = require('./validators/crash')
 const _ = require('lodash')
+const { ref } = require('objection')
 
 module.exports = function (knex) {
   const BaseModel = require('./base_model')(knex)
@@ -103,6 +105,19 @@ module.exports = function (knex) {
 
     get version () {
       return this.contents.ver
+    }
+
+    static get relationMappings () {
+      return {
+        release: {
+          relation: BaseModel.BelongsToOneRelation,
+          modelClass: db.Release,
+          join: {
+            from: ref('dtl.crashes.contents:ver').castText(),
+            to: 'dtl.releases.chromium_version'
+          }
+        }
+      }
     }
   }
 
