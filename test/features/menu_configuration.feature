@@ -40,3 +40,4 @@ Feature: Intelligent menu
       | dailyPublishers             | dailyPublishers         | Daily Publishers                               | Daily Publishers                                           |
       | dailyPublishersAgg          | dailyPublishersAgg      | Daily Publishers Aggregated                    | Daily Publishers Aggregated                                |
       | usage_month_pacing          | usageMonthPacing        | Monthly Active Users - Pacing - MAU            | Monthly Active Users (Pacing) (MAU)                        |
+      | p3a                         | p3a                     | P3A                                            | P3A                                                        |
