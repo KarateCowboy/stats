@@ -32,8 +32,15 @@ class DailyPublishersAggregated extends BaseReportComponent {
   handler (publisherTotals) {
     const handler = BaseReportComponent.buildSuccessHandler('ymd', 'verificationStatus', 'Date', 'stuff', {
       colourBy: 'hashedLabel',
-      pivot: true
+      pivot: true,
+      orderedColumns: [
+        'KYC and uphold verified',
+        'E-mail, channel, and basic uphold identity verified',
+        'Verified e-mail with verified channel',
+        'Verified e-mail'
+      ]
     })
+    console.log(publisherTotals)
     handler(publisherTotals)
 
     $(`#${this.contentTagId}`).show()

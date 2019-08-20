@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global db */
+
 var common = require('./common')
 var _ = require('underscore')
 const ChannelTotal = require('../models/channel_total.model')()
@@ -142,7 +144,7 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/publishers/channel_totals',
     handler: async function (request, h) {
-      const result = await ChannelTotal.find({}).sort({createdAt: -1}).limit(1)
+      const result = await ChannelTotal.find({}).sort({ createdAt: -1 }).limit(1)
       const channel_total = result !== undefined && result.length > 0 ? _.first(result) : (new ChannelTotal())
       return (channel_total.toObject())
     }
@@ -184,7 +186,7 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/publishers/totals',
     handler: async function (request, h) {
-      const result = await PublisherTotal.find({}).sort({createdAt: -1}).limit(1)
+      const result = await PublisherTotal.find({}).sort({ createdAt: -1 }).limit(1)
       const publisher_total = result !== null && result.length > 0 ? _.first(result) : (new PublisherTotal())
       return (publisher_total.toObject())
     }
