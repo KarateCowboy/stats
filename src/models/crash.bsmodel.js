@@ -18,7 +18,7 @@ module.exports = function (knex) {
 
     async writeToSearchIndex (elasticClient) {
       try {
-        const result = await elasticClient.index({
+        await elasticClient.index({
           index: 'crashes',
           type: 'crash',
           id: this.id,
