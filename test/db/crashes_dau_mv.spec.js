@@ -3,16 +3,17 @@ require('../test_helper')
 
 describe('dw.fc_crashes_dau_mv', async function () {
   describe('columns', async function () {
-    let fetchedDau, usage
+    let fetchedDau, usage, crash, release
     beforeEach(async function () {
-      usage = await factory.create('linux-core-fcusage', { total: 10000 })
+      usage = await factory.build('linux-core-fcusage', { total: 10000 })
+      usage.channel = 'release'
       await db.UsageSummary.query().insert(usage)
 
-      const release = await factory.build('release')
+      release = await factory.build('release')
       release.brave_version = usage.version
       await db.Release.query().insert(release)
 
-      const crash = await factory.build('linux-crash')
+      crash = await factory.build('linux-crash')
       crash.contents.year_month_day = usage.ymd
       crash.contents.ver = release.chromium_version
       crash.contents.channel = usage.channel
@@ -39,6 +40,22 @@ describe('dw.fc_crashes_dau_mv', async function () {
     })
     specify('channel', async function () {
       expect(fetchedDau).to.have.property('channel', usage.channel)
+    })
+    specify('maps empty or rull channel to \'release\' value', async function () {
+      const emptyChannelCrash = await factory.build('linux-crash')
+      emptyChannelCrash.contents.year_month_day = usage.ymd
+      emptyChannelCrash.contents.ver = release.chromium_version
+      emptyChannelCrash.contents.channel = ''
+
+      const nullChannelCrash = await factory.build('linux-crash')
+      nullChannelCrash.contents.year_month_day = usage.ymd
+      nullChannelCrash.contents.ver = release.chromium_version
+      nullChannelCrash.contents.channel = null
+      await db.Crash.query().insert([nullChannelCrash, emptyChannelCrash])
+      await knex.raw('refresh materialized view dw.fc_crashes_dau_mv')
+      let fetchedDaus = await knex('dw.fc_crashes_dau_mv').select()
+      expect(fetchedDaus).to.have.property('length', 1)
+      expect(fetchedDaus[0]).to.have.property('crashes', '3')
     })
   })
 })
