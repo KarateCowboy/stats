@@ -1,3 +1,5 @@
+/* global $ */
+
 const MenuConfig = require('./menu-config')
 const _ = require('underscore')
 const COLOR = require('./color')
@@ -191,8 +193,7 @@ module.exports = class BaseReportComponent {
         rows.forEach((row) => {
           columns[row[y]] = true
         })
-        columns = Object.keys(columns).sort()
-
+        columns = opts.orderedColumns ? opts.orderedColumns : Object.keys(columns).sort()
         // get the list of the keys for each row
         let groups = _.groupBy(rows, (row) => {
           return row[x]

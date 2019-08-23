@@ -103,8 +103,7 @@ class TestHelper {
         ['channels', 'delete'],
         ['publisher_platforms', 'delete'],
         'versions',
-        'releases',
-        'release_crashes'
+        'releases'
       ]
     }
     this.materialized_views = {

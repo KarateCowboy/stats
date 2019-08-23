@@ -22,7 +22,6 @@ class DailyPublishers extends BaseReportComponent {
   async retriever () {
     try {
       let publisherTotals = await $.ajax('/api/1/publishers/publisher_totals?' + $.param(this.app.pageState.standardParams()))
-      console.log(publisherTotals)
       this.handler(publisherTotals)
     } catch (e) {
       alert(`Error fetching data for ${this.title}. Please see browser console.`)
@@ -33,7 +32,13 @@ class DailyPublishers extends BaseReportComponent {
   handler (publisherTotals) {
     const handler = BaseReportComponent.buildSuccessHandler('ymd', 'verificationStatus', 'Date', 'stuff', {
       colourBy: 'hashedLabel',
-      pivot: true
+      pivot: true,
+      orderedColumns: [
+        'KYC and uphold verified',
+        'E-mail, channel, and basic uphold identity verified',
+        'Verified e-mail with verified channel',
+        'Verified e-mail'
+      ]
     })
     handler(publisherTotals)
 
