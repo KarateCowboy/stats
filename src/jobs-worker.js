@@ -11,7 +11,6 @@ const main = async () => {
     client = await pg.connect(process.env.DATABASE_URL)
     connection = await messaging.connect()
     ch = await messaging.createChannel('jobs')
-    setInterval(async () => { await remote.removeOldCompleted(client) }, 5 * 60 * 1000)
     while (true) {
       await ch.consume('jobs', async (msg) => {
         id = JSON.parse(msg.content).id
@@ -26,11 +25,8 @@ const main = async () => {
 }
 
 process.on('SIGINT', async () => {
-  console.log('closing gracefully')
   try {
     await client.end()
-    //await ch.close()
-    //await connection.close()
   } catch (e) {
     console.log(e)
   } finally {
