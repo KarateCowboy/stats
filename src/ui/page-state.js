@@ -83,6 +83,14 @@ module.exports = class PageState {
       document.dispatchEvent(dataChange)
     })
 
+    $('#source-menu-items').on('click', 'a', (evt) => {
+      const target = $(evt.target)
+      const source = target.data('source')
+      this.source = source
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
+
     // callback from brave-menu-api
     $('#metric_menu').on('selection', (evt, metricIds) => {
       this.metricIds = metricIds
@@ -157,7 +165,8 @@ module.exports = class PageState {
       wois: this.wois.join(','),
       countryCodes: this.countryCodes.join(','),
       metricIds: this.metricIds.join(','),
-      offset: this.offset
+      offset: this.offset,
+      source: this.source || 'all'
     }
   }
 

@@ -11,6 +11,7 @@ module.exports = class MenuConfig {
     this.showMuon = true
     this.showCore = true
     this.showPagination = false
+    this.showSource = false
     this.mappings = {
       showControls: '#controls',
       showWOISFilter: '#woi_menu',
@@ -20,7 +21,8 @@ module.exports = class MenuConfig {
       showMetricFilter: '#metric_menu',
       showMobile: '#controls-mobile-menu-container',
       showMuon: '#controls-muon-menu-container',
-      showPagination: '#controls-pagination'
+      showPagination: '#controls-pagination',
+      showSource: '#source-menu'
     }
   }
 }

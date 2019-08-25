@@ -160,8 +160,24 @@ body {
 
 .retentionCell {
     text-align: center;
+}
+
+.retentionPercentage {
     font-size: 125%;
     font-weight: bold;
+}
+
+.retentionCount {
+    font-size: 85%;
+    font-style: italic;
+}
+
+.retentionInstalls {
+  text-align: center;
+  background-color: #fff;
+  font-size: 125%;
+  font-weight: bold;
+  color: #333;
 }
 
 .quiet {
