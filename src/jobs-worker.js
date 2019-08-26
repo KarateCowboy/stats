@@ -11,14 +11,12 @@ const main = async () => {
     client = await pg.connect(process.env.DATABASE_URL)
     connection = await messaging.connect()
     ch = await messaging.createChannel('jobs')
-    while (true) {
-      await ch.consume('jobs', async (msg) => {
-        id = JSON.parse(msg.content).id
-        jobStatus = await remote.retrieve(client, id)
-        await require(`./jobs/${jobStatus.job}`)(client, jobStatus)
-        ch.ack(msg)
-      })
-    }
+    await ch.consume('jobs', async (msg) => {
+      id = JSON.parse(msg.content).id
+      jobStatus = await remote.retrieve(client, id)
+      await require(`./jobs/${jobStatus.job}`)(client, jobStatus)
+      ch.ack(msg)
+    })
   } catch (e) {
    console.log(e)
   }
