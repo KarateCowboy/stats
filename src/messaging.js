@@ -16,8 +16,8 @@ const connect = async () => {
 
 const createChannel = async (queueName) => {
   let channel = await connection.createChannel()
+  await channel.assertQueue(queueName, { durable: true })
   channel.prefetch(1)
-  channel.assertQueue(queueName, { durable: true })
   return channel
 }
 
