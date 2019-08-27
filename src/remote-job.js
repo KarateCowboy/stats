@@ -17,6 +17,10 @@ const complete = async (client, id, results) => {
   await client.query(`UPDATE dtl.remote_jobs SET results = $1, status = 'complete', status_ts = current_timestamp WHERE id = $2`, [results, id])
 }
 
+const error = async (client, id, results) => {
+  await client.query(`UPDATE dtl.remote_jobs SET results = $1, status = 'error', status_ts = current_timestamp WHERE id = $2`, [results, id])
+}
+
 const start = async (client, id) => {
   await client.query(`UPDATE dtl.remote_jobs SET status = 'processing', status_ts = current_timestamp WHERE id = $1`, [id])
 }
@@ -45,5 +49,6 @@ module.exports = {
   complete,
   create,
   start,
-  removeOldCompleted
+  removeOldCompleted,
+  error
 }

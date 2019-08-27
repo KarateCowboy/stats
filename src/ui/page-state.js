@@ -38,6 +38,7 @@ module.exports = class PageState {
     this.wois = []
     this.countryCodes = []
     this.metricIds = []
+    this.source = 'all'
 
     // dispatch pagination events
     $('#controls-pagination').on('click', 'a', (e) => {

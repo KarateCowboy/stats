@@ -235,3 +235,12 @@ h5.platform-list span {
 .pointer {
   cursor: pointer
 }
+
+#remote-job-message {
+  color: #336;
+  font-weight: bold;
+  padding: 8px;
+  margin: 8px;
+  background-color: #cce;
+  border-radius: 4px;
+}

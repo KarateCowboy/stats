@@ -25,11 +25,13 @@ class CountryRetention extends BaseReportComponent {
 
   async retriever () {
     $('#countryRetentionTableContainer').empty()
+    $('#countryRetentionContent').show()
+    setTimeout(() => {
+      $('#WeeklyCountryRetentionInstructions').fadeOut()
+    }, 10000)
+
     const params = this.app.pageState.standardParams()
-    let job = await submit('/api/1/retention_cc?' + $.param(params), 1500)
-    job.on('status-change', (status) => {
-      console.log(status)
-    })
+    let job = await submit('/api/1/retention_cc?' + $.param(params), 1000)
     job.on('complete', (results) => {
       this.handler(results, params.wois.split(','))
     })
