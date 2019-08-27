@@ -7,11 +7,14 @@ require('./color')
 require('./brave-menu')
 require('./brave-menu-api')
 require('./reports/referral')
+require('./remote-job')
+
 const Application = require('./application')
 
 const OverviewReport = require('./reports/overview')
 const DailyRetention = require('./reports/daily-retention')
 const WeeklyRetention = require('./reports/weekly-retention')
+const CountryRetention = require('./reports/country-retention')
 const ThirtyDayRetention = require('./reports/thirty-day-retention')
 const MonthlyActiveUsers = require('./reports/monthly-active-users')
 const MonthlyActiveUsersPacing = require('./reports/monthly-active-users-pacing')
@@ -57,6 +60,7 @@ global.init = async function () {
     (new OverviewReport()),
     (new DailyRetention()),
     (new WeeklyRetention()),
+    (new CountryRetention()),
     (new ThirtyDayRetention()),
     (new MonthlyActiveUsers()),
     (new MonthlyActiveUsersPacing()),

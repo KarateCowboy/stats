@@ -1,2 +1,3 @@
 web: node src/run.js
-worker: node src/crash-expiration-worker.js
+crash-expiration-worker: node src/crash-expiration-worker.js
+jobs-worker: node src/jobs-worker.js

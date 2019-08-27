@@ -4,6 +4,7 @@ const _ = require('lodash')
 const {st} = require('../builders')
 const STATS = require('../stats')
 require('jquery-sparkline')
+const {submit}= require('../remote-job')
 
 class WeeklyRetention extends BaseReportComponent {
   constructor () {
@@ -16,14 +17,16 @@ class WeeklyRetention extends BaseReportComponent {
     this.path = 'weekly-retention'
     this.contentTagId = 'weeklyRetentionContent'
     this.menuConfig.showDaysSelector = false
-    this.showCountryCodeFilter = false
-    this.showWOISFilter = false
-
+    this.menuConfig.showCountryCodeFilter = false
+    this.menuConfig.showWOISFilter = true
   }
 
   async retriever () {
-    const data = await $.ajax('/api/1/retention_week?' + $.param(this.app.pageState.standardParams()))
-    this.handler(data)
+    const params = this.app.pageState.standardParams()
+    let job = await submit('/api/1/retention_week?' + $.param(params), 1000)
+    job.on('complete', (results) => {
+      this.handler(results)
+    })
   }
 
   valueFormatter (v) {
@@ -98,8 +101,8 @@ class WeeklyRetention extends BaseReportComponent {
       cellColor = baseColor.desaturateByAmount(0.75 - row.retained_percentage).lightenByAmount((1 - row.retained_percentage) / 6.2)
       buffer += `
         <td style="background-color: ${cellColor}" class="retentionCell">
-          ${st(row.retained_percentage * 100)}<br>
-          <small class="text-muted">${this.valueFormatter(row.current)}</small>
+          <div class="retentionPercentage">${st(row.retained_percentage * 100)}</div>
+          <div class="retentionkCount">${this.valueFormatter(row.current)}</div>
         </td>`
     }
     buffer += '<td><span id=\'sparklineDelta' + weekDelta + '\'></span><br>'

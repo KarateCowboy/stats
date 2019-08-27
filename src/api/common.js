@@ -155,6 +155,18 @@ exports.retrieveCommonParameters = (request) => {
   return [days, platforms, channels, ref, wois, countryCodes]
 }
 
+exports.retrieveCommonParametersObject = (request) => {
+  let days = parseInt(request.query.days || 7, 10) + ' days'
+  let platforms = exports.platformPostgresArray(request.query.platformFilter)
+  let channels = exports.channelPostgresArray(request.query.channelFilter)
+  let ref = request.query.ref === '' ? null : _.compact(request.query.ref.split(','))
+  let wois = request.query.wois === '' ? null : _.compact(request.query.wois.split(','))
+  let countryCodes = !request.query.countryCodes || request.query.countryCodes === '' ? null : _.compact(request.query.countryCodes.split(','))
+  let source = request.query.source || 'all'
+
+  return { days, platforms, channels, ref, wois, countryCodes, source }
+}
+
 exports.retrieveCommonP3AParameters = (request) => {
   let days = parseInt(request.query.days || 7, 10) + ' days'
   let platforms = exports.platformPostgresArray(request.query.platformFilter)
