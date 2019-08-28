@@ -31,7 +31,7 @@ class CountryRetention extends BaseReportComponent {
     }, 10000)
 
     const params = this.app.pageState.standardParams()
-    let job = await submit('/api/1/retention_cc?' + $.param(params), 1000)
+    let job = await submit('/api/1/retention_cc?' + $.param(params), 1000, 10 * 60 * 1000)
     job.on('complete', (results) => {
       this.handler(results, params.wois.split(','))
     })
