@@ -9,6 +9,7 @@ let path = require('path')
 let Hapi = require('hapi')
 let Inert = require('inert')
 let blipp = require('blipp')
+let messaging = require('./messaging')
 
 let ui = require('./ui')
 const mongoose = require('mongoose')
@@ -33,6 +34,11 @@ module.exports.setup = async (connections) => {
       }
     }
   })
+
+  // setup jobs queue
+  let connection = await messaging.connect()
+  let channel = await messaging.createChannel('jobs')
+
   await mongoose.connect(process.env.MLAB_URI)
   await server.register(Inert)
   if (!process.env.TEST) {
@@ -43,7 +49,7 @@ module.exports.setup = async (connections) => {
 
   // Setup the APIs
   _.each(controllers, (api) => {
-    if (api.setup) api.setup(server, connections.pg, connections.mg)
+    if (api.setup) api.setup(server, connections.pg, connections.mg, channel)
   })
 
   // Setup the UI for the dashboard

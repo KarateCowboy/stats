@@ -46,9 +46,10 @@ module.exports = class Application {
       this.persistPageState()
       this.updateUiState()
     })
-    $(document).on('dataChange', async () => {
+    const debouncedRetriever = _.debounce(async () => {
       await this.reports[this.currentlySelected].retriever()
-    })
+    }, 1000)
+    $(document).on('dataChange', debouncedRetriever)
   }
 
   currentReport () {
@@ -64,10 +65,12 @@ module.exports = class Application {
     $('#page-load-status').empty()
     $('#sideBar > li').removeClass('active')
     this.toggleMenuItems()
+
     if (this.currentReport()) {
       $('#contentTitle').empty().append(this.currentReport().title)
       $('#contentSubtitle').empty().append(this.currentReport().subtitle)
     }
+
     $(`#controls-days-menu > li > a > i `).addClass('fa-blank')
     $(`#days-${this.pageState.days} > i:nth-child(1)`).removeClass('fa-blank')
     if (this.pageState.days === 10000) {
@@ -76,17 +79,17 @@ module.exports = class Application {
       $('#controls-selected-days').html(this.pageState.days + ' days')
     }
 
-    if (this.pageState.showCSV) {
-      $('#downloadCSV').prop('disabled', false)
-    } else {
-      $('#downloadCSV').prop('disabled', true)
-    }
-
     if (this.pageState.showToday) {
       $(`#controls`).find(`a[data-days="0"] i`).removeClass('fa-blank')
       $('#controls-selected-days').html($('#controls-selected-days').html() + ' + Now')
     } else {
       $(`#controls`).find(`a[data-days="0"] i`).addClass('fa-blank')
+    }
+
+    if (this.pageState.showCSV) {
+      $('#downloadCSV').prop('disabled', false)
+    } else {
+      $('#downloadCSV').prop('disabled', true)
     }
 
     const controls = $('#controls')
@@ -121,6 +124,17 @@ module.exports = class Application {
       controls.find(`h5.platform-list span.refs`).hide()
     }
 
+    // source menu
+    $(`#source-menu-items > li > a > i `).addClass('fa-blank')
+    $(`#source-${this.pageState.source} > i:nth-child(1)`).removeClass('fa-blank')
+    if (this.pageState.source === 'all') {
+      $('#controls-selected-source').html('Source')
+    } else {
+      // TODO - disable the ref dropdown
+      const label = this.pageState.source[0].toUpperCase() + this.pageState.source.slice(1)
+      $('#controls-selected-source').html(label)
+    }
+
     $('#' + this.currentlySelected).parent().addClass('active')
     $('#page-load-status').text('loaded')
     $(document).ajaxStart(function () {
@@ -143,12 +157,12 @@ module.exports = class Application {
         $(selector).hide()
       }
     })
-    if (this.menuState.showRefFilter) {
+  /*  if (this.menuState.showRefFilter) {
       $('#ref_menu').show()
     } else {
       $('#ref_menu').hide()
     }
-
+    */
   }
 
   renderInitialUi () {
@@ -209,6 +223,7 @@ module.exports = class Application {
       ['filterDNU', 'DNU'],
       ['filterLedger', 'Ledger'],
       ['filterCrashes', 'Crash'],
+      ['filterRetention', 'Retention'],
       ['filterPublisher', 'Publisher']
     ]
 
@@ -278,7 +293,6 @@ module.exports = class Application {
   }
 
   async persistPageState () {
-    console.log('saving page state', this.pageState)
     await window.localStorage.setItem('pageState', JSON.stringify(this.pageState))
   }
 }

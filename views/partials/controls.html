@@ -146,6 +146,19 @@
               id="ref_menu"
           >
           </li>
+
+          <li class="dropdown" id="source-menu">
+            <a class="dropdown-toggle" data-toggle="dropdown" type="button">
+              <span id="controls-selected-source">Source</span><span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" id="source-menu-items">
+              <li><a data-source="all" id="source-all"><i class="fa fa-check fa-blank"></i> All</a></li>
+              <li><a data-source="organic" id="source-organic"><i class="fa fa-check fa-blank"></i> Organic</a></li>
+              <li><a data-source="paid" id="source-paid"><i class="fa fa-check fa-blank"></i> Paid Acquisition</a></li>
+              <li><a data-source="referral" id="source-referral"><i class="fa fa-check fa-blank"></i> Referrals</a></li>
+            </ul>
+          </li>
+
           <li class="dropdown braveMenuStatic" data-api="/api/1/metrics"
               data-page-state="metricIds"
               data-placeholder="Metrics"
@@ -159,9 +172,11 @@
           </li>
         </ul>
 
+        <p id="remote-job-message" class="nav navbar-text navbar-right">
         <ul class="nav navbar-nav navbar-right">
           <li><a class="fa fa-bolt" id="hourglassIndicator"></a></li>
         </ul>
+        </p>
       </div>
       <div>
         <h5 class="platform-list text-center">

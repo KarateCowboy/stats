@@ -10,6 +10,6 @@ exports.up = async function (knex, Promise) {
 
 exports.down = async function (knex, Promise) {
   await knex.schema.withSchema('dtl').alterTable('referral_codes', function (table) {
-    table.unique('code_text')
+    table.dropUnique('code_text')
   })
 }

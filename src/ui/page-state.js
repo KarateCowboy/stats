@@ -38,6 +38,7 @@ module.exports = class PageState {
     this.wois = []
     this.countryCodes = []
     this.metricIds = []
+    this.source = 'all'
 
     // dispatch pagination events
     $('#controls-pagination').on('click', 'a', (e) => {
@@ -79,6 +80,14 @@ module.exports = class PageState {
     // callback from brave-menu-api
     $('#ref_menu').on('selection', (evt, ref) => {
       this.ref = ref
+      document.dispatchEvent(uiChange)
+      document.dispatchEvent(dataChange)
+    })
+
+    $('#source-menu-items').on('click', 'a', (evt) => {
+      const target = $(evt.target)
+      const source = target.data('source')
+      this.source = source
       document.dispatchEvent(uiChange)
       document.dispatchEvent(dataChange)
     })
@@ -157,7 +166,8 @@ module.exports = class PageState {
       wois: this.wois.join(','),
       countryCodes: this.countryCodes.join(','),
       metricIds: this.metricIds.join(','),
-      offset: this.offset
+      offset: this.offset,
+      source: this.source || 'all'
     }
   }
 
