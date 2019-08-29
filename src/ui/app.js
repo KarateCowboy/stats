@@ -43,6 +43,7 @@ const TopCrashReasons = require('./reports/top-crash-reasons')
 const RecentCrashes = require('./reports/recent-crashes')
 const DevelopmentCrashes = require('./reports/development-crashes')
 const CrashRatios = require('./reports/crash-ratios')
+const CrashRatiosPlatform = require('./reports/crash-ratios-platform')
 const DailyCrashesByPlatform = require('./reports/daily-crashes-by-platform')
 const DailyCrashesByVersion = require('./reports/daily-crashes-by-version')
 const Downloads = require('./reports/downloads')
@@ -89,6 +90,7 @@ global.init = async function () {
     (new RecentCrashes()),
     (new DevelopmentCrashes()),
     (new CrashRatios()),
+    (new CrashRatiosPlatform()),
     (new DailyCrashesByPlatform()),
     (new DailyCrashesByVersion()),
     (new Downloads()),

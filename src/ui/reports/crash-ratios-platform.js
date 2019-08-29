@@ -2,14 +2,14 @@ const BaseReportComponent = require('../base-report-component')
 const $ = require('jquery')
 const { round } = require('../builders')
 
-class CrashRatios extends BaseReportComponent {
+class CrashRatiosPlatform extends BaseReportComponent {
   constructor () {
     super()
-    this.title = 'Crash Ratio by Version'
+    this.title = 'Crash Ratio by Platform and Version'
     this.subtitle = ''
-    this.path = 'crash_ratio'
-    this.menuTitle = 'Crash Ratios'
-    this.menuId = 'crashRatio'
+    this.path = 'crash_ratio_platform'
+    this.menuTitle = 'Crash Ratios by Platform'
+    this.menuId = 'crashRatioPlatform'
     this.reportContent = `<marquee>Daily Active Users Content</marquee>`
     this.contentTagId = 'crashRatioContent'
     this.menuConfig.showWOISFilter = false
@@ -22,7 +22,7 @@ class CrashRatios extends BaseReportComponent {
   async retriever () {
     let results
     try {
-      results = await $.ajax('/api/1/crash_ratios?' + $.param(this.app.pageState.standardParams()))
+      results = await $.ajax('/api/1/crash_ratios_platform?' + $.param(this.app.pageState.standardParams()))
       await this.handler(results)
     } catch (e) {
       console.log(`Error running retriever for ${this.title}`)
@@ -49,7 +49,7 @@ class CrashRatios extends BaseReportComponent {
       buf = buf + '<td class="text-right"><a href="#crash_ratio_list/' + params + '">' + round(row.crash_rate * 100, 1) + '</a></td>'
       buf = buf + '<td class="text-left">' + row.version + '</td>'
       buf = buf + '<td class="text-left">' + row.chromium_version + '</td>'
-      buf = buf + '<td class="text-left">n/a</td>'
+      buf = buf + '<td class="text-left">' + row.platform + '</td>'
       buf = buf + '<td class="text-right">' + row.crashes + '</td>'
       buf = buf + '<td class="text-right">' + row.total + '</td>'
 
@@ -75,4 +75,4 @@ class CrashRatios extends BaseReportComponent {
   }
 }
 
-module.exports = CrashRatios
+module.exports = CrashRatiosPlatform

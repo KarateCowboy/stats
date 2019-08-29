@@ -124,27 +124,8 @@ describe('crud endpoints', async function () {
       })
     })
   })
-  describe('crash_versions', async function () {
-    beforeEach(async function () {
-      params.url = '/api/1/crash_versions?days=30'
-    })
-    it('returns all the various versions', async function () {
-      const crashes = await factory.buildMany('crash', 5)
-      crashes.forEach(async (c) => {
-        let version = `${_.random(1, 9)}.${_.random(1, 9)}.${_.random(1, 9)}`
-        c.contents._version = version
-        await db.Crash.query().insert(c)
-      })
-      const server = await main.setup({ pg: pg_client, mg: mongo_client })
 
-      let response = await server.inject(params)
-      let payload = _.sortBy(JSON.parse(response.payload), 'name')
-      expect(payload).to.have.property('length', 5)
-      const expectedVersions = crashes.map(c => c.contents._version).sort()
-      expect(payload.map(r => r.version).sort()).to.have.members(expectedVersions)
-    })
-  })
-  describe('crash_ratios', async function () {
+  describe('crash ratios', async function () {
     let sampleCrashes, server, release, usage
     let stableCrashes, stableRelease, stableUsage
     beforeEach(async function () {
@@ -160,7 +141,6 @@ describe('crud endpoints', async function () {
       release.brave_version = usage.version
       await db.Release.query().insert(release)
 
-      params.url = '/api/1/crash_ratios'
       sampleCrashes = await factory.buildMany('linux-crash', 1000)
       sampleCrashes.forEach((c) => {
         c.contents.year_month_day = usage.ymd
@@ -192,37 +172,82 @@ describe('crud endpoints', async function () {
       await knex.raw('REFRESH MATERIALIZED VIEW dw.fc_crashes_dau_mv')
       server = await main.setup({ pg: pg_client, mg: mongo_client })
     })
-    it('returns a successful response', async function () {
-      params.url += `?version=${release.braveVersion}`
-      // execution
-      let response = await server.inject(params)
-      let payload = _.sortBy(JSON.parse(response.payload), 'version')
+    context('by version', async function () {
+      beforeEach(async function () {
+        params.url = '/api/1/crash_ratios'
+      })
+      it('returns a successful response', async function () {
+        params.url += `?version=${release.braveVersion}`
+        // execution
+        let response = await server.inject(params)
+        let payload = _.sortBy(JSON.parse(response.payload), 'version')
 
-      // validation
-      expect(payload[0]).to.have.property('version', usage.version)
-      expect(payload[0]).to.have.property('platform', usage.platform)
-      expect(payload[0]).to.have.property('total', usage.total)
-      expect(payload[0]).to.have.property('chromium_version', release.chromium_version)
-      expect(payload[0]).to.have.property('crash_rate', payload[0].crashes / payload[0].total)
+        // validation
+        expect(payload[0]).to.have.property('version', usage.version)
+        expect(payload[0]).to.not.have.property('platform')
+        expect(payload[0]).to.have.property('total', usage.total)
+        expect(payload[0]).to.have.property('chromium_version', release.chromium_version)
+        expect(payload[0]).to.have.property('crash_rate', payload[0].crashes / payload[0].total)
+      })
+
     })
-    it('filters channels', async function () {
-      params.url += `?channelFilter=stable`
-      // execution
-      let response = await server.inject(params)
-      let payload = JSON.parse(response.payload)
+    context('by platform and version', async function () {
+      beforeEach(async function () {
+        params.url = '/api/1/crash_ratios_platform'
+      })
+      it('returns a successful response', async function () {
+        params.url += `?version=${release.braveVersion}`
+        // execution
+        let response = await server.inject(params)
+        let payload = _.sortBy(JSON.parse(response.payload), 'version')
 
-      // validation
-      expect(payload[0].crashes).to.equal(stableCrashes.length)
+        // validation
+        expect(payload[0]).to.have.property('version', usage.version)
+        expect(payload[0]).to.have.property('platform', usage.platform)
+        expect(payload[0]).to.have.property('total', usage.total)
+        expect(payload[0]).to.have.property('chromium_version', release.chromium_version)
+        expect(payload[0]).to.have.property('crash_rate', payload[0].crashes / payload[0].total)
+      })
+      it('filters channels', async function () {
+        params.url += `?channelFilter=stable`
+        // execution
+        let response = await server.inject(params)
+        let payload = JSON.parse(response.payload)
+
+        // validation
+        expect(payload[0].crashes).to.equal(stableCrashes.length)
+      })
+      it('filters by version', async function () {
+        params.url += `?version=${stableUsage.version}`
+        // execution
+        let response = await server.inject(params)
+        let payload = JSON.parse(response.payload)
+
+        // validation
+        expect(payload[0].crashes).to.equal(stableCrashes.length)
+        expect(payload).to.have.property('length', 1)
+      })
+
     })
-    it('filters by version', async function () {
-      params.url += `?version=${stableUsage.version}`
-      // execution
-      let response = await server.inject(params)
-      let payload = JSON.parse(response.payload)
+  })
+  describe('crash_versions', async function () {
+    beforeEach(async function () {
+      params.url = '/api/1/crash_versions?days=30'
+    })
+    it('returns all the various versions', async function () {
+      const crashes = await factory.buildMany('crash', 5)
+      crashes.forEach(async (c) => {
+        let version = `${_.random(1, 9)}.${_.random(1, 9)}.${_.random(1, 9)}`
+        c.contents._version = version
+        await db.Crash.query().insert(c)
+      })
+      const server = await main.setup({ pg: pg_client, mg: mongo_client })
 
-      // validation
-      expect(payload[0].crashes).to.equal(stableCrashes.length)
-      expect(payload).to.have.property('length', 1)
+      let response = await server.inject(params)
+      let payload = _.sortBy(JSON.parse(response.payload), 'name')
+      expect(payload).to.have.property('length', 5)
+      const expectedVersions = crashes.map(c => c.contents._version).sort()
+      expect(payload.map(r => r.version).sort()).to.have.members(expectedVersions)
     })
   })
   describe('crash_reports', async function () {

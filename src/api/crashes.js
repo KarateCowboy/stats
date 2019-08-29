@@ -57,7 +57,7 @@ const CRASH_REPORTS_SIGNATURE = `
     ORDER BY total DESC
 `
 
-const CRASH_RATIO = `
+const CRASH_RATIO_PLATFORM = `
     SELECT version, chromium_version, platform, crashes, total, crashes / total AS crash_rate
     FROM (SELECT version,
                  chromium_version,
@@ -75,6 +75,21 @@ const CRASH_RATIO = `
           HAVING SUM(usage) > 50) CR
     ORDER BY version DESC, crashes / total DESC
 `
+const CRASH_RATIO = `
+    SELECT version, chromium_version, crashes, total, crashes / total AS crash_rate
+    FROM (SELECT version,
+                 chromium_version,
+                 SUM(crashes) as crashes,
+                 SUM(usage)   as total
+          FROM dw.fc_crashes_dau_mv
+          WHERE ymd >= current_date - cast($1 AS interval)
+            AND version = COALESCE($2, version)
+            AND channel = ANY ($3)
+          GROUP BY version,
+                   chromium_version
+          HAVING SUM(usage) > 50) CR
+    ORDER BY version DESC, crashes / total DESC
+    `
 
 const CRASH_REPORT_DETAILS_PLATFORM_VERSION = `
     SELECT id,
@@ -281,7 +296,31 @@ exports.setup = (server, client, mongo) => {
       let channels = common.channelPostgresArray(request.query.channelFilter)
 
       try {
-        const results = await pg_client.query(CRASH_RATIO, [days, platforms, version, channels])
+        const results = await pg_client.query(CRASH_RATIO, [days, version, channels])
+        results.rows.forEach((row) => {
+          row.crashes = parseInt(row.crashes)
+          row.total = parseInt(row.total)
+          row.crash_rate = parseFloat(row.crash_rate)
+        })
+        return (results.rows)
+      } catch (err) {
+        console.dir(err, { colors: true })
+        return h.response(err.toString()).code(500)
+      }
+    }
+  })
+  server.route({
+    method: 'GET',
+    path: '/api/1/crash_ratios_platform',
+    handler: async function (request, h) {
+      let days = parseInt(request.query.days || 7, 10)
+      days += ' days'
+      let platforms = common.platformPostgresArray(request.query.platformFilter)
+      let version = request.query.version || null
+      let channels = common.channelPostgresArray(request.query.channelFilter)
+
+      try {
+        const results = await pg_client.query(CRASH_RATIO_PLATFORM, [days, platforms, version, channels])
         results.rows.forEach((row) => {
           row.crashes = parseInt(row.crashes)
           row.total = parseInt(row.total)
