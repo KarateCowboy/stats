@@ -7,6 +7,7 @@ const dataset = require('./dataset')
 const _ = require('lodash')
 const ml = require('ml-distance')
 const moment = require('moment')
+const remote = require('../remote-job')
 
 const DAU_PLATFORM_FIRST = `
 SELECT
@@ -25,38 +26,13 @@ GROUP BY FC.ymd, FC.platform
 ORDER BY FC.ymd DESC, FC.platform
 `
 
-const DAU_COUNTRY = `
-SELECT
-  TO_CHAR(FC.ymd, 'YYYY-MM-DD') AS ymd,
-  FC.country_code,
-  SUM(FC.total) AS count
-FROM dw.fc_agg_usage_daily FC
-WHERE
-  FC.ymd >= GREATEST(current_date - CAST($1 as INTERVAL), '2019-02-21'::date) AND
-  FC.platform = ANY ($2) AND
-  FC.channel = ANY ($3) AND
-  FC.ref = ANY (COALESCE($4, ARRAY[FC.ref])) AND
-  FC.woi = ANY (COALESCE($5, ARRAY[FC.woi])) AND
-  FC.country_code = ANY (COALESCE($6, ARRAY[FC.country_code]))
-GROUP BY FC.ymd, FC.country_code
-ORDER BY FC.ymd DESC, FC.country_code
-`
+exports.setup = (server, client, mongo, ch) => {
 
-exports.setup = (server, client, mongo) => {
-
-  // Daily active users by country code
+  // Daily active users by country
   server.route({
     method: 'GET',
-    path: '/api/1/dau_country',
-    handler: async function (request, reply) {
-      var [days, platforms, channels, ref, wois, country_codes] = common.retrieveCommonParameters(request)
-      const results = await client.query(DAU_COUNTRY, [days, platforms, channels, ref, wois, country_codes])
-      results.rows.forEach((row) => common.formatPGRow(row))
-      results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-      // condense small country counts to an 'other' category
-      results.rows = dataset.condense(results.rows, 'ymd', 'country_code', 0.002)
-      return (results.rows)
-    }
+    path: '/api/1/dau_cc',
+    handler: remote.jobHandler(client, ch, 'dau-country')
   })
 
   // Daily active users
