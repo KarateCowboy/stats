@@ -38,6 +38,7 @@ ORDER BY
 
 const MAU_PACING = `
 select
+  to_char(ymd, 'YYYY-MM-DD') as ymd,
   to_char(ymd, 'Mon-DD') as month_day,
   sum(total) as total
 from dw.fc_usage_month
@@ -47,8 +48,8 @@ where
   channel = ANY ($2) AND
   ref = ANY(COALESCE($3, ARRAY[ref])) AND
   ymd > '2016-01-31'
-group by to_char(ymd, 'Mon-DD')
-order by to_char(ymd, 'Mon-DD') asc
+group by to_char(ymd, 'YYYY-MM-DD'), to_char(ymd, 'Mon-DD')
+order by to_char(ymd, 'YYYY-MM-DD'), to_char(ymd, 'Mon-DD') asc
 `
 
 const MRU = `
@@ -178,28 +179,34 @@ exports.setup = (server, client, mongo) => {
     method: 'GET',
     path: '/api/1/mau_pacing',
     handler: async (request, h) => {
-      let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
-      let results = await client.query(MAU_PACING, [platforms, channels, ref])
-      results.rows.forEach((row) => common.formatPGRow(row))
+      try {
+        let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
+        let results = await client.query(MAU_PACING, [platforms, channels, ref])
+        results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
+        results.rows.forEach((row) => common.formatPGRow(row))
 
-      let monthSum = 0
-      let monthControl = ''
-      let finalRows = []
-      for (let row of results.rows) {
-        let [month, day] = row.month_day.split('-')
-        if (monthControl !== month) {
-          monthSum = 0
-          monthControl = month
+        let monthSum = 0
+        let monthControl = ''
+        let finalRows = []
+        for (let row of results.rows) {
+          let [month, day] = row.month_day.split('-')
+          if (monthControl !== month) {
+            monthSum = 0
+            monthControl = month
+          }
+          monthSum += parseInt(row.total)
+          finalRows.push({
+            month,
+            day,
+            count: monthSum
+          })
         }
-        monthSum += parseInt(row.total)
-        finalRows.push({
-          month,
-          day,
-          count: monthSum
-        })
-      }
 
-      return finalRows
+        return finalRows
+      } catch (e) {
+        console.log(e)
+        return Boom.badImplementation(e)
+      }
     }
   })
 
