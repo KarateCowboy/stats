@@ -163,8 +163,9 @@ exports.retrieveCommonParametersObject = (request) => {
   let wois = request.query.wois === '' ? null : _.compact(request.query.wois.split(','))
   let countryCodes = !request.query.countryCodes || request.query.countryCodes === '' ? null : _.compact(request.query.countryCodes.split(','))
   let source = request.query.source || 'all'
+  let showToday = request.query.showToday === 'true'
 
-  return { days, platforms, channels, ref, wois, countryCodes, source }
+  return { days, platforms, channels, ref, wois, countryCodes, source, showToday }
 }
 
 exports.retrieveCommonP3AParameters = (request) => {
