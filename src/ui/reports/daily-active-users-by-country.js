@@ -1,5 +1,6 @@
 const BaseReportComponent = require('../base-report-component')
-const $ = require('jquery')
+const {submit}= require('../remote-job')
+
 class DailyActiveUsersByCountry extends BaseReportComponent {
   constructor () {
     super()
@@ -15,14 +16,11 @@ class DailyActiveUsersByCountry extends BaseReportComponent {
   }
 
   async retriever () {
-    let results
-    try {
-      results = await $.ajax('/api/1/dau_country?' + $.param(this.app.pageState.standardParams()))
+    const params = this.app.pageState.standardParams()
+    let job = await submit('/api/1/dau_cc?' + $.param(params), 1000, 10 * 60 * 1000)
+    job.on('complete', (results) => {
       this.handler(results)
-    } catch (e) {
-      console.log(`Error running retriever for ${this.title}`)
-      console.log(e.message)
-    }
+    })
   }
 
   handler (data) {

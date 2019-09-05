@@ -1,4 +1,5 @@
 const uuid = require('uuid')
+const common = require('./api/common')
 
 const removeOldCompleted = async (client) => {
   console.log("removing old completed jobs")
@@ -18,6 +19,7 @@ const complete = async (client, id, results) => {
 }
 
 const error = async (client, id, results) => {
+  console.log(results)
   await client.query(`UPDATE dtl.remote_jobs SET results = $1, status = 'error', status_ts = current_timestamp WHERE id = $2`, [results, id])
 }
 
@@ -32,15 +34,45 @@ const create = async (client, jobName, params) => {
   return id
 }
 
+const CACHE_INTERVAL = process.env.CACHE_INTERVAL || '1 minute'
+const checkForCachedResult = async (client, jobName, params) => {
+  const result = await client.query(`SELECT id FROM dtl.remote_jobs WHERE job = $1 AND params::jsonb = $2::jsonb AND status = 'complete' AND status_ts > current_timestamp - '${CACHE_INTERVAL}'::interval ORDER BY status_ts DESC LIMIT 1`, [jobName, params])
+  if (result.rowCount > 0) {
+    console.log(`${result.rows[0].id}: ${jobName} - using cached result`)
+    return result.rows[0].id
+  }
+  return null
+}
+
 const initialize = async (client, channel, jobName, params) => {
+  let id
+  id = await checkForCachedResult(client, jobName, params)
+  if (id) return id
+
   // create a remote job record
-  const id = await create(client, jobName, params)
+  id = await create(client, jobName, params)
   // create a amqp message for the job
   await channel.sendToQueue(
     'jobs',
     Buffer.from(JSON.stringify({ id }), 'utf8')
   )
   return id
+}
+
+const jobHandler = (client, ch, jobName) => {
+  return async (request, h) => {
+    try {
+      let jobId = await initialize(
+        client,
+        ch,
+        jobName,
+        common.retrieveCommonParametersObject(request)
+      )
+      return { id: jobId }
+    } catch (e) {
+      console.log(e)
+    }
+  }
 }
 
 module.exports = {
@@ -50,5 +82,6 @@ module.exports = {
   create,
   start,
   removeOldCompleted,
-  error
+  error,
+  jobHandler
 }
