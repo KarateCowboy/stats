@@ -19,6 +19,7 @@ const complete = async (client, id, results) => {
 }
 
 const error = async (client, id, results) => {
+  console.log(results)
   await client.query(`UPDATE dtl.remote_jobs SET results = $1, status = 'error', status_ts = current_timestamp WHERE id = $2`, [results, id])
 }
 
