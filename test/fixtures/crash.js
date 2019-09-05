@@ -15,6 +15,10 @@ const crypto = require('crypto')
 
 const define = () => {
   factory.setAdapter(new ObjectionAdapter(), 'crash')
+  factory.setAdapter(new ObjectionAdapter(), 'linux-crash')
+  factory.setAdapter(new ObjectionAdapter(), 'win64-crash')
+  factory.setAdapter(new ObjectionAdapter(), 'win32-crash')
+  factory.setAdapter(new ObjectionAdapter(), 'osx-crash')
 
   factory.define('crash', db.Crash, {
     id: () => {

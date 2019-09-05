@@ -27,7 +27,6 @@ describe('Release model', async function () {
     specify('has many crashes', async function () {
       // setup
       const release = await factory.create('release')
-      await db.Release.query().insert(release)
       const crash = await factory.build('linux-crash')
       crash.contents.ver = release.chromium_version
       const secondCrash = await factory.build('linux-crash')
@@ -44,7 +43,6 @@ describe('Release model', async function () {
     specify('has many usage summaries', async function () {
       // setup
       const release = await factory.create('release')
-      await db.Release.query().insert(release)
 
       const usageSummary = await factory.build('linux-core-fcusage')
       await db.UsageSummary.query().insert(usageSummary)

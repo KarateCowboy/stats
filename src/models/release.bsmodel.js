@@ -7,6 +7,7 @@
 
 const Joi = require('joi')
 const Schema = require('./validators/release')
+const { ref } = require('objection')
 module.exports = function (knex) {
   const BaseModel = require('./base_model')(knex)
 
@@ -30,18 +31,17 @@ module.exports = function (knex) {
       return 'dtl.releases'
     }
 
+    static get jsonAttributes () {
+    }
+
     static get relationMappings () {
       return {
         crashes: {
-          relation: BaseModel.ManyToManyRelation,
+          relation: BaseModel.HasManyRelation,
           modelClass: db.Crash,
           join: {
-            from: 'dtl.releases.id',
-            through: {
-              from: 'dtl.release_crashes.release_id',
-              to: 'dtl.release_crashes.crash_id'
-            },
-            to: 'dtl.crashes.id'
+            from: 'dtl.releases.chromium_version',
+            to: ref('dtl.crashes.contents:ver').castText()
           }
         },
         usageSummaries: {
