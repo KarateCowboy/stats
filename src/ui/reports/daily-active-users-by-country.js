@@ -11,6 +11,8 @@ class DailyActiveUsersByCountry extends BaseReportComponent {
     this.menuId = 'usageCountry'
     this.reportContent = `<marquee>Daily Active Users Content</marquee>`
     this.contentTagId = 'usageContent'
+    this.csvFilename = 'daily-active-users-by-country'
+    this.csvDownloadable = true
     this.menuConfig.showWOISFilter = true
     this.menuConfig.showCountryCodeFilter = true
   }
@@ -25,7 +27,7 @@ class DailyActiveUsersByCountry extends BaseReportComponent {
 
   handler (data) {
     const handler = BaseReportComponent.buildSuccessHandler('ymd', 'country_code', 'Date', 'Country', {colourBy: 'hashedLabel', pivot: true })
-    handler(data)
+    this.csvData = handler(data).csv
     $(`#${this.contentTagId}`).show()
   }
 }
