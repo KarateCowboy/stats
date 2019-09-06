@@ -44,9 +44,9 @@ class CrashRatios extends BaseReportComponent {
     let table = $('#crash-ratio-table tbody')
     table.empty()
     rows.forEach((row) => {
-      let params = [row.platform, row.version, this.app.pageState.days].join('/')
+      let params = `/${row.version}`
       let buf = '<tr>'
-      buf = buf + '<td class="text-right"><a href="#crash_ratio_list/' + params + '">' + round(row.crash_rate * 100, 1) + '</a></td>'
+      buf = buf + '<td class="text-right"><a href="#crash_ratio_list' + params + '">' + round(row.crash_rate * 100, 1) + '</a></td>'
       buf = buf + '<td class="text-left">' + row.version + '</td>'
       buf = buf + '<td class="text-left">' + row.chromium_version + '</td>'
       buf = buf + '<td class="text-left">n/a</td>'

@@ -19,6 +19,7 @@ class DbUtil {
     this.pgFiles = this.pgModelsFilter(this.dirFiles)
     this.bsFiles = this.bsModelsFilter(this.dirFiles)
     this.models = []
+    this.objectionModels = []
   }
 
   loadModels () {
@@ -47,6 +48,7 @@ class DbUtil {
       const modelPath = path.join(__dirname, file)
       this[modelName] = require(modelPath)(global.knex)
       this.models.push(modelName)
+      this.objectionModels.push(this[modelName])
     }
   }
 

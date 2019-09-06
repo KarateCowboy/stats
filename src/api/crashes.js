@@ -2,12 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global pg_client, db */
+/* global pg_client, db, knex */
 
 var retriever = require('../retriever')
 var crash = require('../crash')
 var mini = require('../mini')
 var common = require('./common')
+const _ = require('lodash')
+const moment = require('moment')
+const { ref } = require('objection')
 
 const CRASHES_PLATFORM_VERSION = `
     SELECT TO_CHAR(FC.ymd, 'YYYY-MM-DD')                                                                       AS ymd,
@@ -488,6 +491,35 @@ exports.setup = (server, client, mongo) => {
           return (results.rows)
         }
       })
+    }
+  })
+
+  server.route({
+    method: 'GET',
+    path: '/api/1/crash_range_crashes',
+    handler: async (request, h) => {
+      const version = request.query.version
+      const platform = request.query.platform ? request.query.platform : null
+      const ymd = moment().subtract(60, 'days').format('YYYY-MM-DD')
+      try {
+        let usageQuery = db.UsageSummary.query().where({ version: version }).andWhere('ymd', '>=', ymd)
+        if (platform) {
+          usageQuery.andWhere('platform', platform)
+        }
+        let usage = await usageQuery
+        usage = usage.pop()
+        const release = await usage.$relatedQuery('release')
+        const crashesQuery = release.$relatedQuery('crashes').where(ref('crashes.contents:year_month_day').castText(), '>=', ymd)
+        if (platform) {
+          const platforms = db.Crash.mapPlatformFilters([platform])
+          crashesQuery.whereIn(ref('crashes.contents:platform').castText(), platforms)
+        }
+        const crashes = await crashesQuery
+        return (crashes)
+      } catch (err) {
+        console.log(err)
+        return h.response(err.toString()).code(500)
+      }
     }
   })
 }

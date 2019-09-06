@@ -9,7 +9,6 @@ const $ = require('jquery')
 const _ = require('lodash')
 require('./stats')
 require('./common')
-// require('./publishers')
 
 module.exports = class Application {
   constructor (reportComponents = [], pageState = null) {
@@ -91,6 +90,11 @@ module.exports = class Application {
     } else {
       $('#downloadCSV').prop('disabled', true)
     }
+    if (this.pageState.showAgGrid) {
+      $('#agnosticGrid').show()
+    } else {
+      $('#agnosticGrid').hide()
+    }
 
     const controls = $('#controls')
     _.each(this.pageState.platformFilter, (v, k, lst) => {
@@ -157,12 +161,12 @@ module.exports = class Application {
         $(selector).hide()
       }
     })
-  /*  if (this.menuState.showRefFilter) {
-      $('#ref_menu').show()
-    } else {
-      $('#ref_menu').hide()
-    }
-    */
+    /*  if (this.menuState.showRefFilter) {
+        $('#ref_menu').show()
+      } else {
+        $('#ref_menu').hide()
+      }
+      */
   }
 
   renderInitialUi () {

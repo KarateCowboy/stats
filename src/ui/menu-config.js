@@ -12,6 +12,7 @@ module.exports = class MenuConfig {
     this.showCore = true
     this.showPagination = false
     this.showSource = false
+    this.showAgGrid = false
     this.mappings = {
       showControls: '#controls',
       showWOISFilter: '#woi_menu',

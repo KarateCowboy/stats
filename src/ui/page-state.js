@@ -39,6 +39,7 @@ module.exports = class PageState {
     this.countryCodes = []
     this.metricIds = []
     this.source = 'all'
+    this.showAgGrid = false
 
     // dispatch pagination events
     $('#controls-pagination').on('click', 'a', (e) => {
