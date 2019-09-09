@@ -13,8 +13,9 @@ module.exports = async (client, jobStatus) => {
       channels: jobStatus.params.channels,
       ref: jobStatus.params.ref
     })
+    console.log(jobStatus)
     results.rows.forEach((row) => common.formatPGRow(row))
-    results.rows = common.potentiallyFilterToday(results.rows, jobStatus.showToday)
+    results.rows = common.potentiallyFilterToday(results.rows, jobStatus.params.showToday)
     await remote.complete(client, jobStatus.id, JSON.stringify(results.rows))
     console.log(`${jobStatus.id}: dau - complete`)
   } catch (e) {
