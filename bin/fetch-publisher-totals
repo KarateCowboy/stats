@@ -17,7 +17,7 @@ class FetchPublishers extends Script {
     const args = this.yargs.default('day', this.moment().format('YYYY-MM-DD')).argv
     const channel_options = {
       method: 'GET',
-      url: 'https://publishers.basicattentiontoken.org/api/v1/public/channels/totals',
+      url: `${process.env.PUBLISHER_API_URL}/api/v1/public/channels/totals`,
     }
     let api_result
     try {
@@ -32,7 +32,7 @@ class FetchPublishers extends Script {
 
     const publisher_options = {
       method: 'GET',
-      url: 'https://publishers.basicattentiontoken.org/api/v1/stats/publishers/totals',
+      url: `${process.env.PUBLISHER_API_URL}/api/v1/stats/publishers/totals`,
       headers: {
         Authorization: `Token token=${process.env.PUBLISHERS_TOKEN}`
       }
@@ -62,7 +62,6 @@ class FetchPublishers extends Script {
       } else {
         attrsSet = await db.PublisherSignupDay.buildFromRemote(today)
         attrsSet = [attrsSet]
-
       }
       await db.PublisherSignupDay.query().whereIn('ymd', attrsSet.map(i => i.ymd)).delete()
       await db.PublisherSignupDay.query().insert(attrsSet)

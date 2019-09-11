@@ -18,10 +18,12 @@ const overviewPublisherHandler = function (channel_totals, publisher_totals) {
           <thead>
           </thead>
           <tbody>
-            <tr><th>E-mail Verified</th><td>${publisher_totals.email_verified.toLocaleString()}</td></tr>
+            <tr><th>E-mail verified</th><td>${publisher_totals.email_verified.toLocaleString()}</td></tr>
             <tr><th>With a channel</th><td>${publisher_totals.email_verified_with_a_channel.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_channel')}%</span></td></tr>
             <tr><th>With a verified channel</th><td>${publisher_totals.email_verified_with_a_verified_channel.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel')}%</span></td></tr>
-            <tr><th>With Uphold</th><td>${publisher_totals.email_verified_with_a_verified_channel_and_uphold_verified.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel_and_uphold_verified')}%</span></td></tr>
+            <tr><th>With Uphold account</th><td>${publisher_totals.email_verified_with_a_verified_channel_and_uphold_verified.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel_and_uphold_verified')}%</span></td></tr>
+            <tr><th>With Uphold K.Y.C.</th><td>${publisher_totals.email_verified_and_uphold_kycd.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_and_uphold_kycd')}%</span></td></tr>
+            <tr><th>With Uphold K.Y.C. and verified channel</th><td>${publisher_totals.email_verified_with_a_verified_channel_and_uphold_kycd.toLocaleString()}<span class="subvalue"> ${ratio_of_pubs('email_verified_with_a_verified_channel_and_uphold_kycd')}%</span></td></tr>
           </tbody>
         </table>
       </div>

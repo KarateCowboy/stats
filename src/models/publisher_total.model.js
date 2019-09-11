@@ -26,6 +26,14 @@ module.exports = function () {
       type: Schema.Types.Number,
       default: 0
     },
+    email_verified_with_a_verified_channel_and_uphold_kycd: {
+      type: Schema.Types.Number,
+      default: 0
+    },
+    email_verified_and_uphold_kycd: {
+      type: Schema.Types.Number,
+      default: 0
+    },
   }, {
     collection: 'publisher_totals',
     timestamps: true
