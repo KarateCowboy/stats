@@ -116,7 +116,7 @@ const RECENT_CRASH_REPORT_DETAILS = `
            chromium_major_version,
            contents ->> 'year_month_day'                                           AS ymd,
            contents ->> 'ver'                                                      AS version,
-           contents ->> 'channel'                                                  AS channel,
+           channel                                                                 AS channel,
            COALESCE(contents -> 'metadata' ->> 'cpu', 'Unknown')                   AS cpu,
            COALESCE(contents ->> 'node_env', 'Unknown')                            AS node_env,
            COALESCE(contents -> 'metadata' ->> 'crash_reason', 'Unknown')          AS crash_reason,
