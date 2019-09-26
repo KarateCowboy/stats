@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* global db */
+
+const Script = require('./script')
+const path = require('path')
+const fs = require('fs-extra')
+const _ = require('lodash')
+const ProgressBar = require('smooth-progress')
+const { ref } = require('objection')
+
+class Scratch extends Script {
+  async run () {
+    await this.setup('update-crashes-temp-mv')
+
+    await knex.raw('refresh materialized view dtl.crashes_bc_mv')
+
+    await this.shutdown()
+  }
+}
+
+const scratch = new Scratch(path.basename(__filename))
+
+scratch.run()
