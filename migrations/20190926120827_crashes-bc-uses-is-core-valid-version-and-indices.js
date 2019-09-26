@@ -18,7 +18,7 @@ exports.up = async (knex) => {
       (regexp_split_to_array(contents->>'ver', '\\.')::int[])[1]                 AS chromium_major_version
     FROM dtl.crashes
     WHERE
-      where is_core = true
+      is_core = true
       AND has_valid_version = true
       AND sp.to_ymd((contents ->> 'year_month_day'::text)) >= current_date - cast('130 days' as interval)
       `)
