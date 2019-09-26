@@ -122,7 +122,7 @@ const RECENT_CRASH_REPORT_DETAILS = `
            COALESCE(contents -> 'metadata' ->> 'crash_reason', 'Unknown')          AS crash_reason,
            COALESCE(contents -> 'metadata' ->> 'signature', 'Unknown')             AS signature,
            COALESCE(contents -> 'metadata' ->> 'operating_system_name', 'Unknown') AS operating_system_name
-    FROM dtl.crashes_bc
+    FROM dtl.crashes_bc_mv
     WHERE sp.to_ymd((contents ->> 'year_month_day'::text)) >= current_date - CAST($1 as INTERVAL)
       AND platform = ANY ($2)
 `
