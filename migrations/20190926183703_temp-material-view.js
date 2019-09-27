@@ -19,7 +19,7 @@ exports.up = async (knex) => {
     WHERE
       is_core = true
       AND has_valid_version = true
-      AND sp.to_ymd((contents ->> 'year_month_day'::text)) >= current_date - cast('130 days' as interval)
+      AND sp.to_ymd((contents ->> 'year_month_day'::text)) >= current_date - cast('20 days' as interval)
       `)
 }
 
