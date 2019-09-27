@@ -379,7 +379,7 @@ exports.setup = (server, client, mongo) => {
         let params = [days, platforms]
         console.log(channels.length)
         if (channels.length < 5) {
-          query += `  AND contents->>'channel' = ANY ($3)`
+          query += `  AND channel = ANY ($3)`
           params.push(channels)
         }
         query += ` ORDER BY ts DESC OFFSET ${offset} LIMIT 100`
