@@ -14,6 +14,7 @@ const { ref } = require('objection')
 class Scratch extends Script {
   async run () {
     await this.setup('update-crashes-temp-mv')
+    await knex('dtl.crashes').update({ has_valid_version: true }).where(knex.raw(`contents->>'ver' ~ '^[0-9]+\.[0-9]+\.[0-9]+[\.]*[0-9]*$'`)).andWhere('has_valid_version', false)
 
     await knex.raw('refresh materialized view dtl.crashes_bc_mv')
 
