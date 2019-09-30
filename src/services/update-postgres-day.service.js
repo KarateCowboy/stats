@@ -99,7 +99,7 @@ module.exports = class UpdatePostgresDay {
           '_id.ref': 1
         }
       }
-    ], {explain: false})
+    ], { explain: false, allowDiskUse: true })
 
     return query.toArray()
   }
