@@ -1,6 +1,12 @@
 exports.config = {
   tests: './test/codecept/*_test.js',
   output: './output',
+  plugins: {
+    wdio: {
+      enabled: true,
+      services: ['selenium-standalone']
+    }
+  },
   helpers: {
     WebDriver: {
       url: 'http://localhost:8193',
@@ -11,7 +17,7 @@ exports.config = {
     }
   },
   include: {
-    I: './steps_file.js'
+    I: './test/steps_file.js'
   },
   bootstrap: null,
   mocha: {},

@@ -30,7 +30,7 @@ class RecentCrashes extends BaseReportComponent {
       this.handler(results)
     } catch (e) {
       console.log(`Error running retriever for ${this.title}`)
-      console.log(e.message)
+      console.log(e)
     }
   }
 
@@ -57,9 +57,9 @@ class RecentCrashes extends BaseReportComponent {
           <td nowrap>${crash.ymd}</td>
           <td nowrap><span style="border-radius: 2px; background-color: ${versionColor}; padding: 4px;">${crash.version}</span></td>
           <td>${channelIndicators[crash.channel] || ''}</td>
-          <td nowrap>${platformIndicators[crash.canonical_platform] || ''}</td>
-          <td>${crash.cpu}<br/><span class="ago">${crash.operating_system_name}</span></td>
-          <td>${crash.crash_reason}<br/>${crash.signature}</td>
+          <td nowrap>${platformIndicators[crash.platform] || ''}</td>
+          <td>${crash.cpu}<br/><span class="ago">${crash.operatingSystemName}</span></td>
+          <td>${crash.crashReason}<br/>${crash.signature}</td>
         </tr>
         `
       table.append(buf)

@@ -1,9 +1,9 @@
+/* global knex, it, describe, beforeEach, expect, factory */
 require('../test_helper')
 const moment = require('moment')
 const _ = require('underscore')
 let RetentionService = require('../../src/services/retention.service')
-const {ObjectID} = require('mongodb')
-const {Util} = require('../../src/models/util')
+const { Util } = require('../../src/models/util')
 
 let service
 const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc', 'android-bc']
@@ -25,7 +25,7 @@ describe('retention service', async function () {
     })
     it('returns a hash with one key per platform', async function () {
       const res = await service.missing()
-      platforms.forEach((platform) => { expect(Object.keys(res)).to.include(platform)})
+      platforms.forEach((platform) => { expect(Object.keys(res)).to.include(platform) })
     })
     it('returns an array of ymd values for missing retention data', async function () {
       for (let platform of platforms) {

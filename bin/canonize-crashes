@@ -1,0 +1,36 @@
+#!/usr/bin/env node
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* global db */
+
+const Script = require('./script')
+const path = require('path')
+const fs = require('fs-extra')
+const _ = require('lodash')
+const ProgressBar = require('smooth-progress')
+
+class Scratch extends Script {
+  async run () {
+    await this.setup('canonize-crashes')
+    const uncanonizedCrashes = await db.Crash.query().select('id')
+    const bar = ProgressBar({
+      tmpl: `Loading ${uncanonizedCrashes.length} ... :bar :percent :eta`,
+      width: 100,
+      total: uncanonizedCrashes.length
+    })
+    for (const chunk of _.chunk(uncanonizedCrashes, 5000)) {
+      const crashes = await db.Crash.query().whereIn('id', chunk.map(c => c.id))
+      await Promise.all(crashes.map(async (c) => {
+        const updateObject = c.updateSearchFields()
+        await db.Crash.query().update(updateObject).where('id', c.id)
+        bar.tick(1)
+      }))
+    }
+    await this.shutdown()
+  }
+}
+
+const scratch = new Scratch(path.basename(__filename))
+
+scratch.run()

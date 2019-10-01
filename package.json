@@ -101,8 +101,9 @@
     "yargs": "3.31.0"
   },
   "devDependencies": {
+    "@wdio/selenium-standalone-service": "^5.13.2",
     "chai": "4.1.2",
-    "codeceptjs": "^2.3.0",
+    "codeceptjs": "2.3.2",
     "cucumber": "4.1.0",
     "factory-girl": "5.0.2",
     "faker": "^4.1.0",
@@ -117,7 +118,7 @@
     "sinon": "4.4.9",
     "standard": "^12.0.1",
     "tap": "^14.2.0",
-    "webdriverio": "^5.12.5",
+    "webdriverio": "5.14.3",
     "webpack-dev-server": "^3.2.0"
   },
   "precommit": [
