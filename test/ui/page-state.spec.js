@@ -69,7 +69,7 @@ describe('PageState', async function () {
       expect(pageState.productPlatforms).to.have.property('core')
       expect(pageState.productPlatforms).to.have.property('mobile')
       expect(pageState.productPlatforms.muon).to.have.members(['winx64', 'winia32', 'osx', 'linux'])
-      expect(pageState.productPlatforms.core).to.have.members(['winx64-bc', 'winia32-bc', 'osx-bc', 'linux-bc'])
+      expect(pageState.productPlatforms.core).to.have.members(['winx64-bc', 'winia32-bc', 'osx-bc', 'linux-bc', 'android-bc'])
       expect(pageState.productPlatforms.mobile).to.have.members(['androidbrowser', 'ios', 'android'])
     })
     specify('platformFilter', async function () {

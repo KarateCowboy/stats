@@ -187,7 +187,7 @@ const adCountryCodes = async () => {
 module.exports = class RetentionService {
   constructor () {
     this.table = 'dw.fc_retention_woi'
-    this.platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc']
+    this.platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc', 'android-bc']
   }
 
   async missing () {

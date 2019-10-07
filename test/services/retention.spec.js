@@ -6,7 +6,7 @@ const {ObjectID} = require('mongodb')
 const {Util} = require('../../src/models/util')
 
 let service
-const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc']
+const platforms = ['ios', 'androidbrowser', 'linux', 'winia32', 'winx64', 'osx', 'linux-bc', 'osx-bc', 'winx64-bc', 'android-bc']
 describe('retention service', async function () {
   describe('#missing', async function () {
     beforeEach(async function () {

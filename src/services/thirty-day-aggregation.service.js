@@ -17,7 +17,8 @@ const platformMappings = {
   'osx': 'osx-bc',
   'linux': 'linux-bc',
   'android': 'androidbrowser',
-  'ios': 'ios'
+  'ios': 'ios',
+  'android-bc': 'android-bc'
 }
 
 module.exports = class ThirtyDayAggregation {
