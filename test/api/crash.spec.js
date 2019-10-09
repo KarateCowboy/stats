@@ -9,9 +9,10 @@ require('../test_helper')
 const _ = require('lodash')
 const moment = require('moment')
 const main = require('../../src/index')
+const { ref } = require('objection')
 let params = {}
 
-describe('crud endpoints', async function () {
+describe('Crashes API', async function () {
   beforeEach(async function () {
     params = {
       method: 'GET',
@@ -134,8 +135,6 @@ describe('crud endpoints', async function () {
         ymd: moment().subtract(2, 'days').format('YYYY-MM-DD'),
         channel: 'dev'
       })
-      await db.UsageSummary.query().insert(usage)
-
       release = await factory.build('release')
       release.brave_version = usage.version
       await db.Release.query().insert(release)
@@ -154,7 +153,6 @@ describe('crud endpoints', async function () {
         channel: 'stable',
         ymd: moment().subtract(2, 'days').format('YYYY-MM-DD')
       })
-      await db.UsageSummary.query().insert(stableUsage)
 
       stableRelease = await factory.build('release', { brave_version: stableUsage.version })
       await db.Release.query().insert(stableRelease)
@@ -188,7 +186,6 @@ describe('crud endpoints', async function () {
         expect(payload[0]).to.have.property('chromium_version', release.chromium_version)
         expect(payload[0]).to.have.property('crash_rate', payload[0].crashes / payload[0].total)
       })
-
     })
     context('by platform and version', async function () {
       beforeEach(async function () {
@@ -226,7 +223,6 @@ describe('crud endpoints', async function () {
         expect(payload[0].crashes).to.equal(stableCrashes.length)
         expect(payload).to.have.property('length', 1)
       })
-
     })
   })
   describe('crash_versions', async function () {
@@ -312,6 +308,51 @@ describe('crud endpoints', async function () {
       expect(payload).to.have.property('length', 1)
       expect(payload[0].channel).to.equal('dev')
     })
+  })
 
+  describe('crashes for ratio', async function () {
+    let linuxUsage, release, crashes
+    beforeEach(async function () {
+      linuxUsage = await factory.create('linux-core-fcusage')
+      release = await factory.create('release', { brave_version: linuxUsage.version })
+      crashes = await factory.buildMany('linux-crash', 300)
+      crashes.forEach((c) => {
+        c.contents.year_month_day = linuxUsage.ymd
+        c.contents.ver = release.chromiumVersion
+        c.contents.platform = 'linux'
+      })
+      await db.Crash.query().insert(crashes)
+      await release.$relatedQuery('crashes').relate(crashes)
+      await factory.createMany('win64-crash', 200)
+
+    })
+    it('accepts version as a parameter', async function () {
+      params.url = `/api/1/crash_range_crashes?version=${linuxUsage.version}`
+      const server = await main.setup({ pg: pg_client, mg: mongo_client })
+      let response = await server.inject(params)
+      let payload = JSON.parse(response.payload)
+      expect(payload).to.have.property('length', crashes.length)
+    })
+    it('accepts platform as a parameter', async function () {
+      params.url = `/api/1/crash_range_crashes?version=${linuxUsage.version}&platform=${linuxUsage.platform}`
+      // make everything the same version, across platforms
+      await db.Crash.query().update({ 'crashes.contents:ver': release.chromium_version }).whereNotNull('id')
+      const server = await main.setup({ pg: pg_client, mg: mongo_client })
+
+      let response = await server.inject(params)
+      let payload = JSON.parse(response.payload)
+      expect(payload).to.have.property('length', crashes.length)
+    })
+    it('only returns crashes from the last sixty days', async function () {
+      params.url = `/api/1/crash_range_crashes?version=${linuxUsage.version}`
+      const oldCrashes = _.slice(crashes, 0, 10)
+      await db.Crash.query().whereIn('id', oldCrashes.map(c => c.id)).delete()
+      oldCrashes.forEach((c) => { c.contents.year_month_day = moment().subtract(90, 'days').format('YYYY-MM-DD')})
+      await db.Crash.query().insert(oldCrashes)
+      const server = await main.setup({ pg: pg_client, mg: mongo_client })
+      let response = await server.inject(params)
+      let payload = JSON.parse(response.payload)
+      expect(payload).to.have.property('length', crashes.length - oldCrashes.length)
+    })
   })
 })

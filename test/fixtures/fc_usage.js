@@ -22,15 +22,16 @@ const define = () => {
     total: 200,
     ref: () => { return db.ReferralCode.randomCodeText() }
   })
+  factory.setAdapter(new ObjectionAdapter(), 'linux-core-fcusage')
   factory.extend('fc_usage', 'linux-core-fcusage', {
-      ymd: () => moment().subtract(1, 'months').format(),
-      platform: 'linux-bc',
-      version: () => { return `67.${_.random(10, 99)}.${_.random(10, 99)}` },
-      channel: 'dev',
-      first_time: true,
-      total: 200,
-      ref: () => { return db.ReferralCode.randomCodeText() }
-    }
+    ymd: () => moment().subtract(1, 'months').format(),
+    platform: 'linux-bc',
+    version: () => { return `67.${_.random(10, 99)}.${_.random(10, 99)}` },
+    channel: 'dev',
+    first_time: true,
+    total: 200,
+    ref: () => { return db.ReferralCode.randomCodeText() }
+  }
   )
 }
 

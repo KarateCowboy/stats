@@ -18,6 +18,7 @@ const define = () => {
     chromium_version: () => { return _.random(11, 99) + '.' + _.random(11, 99) + '.' + _.random(1000, 9999) + '.' + _.random(11, 99) },
     uses_hybrid_format: false
   })
+  factory.setAdapter(new ObjectionAdapter(), 'hybrid-release')
   factory.extend('release', 'hybrid-release', {
     chromium_version: () => { return _.random(11, 99) + '.' + _.random(11, 99) + '.' + _.random(10, 99) + '.' + _.random(11, 99) },
     uses_hybrid_format: true

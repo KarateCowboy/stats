@@ -78,6 +78,7 @@ const define = () => {
     ts: () => { return new Date() }
   })
 
+  factory.setAdapter(new ObjectionAdapter(), 'linux-crash')
   factory.extend('crash', 'linux-crash', {
     contents: {
       'ts': () => { return '14311029860' },
@@ -130,12 +131,13 @@ const define = () => {
     }
 
   })
+  factory.setAdapter(new ObjectionAdapter(), 'win64-crash')
   factory.extend('crash', 'win64-crash', {
     contents: {
       'ts': () => { return '14311029860' },
       '_id': '5cdb5b07342004001f6e6ea6',
       'pid': '15901',
-      'ver': '67.67.33.11',
+      'ver': '67.67.3003.11',
       'prod': 'Brave',
       'ptime': '141620562',
       'ptype': 'browser',
@@ -181,6 +183,7 @@ const define = () => {
       'total-discardable-memory-allocated': '8388608'
     }
   })
+  factory.setAdapter(new ObjectionAdapter(), 'osx-crash')
   factory.extend('crash', 'osx-crash', {
     contents: {
       'ts': () => { return '14311029860' },
@@ -232,6 +235,7 @@ const define = () => {
       'total-discardable-memory-allocated': '8388608'
     }
   })
+  factory.setAdapter(new ObjectionAdapter(), 'win32-crash')
   factory.extend('crash', 'win32-crash', {
     contents: {
       'ts': () => { return '14311029860' },
