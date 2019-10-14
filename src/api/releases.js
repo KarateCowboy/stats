@@ -29,7 +29,9 @@ exports.setup = (server, client, mongo) => {
     handler: async function (request, h) {
       try {
         const sixtyDaysAgo = moment().subtract(60, 'days').format('YYYY-MM-DD')
-        const validVersions = await db.Release.query().whereExists(db.Release.relatedQuery('crashes').whereRaw(`contents->>'year_month_day' > '${sixtyDaysAgo}'`))
+        const queryBuilder = db.Release.query().whereExists(db.Release.relatedQuery('crashes').where('ymd', '>=', sixtyDaysAgo))
+        console.log(queryBuilder.toString())
+        const validVersions = await queryBuilder
         return _.sortBy(validVersions, 'brave_version').reverse()
       } catch (e) {
         console.log(e)

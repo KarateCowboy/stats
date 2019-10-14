@@ -8,6 +8,8 @@
 const Joi = require('joi')
 const Schema = require('./validators/release')
 const { ref } = require('objection')
+const _ = require('lodash')
+
 module.exports = function (knex) {
   const BaseModel = require('./base_model')(knex)
 
@@ -41,7 +43,7 @@ module.exports = function (knex) {
           modelClass: db.Crash,
           join: {
             from: 'dtl.releases.chromium_version',
-            to: ref('dtl.crashes.contents:ver').castText()
+            to: 'dtl.crashes.version'
           }
         },
         usageSummaries: {
@@ -85,13 +87,6 @@ module.exports = function (knex) {
       } else {
         return false
       }
-    }
-
-    static async createFromCrashVersions () {
-      const releases = await this.query().select()
-      const crashes = await db.Crash.query().select()
-        .whereNotIn(`contents->>'ver'`, releases.map(r => r.chromiumVersion))
-      await this.query().insert(crashes.map((c) => { return { chromium_version: c.contents['ver'] } }))
     }
   }
 

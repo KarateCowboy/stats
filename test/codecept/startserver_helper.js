@@ -4,7 +4,6 @@ class StartServer extends Helper {
 
   // before/after hooks
   async _before () {
-    console.log('I RAN YOUR CUSTOM BEFORE HELPER')
     require('../test_helper')
     await test_helper.setup()
     await test_helper.truncate()

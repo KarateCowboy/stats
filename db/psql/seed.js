@@ -12,6 +12,7 @@ module.exports.exec = async () => {
     ['android', 'Link Bubble', 'Link Bubble'],
     ['androidbrowser', 'Android', 'Android'],
     ['ios', 'iOS', 'iOS'],
+    ['android-bc', 'Android Core', 'Android Core'],
     ['unknown', 'Unknown', 'Unknown']
   ]
   const channels = [
@@ -37,7 +38,7 @@ module.exports.exec = async () => {
   let channelCount = (await db.Channel.query().count())[0]
   if (parseInt(channelCount.count) === 0) {
     await Promise.all(channels.map(async c => {
-      await db.Channel.query().insert({channel: c[0], description: c[1], label: c[2]})
+      await db.Channel.query().insert({ channel: c[0], description: c[1], label: c[2] })
     }))
   }
 

@@ -51,6 +51,8 @@ describe('Crashes API', async function () {
       await Promise.all(sampleCrashes.map(async (c) => {
         c.contents.year_month_day = moment().subtract(2, 'days').format('YYYY-MM-DD')
         c.contents.channel = 'stable'
+        c.contents.ver = '76.11.11'
+        c.updateSearchFields()
         await db.Crash.query().insert(c)
       }))
       const server = await main.setup({ pg: pg_client, mg: mongo_client })
@@ -69,6 +71,7 @@ describe('Crashes API', async function () {
     it('filters by channel', async function () {
       const sampleCrashes = await factory.buildMany('linux-crash', 70)
       await Promise.all(sampleCrashes.map(async (c) => {
+        c.contents.ver = '75.11.11'
         c.contents.year_month_day = moment().subtract(2, 'days').format('YYYY-MM-DD')
         await db.Crash.query().insert(c)
       }))
@@ -90,10 +93,15 @@ describe('Crashes API', async function () {
       let server
       beforeEach(async function () {
         server = await main.setup({ pg: pg_client, mg: mongo_client })
-        await factory.create('linux-crash')
-        await factory.create('win64-crash')
-        await factory.create('win32-crash')
-        await factory.create('osx-crash')
+        const linCrash = await factory.build('linux-crash')
+        const win64Crash = await factory.build('win64-crash')
+        const win32Crash = await factory.build('win32-crash')
+        const osxCrash = await factory.build('osx-crash')
+        const allCrashes = [linCrash, win32Crash, win64Crash, osxCrash]
+        allCrashes.forEach((c) => {
+          c.contents.ver = '76.11.11'
+        })
+        await db.Crash.query().insert(allCrashes)
       })
       specify('winx64-bc', async function () {
         params.url += '?platformFilter=winx64-bc'
@@ -231,11 +239,11 @@ describe('Crashes API', async function () {
     })
     it('returns all the various versions', async function () {
       const crashes = await factory.buildMany('crash', 5)
-      crashes.forEach(async (c) => {
+      await Promise.all(crashes.map(async (c) => {
         let version = `${_.random(1, 9)}.${_.random(1, 9)}.${_.random(1, 9)}`
         c.contents._version = version
         await db.Crash.query().insert(c)
-      })
+      }))
       const server = await main.setup({ pg: pg_client, mg: mongo_client })
 
       let response = await server.inject(params)
@@ -336,7 +344,7 @@ describe('Crashes API', async function () {
     it('accepts platform as a parameter', async function () {
       params.url = `/api/1/crash_range_crashes?version=${linuxUsage.version}&platform=${linuxUsage.platform}`
       // make everything the same version, across platforms
-      await db.Crash.query().update({ 'crashes.contents:ver': release.chromium_version }).whereNotNull('id')
+      await db.Crash.query().update({ 'version': release.chromium_version, 'platform': release.platform }).whereNotNull('id')
       const server = await main.setup({ pg: pg_client, mg: mongo_client })
 
       let response = await server.inject(params)
@@ -354,5 +362,38 @@ describe('Crashes API', async function () {
       let payload = JSON.parse(response.payload)
       expect(payload).to.have.property('length', crashes.length - oldCrashes.length)
     })
+  })
+  describe('1/recent_crash_report_details', async function () {
+    let winCrashes, linCrashes, osxCrashes, androidCrashes, allCrashes, server
+    beforeEach(async function () {
+      params.url = '/api/1/recent_crash_report_details'
+      winCrashes = await factory.buildMany('win64-crash', 25)
+      winCrashes.slice(0, 12).forEach((c) => { c.contents.ver = '71.22.11'})
+      linCrashes = await factory.buildMany('linux-crash', 25)
+      linCrashes.slice(0, 12).forEach((c) => { c.contents.ver = '71.22.11'})
+      osxCrashes = await factory.buildMany('osx-crash', 25)
+      osxCrashes.slice(0, 12).forEach((c) => { c.contents.ver = '71.22.11'})
+      androidCrashes = await factory.buildMany('android-crash', 25)
+      androidCrashes.slice(0, 12).forEach((c) => { c.contents.ver = '71.22.11'})
+      allCrashes = _.flatten([winCrashes, linCrashes, osxCrashes, androidCrashes])
+      allCrashes.forEach((c) => c.updateSearchFields())
+      await db.Crash.query().insert(allCrashes)
+      server = await main.setup({ pg: pg_client, mg: mongo_client })
+    })
+    specify('filters by channel', async function () {
+      params.url += '?channelFilter=dev&ref=\'\'&wois=\'\''
+      let response = await server.inject(params)
+      let payload = JSON.parse(response.payload)
+      const devCrashes = allCrashes.filter((c) => { return c.channel === 'dev'})
+      expect(payload).to.have.property('length', devCrashes.length)
+    })
+    specify('filters by platform', async function () {
+      params.url += '?platformFilter=winx64-bc&ref=\'\'&wois=\'\''
+      let response = await server.inject(params)
+      let payload = JSON.parse(response.payload)
+      const winCrashes = allCrashes.filter((c) => { return c.platform === 'winx64-bc'})
+      expect(payload).to.have.property('length', winCrashes.length)
+    })
+    specify('filters by date interval')
   })
 })

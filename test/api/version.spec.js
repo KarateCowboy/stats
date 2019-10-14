@@ -8,8 +8,8 @@ require('../test_helper')
 const _ = require('lodash')
 const main = require('../../src/index')
 let params = {
-  method : 'GET',
-  url :  '/api/1/versions',
+  method: 'GET',
+  url: '/api/1/versions',
   auth: {
     strategy: 'session',
     credentials: {
@@ -24,7 +24,7 @@ describe('crud endpoints', async function () {
   describe('index/list', async function () {
     it('returns a bunch of versions', async function () {
       await factory.createMany('version', 7)
-      const server = await main.setup({pg: pg_client, mg: mongo_client})
+      const server = await main.setup({ pg: pg_client, mg: mongo_client })
       let response = await server.inject(params)
       let payload = JSON.parse(response.payload)
       expect(payload).to.have.property('length', 7)

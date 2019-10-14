@@ -9,6 +9,8 @@ const Joi = require('joi')
 const Schema = require('./validators/crash')
 const _ = require('lodash')
 const { ref } = require('objection')
+const semver = require('semver')
+const moment = require('moment')
 
 module.exports = function (knex) {
   const BaseModel = require('./base_model')(knex)
@@ -103,8 +105,74 @@ module.exports = function (knex) {
       return Crash.reverseMapPlatformFilters([this.contents.platform]).pop()
     }
 
-    get version () {
-      return this.contents.ver
+    updateSearchFields () {
+      if (_.isEmpty(this.contents)) return
+      this._updatePlatform()
+      this._updateVersionInfo()
+      this._updateChannel()
+      this._updateYmd()
+      return {
+        ymd: this.ymd,
+        platform: this.platform,
+        is_core: this.is_core,
+        has_valid_version: this.has_valid_version,
+        channel: this.channel,
+        version: this.version
+      }
+    }
+
+    _updateYmd () {
+      this.ymd = moment(this.contents.year_month_day).format('YYYY-MM-DD')
+    }
+
+    _updatePlatform () {
+      if (_.isEmpty(this.contents.platform)) {
+        this.platform = 'unknown'
+      } else if (this.contents.platform.match(/os\s?x/i) || this.contents.platform.match(/darwin/i)) {
+        this.platform = 'osx-bc'
+      } else if (this.contents.platform.match(/win\s?64/i)) {
+        this.platform = 'winx64-bc'
+      } else if (this.contents.platform.match(/linux/i)) {
+        this.platform = 'linux-bc'
+      } else if (this.contents.platform.match(/win\s?32/i)) {
+        this.platform = 'winia32-bc'
+      } else {
+        this.platform = 'unknown'
+      }
+    }
+
+    _updateVersionInfo () {
+      const versionIsValid = semver.valid(this.contents.ver)
+      if (versionIsValid) {
+        this.has_valid_version = true
+        const majorVersion = this.contents.ver.match(/^[0-9]+/)[0]
+        if (parseInt(majorVersion) > 69) {
+          this.is_core = true
+        } else {
+          this.is_core = false
+        }
+      } else {
+        this.has_valid_version = false
+        this.is_core = false
+      }
+      this.version = this.contents.ver
+    }
+
+    _updateChannel () {
+      if (_.isEmpty(this.contents.channel)) {
+        this.channel = 'release'
+      } else {
+        this.channel = this.contents.channel
+      }
+    }
+
+    $beforeUpdate (opt, queryContext) {
+      this.updateSearchFields()
+      this.updated_at = moment()
+    }
+
+    $beforeInsert () {
+      this.updateSearchFields()
     }
 
     static get relationMappings () {
@@ -113,7 +181,7 @@ module.exports = function (knex) {
           relation: BaseModel.BelongsToOneRelation,
           modelClass: db.Release,
           join: {
-            from: ref('dtl.crashes.contents:ver').castText(),
+            from: 'dtl.crashes.version',
             to: 'dtl.releases.chromium_version'
           }
         }

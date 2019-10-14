@@ -4,17 +4,20 @@
  *  You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/* global specify, db, context, expect, beforeEach, factory, describe */
+/* global specify, db, context, it, expect, afterEach, beforeEach, factory, describe */
 
 require('../test_helper')
 const AWS = require('aws-sdk')
+const moment = require('moment')
 
 describe('Crash model', async function () {
   let sampleCrash
   context('properties', async function () {
     beforeEach(async function () {
-      sampleCrash = await factory.create('crash')
-      sampleCrash = (await db.Crash.query().where('id', sampleCrash.id)).pop()
+      sampleCrash = await factory.build('crash')
+      sampleCrash.updateSearchFields()
+      await db.Crash.query().insert(sampleCrash)
+      sampleCrash = (await db.Crash.query().select()).pop()
     })
     specify('id', async function () {
       expect(sampleCrash).to.have.property('id')
@@ -27,12 +30,47 @@ describe('Crash model', async function () {
     specify('ts', async function () {
       expect(sampleCrash).to.have.property('ts')
     })
+    specify('channel', async function () {
+      expect(sampleCrash).to.have.property('channel')
+    })
+    specify('platform', async function () {
+      expect(sampleCrash).to.have.property('platform')
+    })
+    specify('is_core', async function () {
+      expect(sampleCrash).to.have.property('is_core')
+    })
+    specify('has_valid_version', async function () {
+      expect(sampleCrash).to.have.property('has_valid_version')
+    })
+    specify('ymd', async function () {
+      expect(sampleCrash).to.have.property('ymd')
+    })
+    specify('updated_at', async function () {
+      expect(sampleCrash).to.have.property('updated_at', null)
+    })
+    specify('version', async function () {
+      expect(sampleCrash).to.have.property('version')
+    })
     context('deprecated attributes', async function () {
       specify('github_repo', async function () {
         expect(sampleCrash).to.not.have.property('github_repo')
       })
       specify('github_issue_number', async function () {
         expect(sampleCrash).to.not.have.property('github_issue_number')
+      })
+    })
+  })
+  describe('hooks', async function () {
+    context('beforeUpdate', async function () {
+      it('changes the updated_at value', async function () {
+        await factory.create('crash')
+        let crash = (await db.Crash.query().select()).pop()
+        expect(crash).to.have.property('updated_at', null)
+        crash.contents.channel = 'release'
+        await db.Crash.query().update(crash)
+        crash = (await db.Crash.query().select()).pop()
+        expect(crash.updated_at).to.be.a('date')
+        expect(crash).to.have.property('channel', 'release')
       })
     })
   })
@@ -73,10 +111,97 @@ describe('Crash model', async function () {
         expect(sampleCrash.canonPlatform).to.equal(expectedPlatform)
       })
     })
-    describe('version helper', async function () {
-      specify('fetches the version from the crash contents', async function () {
-        const sampleCrash = await factory.build('crash')
-        expect(sampleCrash.version).to.equal(sampleCrash.contents.ver)
+    describe('.updateSearchFields', async function () {
+      let sampleCrash
+      beforeEach(async function () {
+        sampleCrash = await factory.build('crash')
+      })
+      specify('ymd', async function () {
+        sampleCrash.updateSearchFields()
+        expect(sampleCrash).to.have.property('ymd', moment(sampleCrash.contents.year_month_day).format('YYYY-MM-DD'))
+      })
+      context('platform', async function () {
+        specify('os x', async function () {
+          sampleCrash.contents.platform = 'osx'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('platform', 'osx-bc')
+
+          sampleCrash.contents.platform = 'darwin'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('platform', 'osx-bc')
+
+          sampleCrash.contents.platform = 'OSX'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('platform', 'osx-bc')
+
+          sampleCrash.contents.platform = 'OS X'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('platform', 'osx-bc')
+        })
+        specify('windows 64 bit', async function () {
+          sampleCrash.contents.platform = 'Win64'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('platform', 'winx64-bc')
+        })
+        specify('windows 32 bit', async function () {
+          sampleCrash.contents.platform = 'Win32'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('platform', 'winia32-bc')
+        })
+        specify('linux', async function () {
+          sampleCrash.contents.platform = 'linux'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('platform', 'linux-bc')
+        })
+      })
+      context('is_core', async function () {
+        specify('is_core', async function () {
+          sampleCrash.contents.ver = '70.33.11'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('is_core', true)
+          sampleCrash.contents.ver = '69.09.01'
+          sampleCrash.updateSearchFields()
+          expect(sampleCrash).to.have.property('is_core', false)
+        })
+      })
+      specify('has_valid_version', async function () {
+        sampleCrash.contents.ver = '69.11.01'
+        sampleCrash.updateSearchFields()
+        expect(sampleCrash).to.have.property('has_valid_version', false)
+
+        sampleCrash.contents.ver = '71.33.11'
+        sampleCrash.updateSearchFields()
+        expect(sampleCrash).to.have.property('has_valid_version', true)
+      })
+      specify('channel', async function () {
+        sampleCrash.contents.channel = ''
+        sampleCrash.updateSearchFields()
+        expect(sampleCrash).to.have.property('channel', 'release')
+
+        sampleCrash.contents.channel = null
+        sampleCrash.updateSearchFields()
+        expect(sampleCrash).to.have.property('channel', 'release')
+
+        sampleCrash.contents.channel = undefined
+        sampleCrash.updateSearchFields()
+        expect(sampleCrash).to.have.property('channel', 'release')
+
+        sampleCrash.contents.channel = 'dev'
+        sampleCrash.updateSearchFields()
+        expect(sampleCrash).to.have.property('channel', 'dev')
+      })
+      specify('version', async function () {
+        sampleCrash.updateSearchFields()
+        expect(sampleCrash).to.have.property('version', sampleCrash.contents.ver)
+      })
+      specify('returns an object containing the derived values', async function () {
+        const returned = sampleCrash.updateSearchFields()
+        expect(returned).to.have.property('ymd', sampleCrash.ymd)
+        expect(returned).to.have.property('platform', sampleCrash.platform)
+        expect(returned).to.have.property('is_core', sampleCrash.is_core)
+        expect(returned).to.have.property('has_valid_version', sampleCrash.has_valid_version)
+        expect(returned).to.have.property('channel', sampleCrash.channel)
+        expect(returned).to.have.property('version', sampleCrash.version)
       })
     })
     context('elastic search', async function () {

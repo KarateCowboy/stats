@@ -79,23 +79,5 @@ describe('Release model', async function () {
     })
   })
   describe('static methods', async function () {
-    describe('createFromCrashVersions', async function () {
-      specify('creates a release for every chromium version found in crashes', async function () {
-        await Promise.all(_.range(1, 100).map(async (i) => {
-          const crashes = await factory.build('linux-crash')
-          try {
-            await db.Crash.query().insert(crashes)
-          } catch (e) {
-            _.noop()
-          }
-        }))
-        await db.Release.createFromCrashVersions()
-        const crashes = await db.Crash.query().select()
-        const crashVers = crashes.map(c => c.contents.ver)
-        const releases = await db.Release.query().select()
-        expect(releases.length).to.equal(crashVers.length)
-        expect(_.every(releases, (r) => { return r.isHybridFormat() })).to.equal(true, 'all releases should use the hybrid format and be marked as such')
-      })
-    })
   })
 })

@@ -8,7 +8,6 @@ const Script = require('./script')
 const path = require('path')
 const fs = require('fs-extra')
 const _ = require('lodash')
-const ProgressBar = require('smooth-progress')
 const { ref } = require('objection')
 
 class Scratch extends Script {

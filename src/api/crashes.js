@@ -4,13 +4,13 @@
 
 /* global pg_client, db, knex */
 
-var retriever = require('../retriever')
-var crash = require('../crash')
-var mini = require('../mini')
-var common = require('./common')
+const retriever = require('../retriever')
+const crash = require('../crash')
+const mini = require('../mini')
+const common = require('./common')
 const _ = require('lodash')
-const moment = require('moment')
 const { ref } = require('objection')
+const moment = require('moment')
 
 const CRASHES_PLATFORM_VERSION = `
     SELECT TO_CHAR(FC.ymd, 'YYYY-MM-DD')                                                                       AS ymd,
@@ -27,7 +27,7 @@ const CRASHES_PLATFORM_VERSION = `
     GROUP BY FC.ymd, FC.platform || ' ' || FC.version
     ORDER BY FC.ymd DESC, FC.platform || ' ' || FC.version
 `
-// ~
+// ~r
 const CRASH_REPORTS_SIGNATURE = `
 
     SELECT version,
@@ -112,24 +112,6 @@ const CRASH_REPORT_DETAILS_PLATFORM_VERSION = `
     ORDER BY ts DESC
 `
 
-const RECENT_CRASH_REPORT_DETAILS = `
-    SELECT id,
-           ts,
-           platform                                                                as canonical_platform,
-           chromium_major_version,
-           contents ->> 'year_month_day'                                           AS ymd,
-           contents ->> 'ver'                                                      AS version,
-           channel                                                                 AS channel,
-           COALESCE(contents -> 'metadata' ->> 'cpu', 'Unknown')                   AS cpu,
-           COALESCE(contents ->> 'node_env', 'Unknown')                            AS node_env,
-           COALESCE(contents -> 'metadata' ->> 'crash_reason', 'Unknown')          AS crash_reason,
-           COALESCE(contents -> 'metadata' ->> 'signature', 'Unknown')             AS signature,
-           COALESCE(contents -> 'metadata' ->> 'operating_system_name', 'Unknown') AS operating_system_name
-    FROM dtl.crashes_bc_mv
-    WHERE sp.to_ymd((contents ->> 'year_month_day'::text)) >= current_date - CAST($1 as INTERVAL)
-      AND platform = ANY ($2)
-`
-
 const DEVELOPMENT_CRASH_REPORT_DETAILS = `
     SELECT id,
            ts,
@@ -172,34 +154,6 @@ const CRASH_REPORT_DETAILS = `
       AND COALESCE(contents -> 'metadata' ->> 'signature', 'unknown') = $6
     ORDER BY ts DESC`
 
-const CRASHES_PLATFORM = `
-    SELECT C.contents ->> 'year_month_day' AS ymd,
-           CASE
-               WHEN C.contents ->> 'platform' = 'linux' THEN 'linux-bc'
-               WHEN C.contents ->> 'platform' = 'Win64' THEN 'winx64-bc'
-               WHEN C.contents ->> 'platform' IN ('Win32', 'win32') THEN 'winia32-bc'
-               WHEN C.contents ->> 'platform' IN ('OS X', 'darwin') THEN 'osx-bc'
-               WHEN C.contents ->> 'platform' = 'unknown' THEN 'unknown'
-               ELSE 'unknown' END          AS platform,
-           COUNT(CASE
-                     WHEN C.contents ->> 'platform' = 'linux' THEN 'linux-bc'
-                     WHEN C.contents ->> 'platform' = 'Win64' THEN 'winx64-bc'
-                     WHEN C.contents ->> 'platform' IN ('Win32', 'win32') THEN 'winia32-bc'
-                     WHEN C.contents ->> 'platform' IN ('OS X', 'darwin') THEN 'osx-bc'
-                     WHEN C.contents ->> 'platform' = 'unknown' THEN 'unknown'
-                     ELSE 'unknown' END)   AS count
-    FROM dtl.crashes C
-    WHERE sp.to_ymd((contents ->> 'year_month_day'::text)) >= current_date - CAST($1 as INTERVAL)
-      AND C.contents ->> 'channel' = ANY ($2)
-      AND sp.canonical_platform(C.contents ->> 'platform', C.contents->'metadata'->>'cpu') = ANY ($3)
-      AND C.contents->> 'ver' ~ '^[0-9]+\.[0-9]+\.[0-9]+'
-      AND C.contents->>'ver' ~ '^[0-9]{1,2}\.[0-9]{1,4}\.[0-9]+'
-      AND c.contents->>'ver' NOT LIKE '0.2%'
-      AND C.contents->>'ver' NOT LIKE '0.3%'
-      AND C.contents->>'ver' NOT LIKE '0.4%'
-    GROUP BY ymd, platform
-    ORDER BY ymd, platform`
-
 // COUNT(platform) AS count
 // GROUP BY C.contents->>'year_month_day', platform, C.contents->>'_version'
 // ORDER BY C.contents->>'year_month_day' DESC
@@ -232,11 +186,20 @@ exports.setup = (server, client, mongo) => {
       days += ' days'
       let platforms = common.platformPostgresArray(request.query.platformFilter)
       let channels = common.channelPostgresArray(request.query.channelFilter)
+      const query = db.Crash.query().select(ref('ymd').castText(), 'platform').count({ 'count': 'platform' })
+        .whereIn('channel', channels)
+        .whereIn('platform', platforms)
+        .where('has_valid_version', true)
+        .where('is_core', true)
+        .where('ymd', '>=', moment().subtract(parseInt(days), 'days').format('YYYY-MM-DD'))
+        .groupBy('ymd')
+        .groupBy('platform')
+        .orderBy(['ymd', 'platform'])
       try {
-        const results = await client.query(CRASHES_PLATFORM, [days, channels, platforms])
-        results.rows = common.potentiallyFilterToday(results.rows, request.query.showToday === 'true')
-        return (results.rows)
-      } catch (e) {
+        let results = await query
+        results = common.potentiallyFilterToday(results, request.query.showToday === 'true')
+        return results
+      } catch (err) {
         return h.response(err.toString()).code(500)
       }
     }
@@ -376,21 +339,30 @@ exports.setup = (server, client, mongo) => {
     path: '/api/1/recent_crash_report_details',
     handler: async (request, h) => {
       try {
-        let [days, platforms, channels, ref] = common.retrieveCommonParameters(request)
+        let [days, platforms, channels, refs] = common.retrieveCommonParameters(request)
         let offset = parseInt(request.query.offset || 0)
-        let query = RECENT_CRASH_REPORT_DETAILS
-        let params = [days, platforms]
-        console.log(channels.length)
+        const queryBuilder = db.Crash.query().select(['id', 'ts', 'platform', 'version', 'ymd', 'channel']).select({
+          cpu: ref('crashes.contents:metadata:cpu').castText(),
+          crashReason: ref('crashes.contents:metadata:crash_reason').castText(),
+          signature: ref('crashes.contents:metadata:signature').castText(),
+          operatingSystemName: ref('crashes.contents:metadata:operating_system_name').castText()
+        }).where('ymd', '>=', moment().subtract(parseInt(days), 'days'))
+          .whereIn('platform', platforms)
+        const queryString = queryBuilder.toString()
+        console.log(queryString)
         if (channels.length < 5) {
-          query += `  AND channel = ANY ($3)`
-          params.push(channels)
+          queryBuilder.whereIn('channel', channels)
         }
-        query += ` ORDER BY ts DESC OFFSET ${offset} LIMIT 100`
-        let results = await client.query(query, params)
-        return results.rows
+        queryBuilder.orderBy('ymd', 'desc').offset(offset).limit(100)
+        const start = moment()
+        let results = await queryBuilder
+        const end = moment()
+        console.log(start.toString())
+        console.log(end.toString())
+        return (results)
       } catch (e) {
         console.log(e)
-        return h.response(e.toString()).code(500)
+        throw e
       }
     }
   })
@@ -509,10 +481,9 @@ exports.setup = (server, client, mongo) => {
         let usage = await usageQuery
         usage = usage.pop()
         const release = await usage.$relatedQuery('release')
-        const crashesQuery = release.$relatedQuery('crashes').where(ref('crashes.contents:year_month_day').castText(), '>=', ymd)
+        const crashesQuery = release.$relatedQuery('crashes').where('ymd', '>=', ymd)
         if (platform) {
-          const platforms = db.Crash.mapPlatformFilters([platform])
-          crashesQuery.whereIn(ref('crashes.contents:platform').castText(), platforms)
+          crashesQuery.whereIn('platform', [platform])
         }
         const crashes = await crashesQuery
         return (crashes)
